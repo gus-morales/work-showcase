@@ -71,6 +71,7 @@ def main():
     train_df, val_df, test_df = temporal_split(df)
     print(f"Train: {len(train_df):,} (months 1-18) | Val: {len(val_df):,} (19-21) | "
           f"Test: {len(test_df):,} (22-24, incl. macro shock)")
+    SOURCE = f"Source: synthetic BNPL loan data · held-out test set, months 22-24 · n = {len(test_df):,} loans"
 
     X_all, feature_names = build_design_matrix(df)
     X_train, y_train = X_all.loc[train_df.index], train_df["delinquent_30dpd"].values
@@ -132,7 +133,7 @@ def main():
              subtitle="Held-out months 22-24 (incl. shock)",
              xlabel="False positive rate", ylabel="True positive rate", grid_axis="both")
     ax.legend(loc="lower right")
-    savefig(fig, FIG_DIR / "roc_curve.png")
+    savefig(fig, FIG_DIR / "roc_curve.png", footnote=SOURCE)
 
     prec, rec, _ = precision_recall_curve(y_test, y_prob_test)
     base_rate = y_test.mean()
@@ -143,7 +144,7 @@ def main():
              subtitle="Held-out months 22-24 (incl. shock)",
              xlabel="Recall", ylabel="Precision", grid_axis="both")
     ax.legend(loc="upper right")
-    savefig(fig, FIG_DIR / "pr_curve.png")
+    savefig(fig, FIG_DIR / "pr_curve.png", footnote=SOURCE)
 
     frac_pos_raw, mean_pred_raw = calibration_curve(y_test, y_prob_raw, n_bins=10, strategy="quantile")
     frac_pos_cal, mean_pred_cal = calibration_curve(y_test, y_prob_test, n_bins=10, strategy="quantile")
@@ -155,7 +156,7 @@ def main():
              subtitle="Predicted probability vs. observed rate, by decile",
              xlabel="Mean predicted probability", ylabel="Observed delinquency rate", grid_axis="both")
     ax.legend(loc="upper left")
-    savefig(fig, FIG_DIR / "calibration_curve.png")
+    savefig(fig, FIG_DIR / "calibration_curve.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
     im = ax.imshow(cm, cmap="Blues")
@@ -171,7 +172,7 @@ def main():
         for j in range(2):
             ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center", fontsize=13,
                      color="white" if cm[i, j] > cm.max() / 2 else "#222222")
-    savefig(fig, FIG_DIR / "confusion_matrix.png")
+    savefig(fig, FIG_DIR / "confusion_matrix.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.plot(thresholds, costs / 1e6, color=SLATE, linewidth=1.8)
@@ -180,7 +181,7 @@ def main():
     style_ax(ax, title="Expected portfolio cost by decision threshold",
              xlabel="Decision threshold", ylabel="Expected cost (MXN, millions)", grid_axis="both")
     ax.legend()
-    savefig(fig, FIG_DIR / "threshold_cost_curve.png")
+    savefig(fig, FIG_DIR / "threshold_cost_curve.png", footnote=SOURCE)
 
     # --- Feature importance (permutation-free, from HGB) ---
     gbm_importances = getattr(gbm, "feature_importances_", None)

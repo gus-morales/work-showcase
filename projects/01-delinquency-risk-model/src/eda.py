@@ -18,6 +18,7 @@ set_style()
 
 def main():
     df = pd.read_csv(BASE / "data" / "loans.csv")
+    SOURCE = f"Source: synthetic BNPL loan data (src/generate_data.py) · n = {len(df):,} loans"
 
     # 1. Delinquency rate by month (shows the late-window shock)
     by_month = df.groupby("origination_month")["delinquent_30dpd"].mean()
@@ -29,7 +30,7 @@ def main():
     style_ax(ax, title="Delinquency rate by origination month",
              xlabel="Origination month", ylabel="30+ DPD rate (%)")
     ax.set_ylim(0, by_month.values.max() * 100 * 1.15)
-    savefig(fig, FIG_DIR / "delinquency_by_month.png")
+    savefig(fig, FIG_DIR / "delinquency_by_month.png", footnote=SOURCE)
 
     # 2. Delinquency by employment type
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -41,7 +42,7 @@ def main():
         ax.text(i, v + 0.6, f"{v:.1f}%", ha="center", fontsize=10, color="#4a4a4a")
     style_ax(ax, title="Delinquency rate by employment type",
              ylabel="30+ DPD rate (%)")
-    savefig(fig, FIG_DIR / "delinquency_by_employment.png")
+    savefig(fig, FIG_DIR / "delinquency_by_employment.png", footnote=SOURCE)
 
     # 3. Bureau score distribution by outcome
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -52,7 +53,7 @@ def main():
     ax.legend(loc="upper left")
     style_ax(ax, title="Credit bureau score distribution by outcome",
              xlabel="Credit bureau score", ylabel="Density")
-    savefig(fig, FIG_DIR / "bureau_score_by_outcome.png")
+    savefig(fig, FIG_DIR / "bureau_score_by_outcome.png", footnote=SOURCE)
 
     # 4. Loan amount vs income ratio vs outcome
     df["loan_to_income_ratio"] = df["loan_amount_mxn"] / df["monthly_income_mxn"].clip(lower=1)
@@ -63,7 +64,7 @@ def main():
     ax.set_xticklabels(["Current", "30+ DPD"])
     style_ax(ax, title="Loan-to-income ratio by outcome",
              xlabel="", ylabel="Loan amount / monthly income")
-    savefig(fig, FIG_DIR / "loan_to_income_by_outcome.png")
+    savefig(fig, FIG_DIR / "loan_to_income_by_outcome.png", footnote=SOURCE)
 
     # Summary markdown
     lines = ["# EDA summary\n"]

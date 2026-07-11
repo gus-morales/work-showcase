@@ -71,7 +71,15 @@ def style_ax(ax, title=None, subtitle=None, xlabel=None, ylabel=None, grid_axis=
     return ax
 
 
-def savefig(fig, path, dpi=170):
+def add_footnote(fig, text):
+    """Small grey source/sample-size line pinned to the bottom-left of the
+    figure, in the style of FT/Economist chart footers."""
+    fig.text(0.01, -0.04, text, fontsize=8.5, color=GREY, ha="left", va="top", fontfamily=SANS)
+
+
+def savefig(fig, path, dpi=170, footnote=None):
+    if footnote:
+        add_footnote(fig, footnote)
     fig.tight_layout()
     fig.savefig(path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)

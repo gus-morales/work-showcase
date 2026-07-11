@@ -51,6 +51,8 @@ def main():
 
     reference = df[df.origination_month <= 21]     # what the model was trained on
     monitored = df[df.origination_month > 21]       # months 22-24, incl. macro shock
+    SOURCE = (f"Source: synthetic BNPL loan data · reference n = {len(reference):,}, "
+              f"monitored n = {len(monitored):,} loans")
 
     psi_results = {
         feat: round(psi(reference[feat].values, monitored[feat].values), 4)
@@ -69,7 +71,7 @@ def main():
              subtitle="Reference (months 1-21) vs. monitored (22-24)",
              xlabel="PSI", grid_axis="x")
     ax.legend(loc="lower right")
-    savefig(fig, FIG_DIR / "drift_psi.png")
+    savefig(fig, FIG_DIR / "drift_psi.png", footnote=SOURCE)
 
     # Performance degradation check: score the "current" window with the
     # frozen model and see how AUC compares to the original held-out test AUC.
@@ -119,7 +121,7 @@ def main():
     style_ax(ax, title="Predicted vs. actual delinquency rate by month",
              xlabel="Origination month", ylabel="30+ DPD rate (%)")
     ax.legend(fontsize=10, loc="upper left")
-    savefig(fig, FIG_DIR / "drift_predicted_vs_actual.png")
+    savefig(fig, FIG_DIR / "drift_predicted_vs_actual.png", footnote=SOURCE)
     with open(BASE / "reports" / "drift_report.json", "w") as f:
         json.dump(report, f, indent=2)
 

@@ -10,7 +10,7 @@ import pandas as pd
 import shap
 
 from features import build_design_matrix, engineer_features
-from style import set_style
+from style import set_style, add_footnote
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -38,6 +38,7 @@ def main():
     ax.set_xlabel("SHAP value (impact on predicted risk)", fontsize=11, labelpad=8)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
+    add_footnote(fig, f"Source: TreeExplainer on the trained GBM · held-out test set, months 22-24 · n = {len(test_df):,} loans")
     plt.tight_layout()
     plt.savefig(FIG_DIR / "shap_summary.png", dpi=170, bbox_inches="tight")
     plt.close()
