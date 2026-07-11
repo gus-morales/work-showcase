@@ -77,3 +77,24 @@ def test_shock_window_raises_delinquency(full):
     shocked = full[full.origination_month >= gd.N_MONTHS - 2]
     normal = full[full.origination_month < gd.N_MONTHS - 2]
     assert shocked["delinquent_30dpd"].mean() > normal["delinquent_30dpd"].mean()
+
+
+def test_bureau_missingness_does_not_change_delinquency_labels(full):
+    # Masking credit_bureau_score to NaN happens strictly after labels are
+    # assigned, using the same rows/order, so the labels themselves must
+    # be untouched by it.
+    masked = gd.apply_bureau_missingness(full)
+    assert (masked["delinquent_30dpd"] == full["delinquent_30dpd"]).all()
+
+
+def test_bureau_missingness_rate_is_plausible(full):
+    masked = gd.apply_bureau_missingness(full)
+    rate = masked["credit_bureau_score"].isna().mean()
+    assert 0.03 < rate < 0.25
+
+
+def test_bureau_missingness_concentrates_in_thin_file_segments(full):
+    masked = gd.apply_bureau_missingness(full)
+    informal_rate = masked.loc[masked.employment_type == "informal", "credit_bureau_score"].isna().mean()
+    salaried_rate = masked.loc[masked.employment_type == "salaried", "credit_bureau_score"].isna().mean()
+    assert informal_rate > salaried_rate

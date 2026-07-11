@@ -2,13 +2,13 @@
 
 |                                |      0 |
 |:-------------------------------|-------:|
-| credit_bureau_score            | 0.6868 |
-| down_payment_ratio             | 0.2688 |
-| num_active_loans_elsewhere     | 0.2148 |
-| loan_to_income_ratio           | 0.1942 |
-| avg_prior_repayment_delay_days | 0.1511 |
-| employment_type_salaried       | 0.1409 |
+| credit_bureau_score            | 0.5364 |
+| employment_type_salaried       | 0.2799 |
+| down_payment_ratio             | 0.2602 |
+| num_active_loans_elsewhere     | 0.1905 |
+| loan_to_income_ratio           | 0.1809 |
+| avg_prior_repayment_delay_days | 0.1427 |
 | tenure_months_platform         | 0.1311 |
-| num_installments               | 0.1107 |
-| monthly_income_usd             | 0.0777 |
-| employment_type_self_employed  | 0.0584 |
+| monthly_income_usd             | 0.1152 |
+| num_installments               | 0.0984 |
+| employment_type_self_employed  | 0.0669 |

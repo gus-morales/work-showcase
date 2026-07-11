@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from features import build_design_matrix, engineer_features
+from features import engineer_features, RAW_FEATURE_COLS
 from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
 
 BASE = Path(__file__).resolve().parents[1]
@@ -34,6 +34,12 @@ PSI_ALERT_THRESHOLD = 0.20  # >0.2 is commonly treated as "significant shift"
 
 
 def psi(reference: np.ndarray, current: np.ndarray, bins: int = 10) -> float:
+    # PSI is computed on observed values only; a shift in the *missing*
+    # rate itself (credit_bureau_score) is a separate, deliberately
+    # separate check below, since it's a different kind of drift than the
+    # distribution of the values that were actually observed.
+    reference = reference[~np.isnan(reference)]
+    current = current[~np.isnan(current)]
     quantiles = np.linspace(0, 1, bins + 1)
     cut_points = np.unique(np.quantile(reference, quantiles))
     if len(cut_points) < 3:
@@ -59,6 +65,13 @@ def main():
         for feat in MONITORED_FEATURES
     }
 
+    # Separate from PSI: has the *rate* of missing bureau scores itself
+    # shifted? A PSI computed on observed values only would miss this, and
+    # a rising missing-rate is itself a meaningful signal (e.g. a shift
+    # toward thinner-file applicants).
+    missing_rate_reference = float(reference["credit_bureau_score"].isna().mean())
+    missing_rate_monitored = float(monitored["credit_bureau_score"].isna().mean())
+
     fig, ax = plt.subplots(figsize=(9, 5))
     feats = [f.replace("_", " ") for f in psi_results.keys()]
     vals = list(psi_results.values())
@@ -77,8 +90,9 @@ def main():
     # frozen model and see how AUC compares to the original held-out test AUC.
     bundle = joblib.load(BASE / "reports" / "model.pkl")
     calibrated = bundle["calibrated_model"]
-    X_all, _ = build_design_matrix(df)
-    X_monitored = X_all.loc[monitored.index]
+    # Transform only, with the same pipeline (and the same training-split
+    # imputation median) train.py froze at training time.
+    X_monitored = bundle["feature_pipeline"].transform(monitored[RAW_FEATURE_COLS])
     y_monitored = monitored["delinquent_30dpd"].values
     y_prob = calibrated.predict_proba(X_monitored)[:, 1]
     auc_monitored = roc_auc_score(y_monitored, y_prob)
@@ -93,6 +107,8 @@ def main():
     report = {
         "psi_by_feature": psi_results,
         "features_flagged": [f for f, v in psi_results.items() if v > PSI_ALERT_THRESHOLD],
+        "missing_bureau_score_rate_reference": round(missing_rate_reference, 4),
+        "missing_bureau_score_rate_monitored": round(missing_rate_monitored, 4),
         "auc_original_test_month24": auc_test,
         "auc_monitored_window_22_24": round(float(auc_monitored), 4),
         "observed_rate_reference_months_1_21": round(float(reference["delinquent_30dpd"].mean()), 4),
@@ -134,6 +150,9 @@ def main():
     lines.append(psi_df.to_markdown())
     lines.append(f"\n\n## Delinquency rate shift\n- Reference: {report['observed_rate_reference_months_1_21']:.2%}"
                  f"\n- Monitored: {report['observed_rate_monitored_months_22_24']:.2%}\n")
+    lines.append(f"\n## Missing bureau score rate\n- Reference: {missing_rate_reference:.2%}"
+                 f"\n- Monitored: {missing_rate_monitored:.2%}\n"
+                 f"(Computed separately from PSI, which only covers observed values.)\n")
     lines.append(f"\n## Model performance on monitored window\n- AUC (original held-out test set): "
                  f"{auc_test:.3f}\n- AUC (monitored window, months 22-24): {auc_monitored:.3f}\n")
     lines.append(f"\n## Calibration drift\n- Mean predicted probability (monitored window): "

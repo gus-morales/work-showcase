@@ -31,7 +31,7 @@ from scipy.stats import randint, uniform
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
-from features import build_design_matrix, engineer_features
+from features import build_feature_pipeline, engineer_features, RAW_FEATURE_COLS
 from style import set_style, style_ax, add_footnote, SLATE, MUTED_RED, GREY
 import matplotlib
 matplotlib.use("Agg")
@@ -60,8 +60,10 @@ def main():
     df = engineer_features(df)
     train_df = df[df.origination_month <= 18].sort_values("origination_month")
 
-    X_all, feature_names = build_design_matrix(df)
-    X_train = X_all.loc[train_df.index]
+    # Fit the feature pipeline on the same train window the search itself
+    # is scoped to (months 1-18); the search never touches val/test data
+    # through either the model or the preprocessing statistics.
+    X_train = build_feature_pipeline().fit_transform(train_df[RAW_FEATURE_COLS])
     y_train = train_df["delinquent_30dpd"].values
 
     print(f"Tuning on {len(train_df):,} loans, months 1-18, sorted chronologically")

@@ -168,11 +168,35 @@ def assign_delinquency(loans, customers, n_months=N_MONTHS):
     return df
 
 
+def apply_bureau_missingness(df):
+    """BNPL lenders routinely originate loans for applicants with little or
+    no bureau history: gig/informal workers and customers who just joined
+    the platform. The bureau score computed above still reflects each
+    customer's true creditworthiness (that's what actually drove the
+    delinquency label), but it isn't observed by the lender at underwriting
+    time for a meaningful share of these thin-file applicants, so it's
+    masked to missing in the data the model gets to see. This is what gives
+    the feature-engineering pipeline's missing-indicator and imputation
+    steps a real job to do, rather than being no-ops on complete data."""
+    p_missing = (
+        0.05
+        + 0.15 * (df["employment_type"] == "informal")
+        + 0.08 * (df["employment_type"] == "gig_economy")
+        + 0.10 * (df["tenure_months_platform"] < 3)
+    )
+    missing_mask = rng.random(len(df)) < p_missing
+    df = df.copy()
+    df["credit_bureau_score"] = df["credit_bureau_score"].astype(float)
+    df.loc[missing_mask, "credit_bureau_score"] = np.nan
+    return df
+
+
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     customers = make_customers(N_CUSTOMERS)
     loans = make_loans(customers)
     full = assign_delinquency(loans, customers)
+    full = apply_bureau_missingness(full)
     full = full.sample(frac=1.0, random_state=SEED).reset_index(drop=True)
     out_path = OUT_DIR / "loans.csv"
     full.to_csv(out_path, index=False)
@@ -182,6 +206,7 @@ def main():
           f"{full.loc[full.origination_month >= N_MONTHS - 2, 'delinquent_30dpd'].mean():.3%}")
     print(f"Delinquency rate, months 1-{N_MONTHS - 3}: "
           f"{full.loc[full.origination_month < N_MONTHS - 2, 'delinquent_30dpd'].mean():.3%}")
+    print(f"Missing bureau score (thin-file customers): {full['credit_bureau_score'].isna().mean():.1%}")
 
 
 if __name__ == "__main__":

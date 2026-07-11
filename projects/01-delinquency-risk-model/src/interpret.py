@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import shap
 
-from features import build_design_matrix, engineer_features
+from features import engineer_features, RAW_FEATURE_COLS
 from style import set_style, add_footnote
 
 BASE = Path(__file__).resolve().parents[1]
@@ -20,11 +20,14 @@ def main():
     df = pd.read_csv(BASE / "data" / "loans.csv")
     df = engineer_features(df)
     test_df = df[df.origination_month > 21]
-    X_all, feature_names = build_design_matrix(df)
-    X_test = X_all.loc[test_df.index]
 
     bundle = joblib.load(BASE / "reports" / "model.pkl")
     model = bundle["model"]
+    feature_names = bundle["feature_names"]
+    # Transform only, with the pipeline fit on the training split by
+    # train.py: SHAP explains the model exactly as it was trained, not a
+    # version re-fit on the test window.
+    X_test = bundle["feature_pipeline"].transform(test_df[RAW_FEATURE_COLS])
 
     explainer = shap.TreeExplainer(model)
     shap_values = explainer(X_test)

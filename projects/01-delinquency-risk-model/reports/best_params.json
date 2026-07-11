@@ -1,20 +1,20 @@
 {
   "best_params": {
-    "l2_regularization": 0.014132610439434812,
-    "learning_rate": 0.024151236507454835,
+    "l2_regularization": 1.7214611665126869,
+    "learning_rate": 0.021251383495614326,
     "max_depth": 5,
-    "max_iter": 158,
-    "max_leaf_nodes": 31,
-    "min_samples_leaf": 37
+    "max_iter": 236,
+    "max_leaf_nodes": null,
+    "min_samples_leaf": 42
   },
-  "cv_mean_auc": 0.8127,
-  "cv_std_auc": 0.0038,
+  "cv_mean_auc": 0.8074,
+  "cv_std_auc": 0.0046,
   "cv_fold_auc": [
-    0.813,
-    0.81,
-    0.8191,
-    0.808,
-    0.8134
+    0.802,
+    0.807,
+    0.8151,
+    0.8036,
+    0.8095
   ],
   "n_candidates_searched": 30,
   "n_cv_splits": 5

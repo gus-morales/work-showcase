@@ -26,7 +26,7 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import StandardScaler
 
-from features import build_design_matrix, engineer_features
+from features import build_feature_pipeline, engineer_features, RAW_FEATURE_COLS
 from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
 
 BEST_PARAMS_DEFAULT = {
@@ -77,10 +77,19 @@ def main():
           f"Test: {len(test_df):,} (22-24, incl. macro shock)")
     SOURCE = f"Source: synthetic BNPL loan data · held-out test set, months 22-24 · n = {len(test_df):,} loans"
 
-    X_all, feature_names = build_design_matrix(df)
-    X_train, y_train = X_all.loc[train_df.index], train_df["delinquent_30dpd"].values
-    X_val, y_val = X_all.loc[val_df.index], val_df["delinquent_30dpd"].values
-    X_test, y_test = X_all.loc[test_df.index], test_df["delinquent_30dpd"].values
+    # Feature pipeline (missing-value imputation, outlier capping, one-hot
+    # encoding) is fit on the training split only, then applied unchanged
+    # to validation and test, the same statistics a frozen deployment
+    # would use rather than ones re-computed on data the model shouldn't
+    # get to see yet.
+    feature_pipeline = build_feature_pipeline()
+    X_train = feature_pipeline.fit_transform(train_df[RAW_FEATURE_COLS])
+    X_val = feature_pipeline.transform(val_df[RAW_FEATURE_COLS])
+    X_test = feature_pipeline.transform(test_df[RAW_FEATURE_COLS])
+    feature_names = list(X_train.columns)
+    y_train = train_df["delinquent_30dpd"].values
+    y_val = val_df["delinquent_30dpd"].values
+    y_test = test_df["delinquent_30dpd"].values
 
     # --- Baseline: logistic regression (interpretable benchmark) ---
     scaler = StandardScaler()
@@ -229,8 +238,8 @@ def main():
         json.dump(metrics, f, indent=2)
 
     joblib.dump({
-        "model": gbm, "calibrated_model": calibrated, "feature_names": feature_names,
-        "threshold": best_t,
+        "model": gbm, "calibrated_model": calibrated, "feature_pipeline": feature_pipeline,
+        "feature_names": feature_names, "threshold": best_t,
     }, BASE / "reports" / "model.pkl")
 
     print(json.dumps(metrics, indent=2))
