@@ -33,7 +33,7 @@ The gradient-boosted model's hyperparameters were chosen with a randomized searc
 
 ## Monitoring caught something standard checks would have missed
 
-The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed) showed nothing unusual. But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching this took watching the gap between predicted and observed outcomes, not just input drift. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
+The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed) showed nothing unusual. But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes, since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 

@@ -3,8 +3,8 @@ Validates the LLM-judge against human labels on a golden eval set, before
 trusting the judge for anything downstream (the A/B test and the
 monitoring pipeline both rely on it). An automated judge that looks
 reliable in aggregate can still be systematically miscalibrated on the
-subset that matters most; that's the specific thing this checks for,
-not just "does the judge roughly agree with humans."
+subset that matters most, which is the specific thing checked here,
+rather than a plain "does the judge roughly agree with humans" average.
 """
 from pathlib import Path
 

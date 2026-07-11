@@ -113,7 +113,7 @@ def rate_mix_shift(df, segment_col, source_note, plot=True):
     ax.bar(x + width / 2, r_b.reindex(segs, fill_value=0) * 100, width, color=MUTED_TEAL, label=f"Monitored ({REFERENCE_END_MONTH+1}-24)", zorder=3)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9.5)
-    style_ax(ax, title=f"Every {segment_col.replace('_', ' ')} segment got riskier, not just one",
+    style_ax(ax, title=f"Every {segment_col.replace('_', ' ')} segment got riskier together",
              subtitle="Delinquency rate by segment, reference vs. monitored window",
              ylabel="Delinquency rate (%)")
     ax.legend(fontsize=9.5, loc="upper left")

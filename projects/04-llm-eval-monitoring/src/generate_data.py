@@ -35,7 +35,7 @@ CATEGORIES = [
     "billing_question", "technical_issue", "cancellation_request",
     "account_access", "how_to_question", "complaint",
 ]
-# Latent difficulty of drafting a genuinely good reply, by category.
+# Latent difficulty of drafting an actually good reply, by category.
 # Complaints are hardest: emotionally charged, harder to fully resolve
 # in a single reply, easiest for a lenient judge to rate too generously.
 CATEGORY_QUALITY_MEAN = {
