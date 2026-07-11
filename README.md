@@ -13,6 +13,7 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 | [01 - BNPL Delinquency Risk Model](projects/01-delinquency-risk-model) | Credit risk classification, probability calibration, cost-based decisioning, SHAP interpretability, drift/monitoring | Done |
 | [02 - Customer LTV & Contribution Analysis](projects/02-ltv-contribution-analysis) | SQL cohort analysis, GMV contribution decomposition, probabilistic CLV (BG/NBD + Gamma-Gamma), early-life predictive modeling | Done |
 | [03 - Growth Experimentation & Segmentation](projects/03-growth-experimentation-segmentation) | Power analysis, A/B testing, CUPED, difference-in-differences, RFM/KMeans segmentation, light NLP topic modeling | Done |
+| [04 - Evaluating & Monitoring an LLM-Powered Feature](projects/04-llm-eval-monitoring) | LLM-judge validation (Cohen's kappa, bias analysis), A/B testing, statistical process control for output-quality monitoring, cost-based guardrail thresholds | Done |
 
 ## About me
 

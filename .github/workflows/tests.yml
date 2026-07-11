@@ -16,6 +16,7 @@ jobs:
           - 01-delinquency-risk-model
           - 02-ltv-contribution-analysis
           - 03-growth-experimentation-segmentation
+          - 04-llm-eval-monitoring
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}
