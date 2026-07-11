@@ -28,4 +28,4 @@ Reference window: origination months 1-21. Monitored window: months 22-24 (inclu
 ## Calibration drift
 - Mean predicted probability (monitored window): 15.42%
 - Observed delinquency rate (monitored window): 19.06%
-- Gap: 3.64% (model under-predicts risk once the shock hits, despite clean PSI - a concept-drift case, not covariate drift; underscores why outcome-rate monitoring matters alongside input PSI checks.)
+- Gap: 3.64%. The model under-predicts risk once the shock hits, even though PSI is clean. This is concept drift, not covariate drift. Outcome-rate monitoring catches it; PSI alone does not.

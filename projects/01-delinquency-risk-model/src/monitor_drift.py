@@ -136,9 +136,9 @@ def main():
                  f"{auc_test:.3f}\n- AUC (monitored window, months 22-24): {auc_monitored:.3f}\n")
     lines.append(f"\n## Calibration drift\n- Mean predicted probability (monitored window): "
                  f"{mean_pred_prob:.2%}\n- Observed delinquency rate (monitored window): "
-                 f"{observed_rate_monitored:.2%}\n- Gap: {report['calibration_gap_monitored_window']:.2%} "
-                 f"(model under-predicts risk once the shock hits, despite clean PSI - a concept-drift case, "
-                 f"not covariate drift; underscores why outcome-rate monitoring matters alongside input PSI checks.)\n")
+                 f"{observed_rate_monitored:.2%}\n- Gap: {report['calibration_gap_monitored_window']:.2%}. "
+                 f"The model under-predicts risk once the shock hits, even though PSI is clean. This is "
+                 f"concept drift, not covariate drift. Outcome-rate monitoring catches it; PSI alone does not.\n")
     (BASE / "reports" / "drift_report.md").write_text("\n".join(lines))
 
     print(json.dumps(report, indent=2))

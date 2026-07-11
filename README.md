@@ -1,10 +1,6 @@
 # Work Showcase
 
-Data science and ML projects built to demonstrate applied skills across
-credit risk, customer analytics, and experimentation — the kind of work I do
-as a Senior Data Scientist in fintech, plus a couple of areas to round it out.
-All projects use synthetic data (generated in-repo) so they're fully
-shareable; none reflect proprietary data or results from any employer.
+Data science and ML projects demonstrating applied skills in credit risk, customer analytics, and experimentation. This is the kind of work I do as a Senior Data Scientist in fintech, plus a couple of projects outside that scope. All projects use synthetic data generated in-repo, so they're fully shareable. None of it reflects proprietary data or results from any employer.
 
 ## Projects
 
@@ -16,6 +12,6 @@ shareable; none reflect proprietary data or results from any employer.
 
 ## About me
 
-Gustavo Morales — Senior Data Scientist, formerly an astrophysicist (PhD,
-Heidelberg University). 8 years in academic research, 5+ in financial
-analytics and ML, currently at a BNPL fintech. [LinkedIn](https://linkedin.com/in/gus-morales) · [GitHub](https://github.com/gus-morales)
+Gustavo Morales, Senior Data Scientist, formerly an astrophysicist (PhD, Heidelberg University). 8 years in academic research, 5+ in financial analytics and ML, currently at a BNPL fintech.
+
+[LinkedIn](https://linkedin.com/in/gus-morales) · [GitHub](https://github.com/gus-morales)
