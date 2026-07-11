@@ -6,6 +6,8 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied.
 
+**Skills demonstrated:** classification modeling (logistic regression + gradient-boosted trees), temporal train/val/test design, probability calibration, cost-based decision optimization, SHAP interpretability, drift and calibration monitoring.
+
 ## The problem
 
 A BNPL lender approves a loan in seconds at checkout. Approve a customer who pays on time, and the lender earns a small merchant fee. Approve one who defaults, and the lender loses most of the loan amount. Getting the approve/decline line right is worth real money.
@@ -33,6 +35,10 @@ Picking the threshold from cost instead of defaulting to 0.5 cut expected portfo
 The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed) showed nothing unusual. But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching this took watching the gap between predicted and observed outcomes, not just input drift. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
+
+## Recommendation
+
+Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it.
 
 ## Repo layout
 
