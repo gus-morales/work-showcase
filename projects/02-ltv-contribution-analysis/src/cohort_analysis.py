@@ -60,13 +60,13 @@ def main():
     ax.plot(cum_curve.index, cum_curve.values, color=SLATE, linewidth=1.8, marker="o", markersize=4.5)
     style_ax(ax, title="Cumulative revenue per acquired customer",
              subtitle=f"Averaged across cohorts with {MAX_MONTHS_SINCE + 1}+ months of observed history",
-             xlabel="Months since acquisition", ylabel="Cumulative revenue (MXN)")
+             xlabel="Months since acquisition", ylabel="Cumulative revenue (USD)")
     savefig(fig, FIG_DIR / "cohort_cumulative_revenue.png", footnote=SOURCE)
 
     print(f"Full cohorts used (>= {MAX_MONTHS_SINCE + 1} months observed): {sorted(full_cohorts.tolist())}")
     print(f"Month-1 retention (avg across full cohorts): "
           f"{mat[mat.months_since_acquisition == 1]['retention_rate'].mean():.1%}")
-    print(f"Month-{MAX_MONTHS_SINCE} cumulative revenue per acquired customer: {cum_curve.iloc[-1]:.2f} MXN")
+    print(f"Month-{MAX_MONTHS_SINCE} cumulative revenue per acquired customer: {cum_curve.iloc[-1]:.2f} USD")
     print("Wrote reports/cohort_revenue.csv and 2 figures.")
 
 

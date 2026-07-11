@@ -8,18 +8,18 @@ CATEGORICAL_COLS = [
 ]
 
 NUMERIC_COLS = [
-    "age", "monthly_income_mxn", "tenure_months_platform", "num_previous_loans",
+    "age", "monthly_income_usd", "tenure_months_platform", "num_previous_loans",
     "credit_bureau_score", "avg_prior_repayment_delay_days", "num_active_loans_elsewhere",
-    "num_installments", "loan_amount_mxn", "down_payment_ratio",
-    "loan_to_income_ratio", "installment_amount_mxn",
+    "num_installments", "loan_amount_usd", "down_payment_ratio",
+    "loan_to_income_ratio", "installment_amount_usd",
 ]
 
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    df["loan_to_income_ratio"] = df["loan_amount_mxn"] / df["monthly_income_mxn"].clip(lower=1)
-    df["installment_amount_mxn"] = df["loan_amount_mxn"] * (1 - df["down_payment_ratio"]) / df["num_installments"]
-    df["installment_to_income_ratio"] = df["installment_amount_mxn"] / df["monthly_income_mxn"].clip(lower=1)
+    df["loan_to_income_ratio"] = df["loan_amount_usd"] / df["monthly_income_usd"].clip(lower=1)
+    df["installment_amount_usd"] = df["loan_amount_usd"] * (1 - df["down_payment_ratio"]) / df["num_installments"]
+    df["installment_to_income_ratio"] = df["installment_amount_usd"] / df["monthly_income_usd"].clip(lower=1)
     df["low_bureau_score"] = (df["credit_bureau_score"] < 580).astype(int)
     df["is_new_customer"] = (df["tenure_months_platform"] < 3).astype(int)
     return df

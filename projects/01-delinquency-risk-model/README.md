@@ -1,6 +1,6 @@
 # BNPL Delinquency Risk Model
 
-A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, and a decision threshold picked from actual business costs instead of a default 0.5 cutoff. Built on synthetic data modeled after a Mexican BNPL lending book, mirroring delinquency-prediction work I currently do in fintech.
+A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, and a decision threshold picked from actual business costs instead of a default 0.5 cutoff. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I currently do in fintech.
 
 **For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version.
 

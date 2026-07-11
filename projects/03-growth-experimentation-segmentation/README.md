@@ -1,6 +1,6 @@
 # Growth Experimentation & Segmentation
 
-Four growth analyses for a synthetic Mexican BNPL fintech: an A/B test on a repayment-reminder redesign with a proper power analysis and CUPED variance reduction, a difference-in-differences read on a regional feature rollout that wasn't randomized, RFM customer segmentation, and light NLP topic modeling on support tickets. Built on synthetic data, mirroring the experimentation and lifecycle-analytics work that sits alongside credit risk and growth analysis in fintech.
+Four growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-reminder redesign with a proper power analysis and CUPED variance reduction, a difference-in-differences read on a regional feature rollout that wasn't randomized, RFM customer segmentation, and light NLP topic modeling on support tickets. Built on synthetic data, mirroring the experimentation and lifecycle-analytics work that sits alongside credit risk and growth analysis in fintech.
 
 **For the full technical walkthrough (power analysis, fixed-effects regression, clustering, NMF), see the [notebook](notebooks/03_growth_experimentation_segmentation.ipynb).** This README is the short version.
 

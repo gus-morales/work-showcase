@@ -27,7 +27,7 @@ set_style()
 
 MONITORED_FEATURES = [
     "credit_bureau_score", "loan_to_income_ratio", "avg_prior_repayment_delay_days",
-    "num_active_loans_elsewhere", "monthly_income_mxn", "down_payment_ratio",
+    "num_active_loans_elsewhere", "monthly_income_usd", "down_payment_ratio",
 ]
 
 PSI_ALERT_THRESHOLD = 0.20  # >0.2 is commonly treated as "significant shift"

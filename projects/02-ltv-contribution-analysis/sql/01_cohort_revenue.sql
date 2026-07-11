@@ -13,7 +13,7 @@ cohort_activity AS (
         c.cohort_month,
         o.months_since_acquisition,
         COUNT(DISTINCT o.customer_id) AS active_customers,
-        SUM(o.fee_revenue_mxn) AS revenue_mxn
+        SUM(o.fee_revenue_usd) AS revenue_usd
     FROM orders o
     JOIN customers c ON c.customer_id = o.customer_id
     GROUP BY 1, 2
@@ -24,8 +24,8 @@ SELECT
     a.active_customers,
     s.cohort_size,
     ROUND(a.active_customers * 1.0 / s.cohort_size, 4) AS retention_rate,
-    ROUND(a.revenue_mxn, 2) AS revenue_mxn,
-    ROUND(a.revenue_mxn / s.cohort_size, 2) AS revenue_per_acquired_customer
+    ROUND(a.revenue_usd, 2) AS revenue_usd,
+    ROUND(a.revenue_usd / s.cohort_size, 2) AS revenue_per_acquired_customer
 FROM cohort_activity a
 JOIN cohort_sizes s ON s.cohort_month = a.cohort_month
 ORDER BY a.cohort_month, a.months_since_acquisition;

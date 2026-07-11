@@ -1,5 +1,5 @@
 """
-Synthetic data for project 03, same fictional Mexican BNPL fintech as
+Synthetic data for project 03, same fictional BNPL fintech as
 projects 01 and 02, viewed from the growth/experimentation and lifecycle
 marketing side. Four datasets, each feeding one section of the analysis:
 
@@ -62,9 +62,9 @@ def make_experiment_users(n=20_000):
     return pd.DataFrame({
         "user_id": user_id,
         "arm": arm,
-        "revenue_pre_30d_mxn": revenue_pre_30d,
+        "revenue_pre_30d_usd": revenue_pre_30d,
         "converted_post_14d": converted,
-        "revenue_post_14d_mxn": revenue_post_14d,
+        "revenue_post_14d_usd": revenue_post_14d,
     })
 
 
@@ -149,7 +149,7 @@ def make_rfm_customers(n=8_000, obs_end=pd.Timestamp("2026-07-01"), window_days=
         "last_order_date": last_order_date,
         "recency_days": recency_days.astype(int),
         "frequency": frequency,
-        "monetary_mxn": monetary.round(2),
+        "monetary_usd": monetary.round(2),
     })
 
 
@@ -220,7 +220,7 @@ TOPIC_TEMPLATES = {
     ],
 }
 
-FILLER_PREFIXES = ["Hi, ", "Hello, ", "Hola, ", "Good afternoon, ", ""]
+FILLER_PREFIXES = ["Hi, ", "Hello, ", "Hey, ", "Good afternoon, ", ""]
 FILLER_SUFFIXES = [" Thank you.", " Please help.", " Appreciate any update.", " Thanks in advance.", ""]
 
 

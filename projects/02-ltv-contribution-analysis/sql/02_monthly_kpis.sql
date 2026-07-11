@@ -6,9 +6,9 @@ SELECT
     order_month_index AS month_index,
     COUNT(DISTINCT customer_id) AS active_customers,
     COUNT(*) AS orders,
-    ROUND(SUM(order_value_mxn), 2) AS gmv_mxn,
-    ROUND(SUM(fee_revenue_mxn), 2) AS revenue_mxn,
-    ROUND(SUM(order_value_mxn) / COUNT(*), 2) AS avg_order_value_mxn,
+    ROUND(SUM(order_value_usd), 2) AS gmv_usd,
+    ROUND(SUM(fee_revenue_usd), 2) AS revenue_usd,
+    ROUND(SUM(order_value_usd) / COUNT(*), 2) AS avg_order_value_usd,
     ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id), 3) AS orders_per_customer
 FROM orders
 GROUP BY 1

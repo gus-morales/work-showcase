@@ -127,7 +127,7 @@ def main():
     print(f"Brier score - raw: {brier_raw:.4f} | calibrated: {brier:.4f}")
 
     # --- Cost-optimal threshold ---
-    loan_amounts = test_df["loan_amount_mxn"].values
+    loan_amounts = test_df["loan_amount_usd"].values
     thresholds, costs, best_t = find_cost_optimal_threshold(y_test, y_prob_test, loan_amounts)
     default_cost = costs[np.argmin(np.abs(thresholds - 0.5))]
     best_cost = costs.min()
@@ -196,7 +196,7 @@ def main():
     ax.axvline(best_t, ls="--", color=MUTED_RED, linewidth=1.3, label=f"Cost-optimal t={best_t:.2f}")
     ax.axvline(0.50, ls=":", color=GREY, linewidth=1.3, label="Naive t=0.50")
     style_ax(ax, title="Expected portfolio cost by decision threshold",
-             xlabel="Decision threshold", ylabel="Expected cost (MXN, millions)", grid_axis="both")
+             xlabel="Decision threshold", ylabel="Expected cost (USD, millions)", grid_axis="both")
     ax.legend()
     savefig(fig, FIG_DIR / "threshold_cost_curve.png", footnote=SOURCE)
 
@@ -211,8 +211,8 @@ def main():
         "brier_raw": round(float(brier_raw), 4),
         "brier_calibrated": round(float(brier), 4),
         "cost_optimal_threshold": round(float(best_t), 3),
-        "expected_cost_at_optimal_threshold_mxn": round(float(best_cost), 2),
-        "expected_cost_at_naive_threshold_mxn": round(float(default_cost), 2),
+        "expected_cost_at_optimal_threshold_usd": round(float(best_cost), 2),
+        "expected_cost_at_naive_threshold_usd": round(float(default_cost), 2),
         "cost_reduction_vs_naive": round(float(1 - best_cost / default_cost), 4),
         "precision_at_optimal_threshold": round(float(precision), 4),
         "recall_at_optimal_threshold": round(float(recall), 4),

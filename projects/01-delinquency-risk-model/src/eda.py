@@ -56,7 +56,7 @@ def main():
     savefig(fig, FIG_DIR / "bureau_score_by_outcome.png", footnote=SOURCE)
 
     # 4. Loan amount vs income ratio vs outcome
-    df["loan_to_income_ratio"] = df["loan_amount_mxn"] / df["monthly_income_mxn"].clip(lower=1)
+    df["loan_to_income_ratio"] = df["loan_amount_usd"] / df["monthly_income_usd"].clip(lower=1)
     fig, ax = plt.subplots(figsize=(8, 5))
     sns.boxplot(data=df, x="delinquent_30dpd", y="loan_to_income_ratio", hue="delinquent_30dpd",
                 ax=ax, palette=[MUTED_TEAL, MUTED_RED], showfliers=False, width=0.45, zorder=3, legend=False)

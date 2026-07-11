@@ -53,7 +53,7 @@ def load_data():
 def fit_probabilistic_clv(customers, orders, source_note):
     summary = summary_data_from_transaction_data(
         orders, "customer_id", "order_date",
-        monetary_value_col="order_value_mxn", observation_period_end=OBS_END, freq="D",
+        monetary_value_col="order_value_usd", observation_period_end=OBS_END, freq="D",
     )
 
     bgf = BetaGeoFitter(penalizer_coef=0.001)
@@ -68,13 +68,13 @@ def fit_probabilistic_clv(customers, orders, source_note):
         summary[summary["frequency"] > 0]["monetary_value"].reindex(summary.index, fill_value=summary["monetary_value"].mean()),
         time=HORIZON_MONTHS, freq="D", discount_rate=0.01,
     )
-    clv = clv.rename("predicted_clv_12m_mxn")
+    clv = clv.rename("predicted_clv_12m_usd")
     result = summary.join(clv)
     result.to_csv(BASE / "reports" / "customer_clv.csv")
 
     # --- CLV distribution chart ---
     fig, ax = plt.subplots(figsize=(9, 5.5))
-    vals = result["predicted_clv_12m_mxn"].clip(lower=0)
+    vals = result["predicted_clv_12m_usd"].clip(lower=0)
     ax.hist(vals, bins=60, color=SLATE, alpha=0.85, zorder=3)
     median = vals.median()
     ax.axvline(median, color=MUTED_AMBER, linewidth=1.5, linestyle="--")
@@ -82,11 +82,11 @@ def fit_probabilistic_clv(customers, orders, source_note):
             fontsize=9.5, color=MUTED_AMBER, va="top")
     style_ax(ax, title="Predicted 12-month value is concentrated in a small share of customers",
              subtitle="Distribution of BG/NBD + Gamma-Gamma predicted customer lifetime value",
-             xlabel="Predicted 12-month CLV (MXN)", ylabel="Customers")
+             xlabel="Predicted 12-month CLV (USD)", ylabel="Customers")
     savefig(fig, FIG_DIR / "clv_distribution.png", footnote=source_note)
 
     top_decile_share = vals.sort_values(ascending=False).head(int(len(vals) * 0.1)).sum() / vals.sum()
-    print(f"Median predicted 12-month CLV: {median:,.0f} MXN")
+    print(f"Median predicted 12-month CLV: {median:,.0f} USD")
     print(f"Top decile of customers captures {top_decile_share:.1%} of predicted 12-month value")
     return result, bgf, ggf
 
@@ -144,7 +144,7 @@ def build_early_life_dataset(customers, orders):
     day30 = merged[merged["days_since_acq"] <= 30]
     feats = day30.groupby("customer_id").agg(
         orders_first_30d=("order_id", "count"),
-        revenue_first_30d=("order_value_mxn", "sum"),
+        revenue_first_30d=("order_value_usd", "sum"),
     ).reindex(eligible["customer_id"]).fillna(0)
 
     second_order_day = (
@@ -156,7 +156,7 @@ def build_early_life_dataset(customers, orders):
     feats["reordered_in_30d"] = (second_order_day.notna()).astype(int)
 
     horizon = merged[merged["months_since_acquisition"] < HORIZON_MONTHS]
-    target = horizon.groupby("customer_id")["order_value_mxn"].sum().reindex(eligible["customer_id"]).fillna(0)
+    target = horizon.groupby("customer_id")["order_value_usd"].sum().reindex(eligible["customer_id"]).fillna(0)
 
     df = eligible.set_index("customer_id").join(feats).join(target.rename("revenue_12m"))
     df = df.reset_index()
@@ -177,7 +177,7 @@ def fit_early_life_model(df, source_note, n_customers):
     pred = model.predict(X_test)
     r2 = r2_score(y_test, pred)
     mae = mean_absolute_error(y_test, pred)
-    print(f"Early-life model (holdout, n={len(X_test)}): R2={r2:.3f}, MAE={mae:,.0f} MXN")
+    print(f"Early-life model (holdout, n={len(X_test)}): R2={r2:.3f}, MAE={mae:,.0f} USD")
 
     # --- Predicted vs actual ---
     fig, ax = plt.subplots(figsize=(7, 6.5))
@@ -188,7 +188,7 @@ def fit_early_life_model(df, source_note, n_customers):
     ax.set_ylim(lims)
     style_ax(ax, title=f"Day-30 behavior is a meaningful but partial signal (R² = {r2:.2f})",
              subtitle="Holdout customers: predicted vs. actual 12-month revenue",
-             xlabel="Actual 12-month revenue (MXN)", ylabel="Predicted 12-month revenue (MXN)")
+             xlabel="Actual 12-month revenue (USD)", ylabel="Predicted 12-month revenue (USD)")
     savefig(fig, FIG_DIR / "early_life_predicted_vs_actual.png", footnote=source_note)
 
     # --- Feature importance ---

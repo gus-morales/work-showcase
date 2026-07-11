@@ -4,7 +4,7 @@
     "loan_to_income_ratio": 0.0047,
     "avg_prior_repayment_delay_days": 0.0072,
     "num_active_loans_elsewhere": 0.001,
-    "monthly_income_mxn": 0.0038,
+    "monthly_income_usd": 0.0038,
     "down_payment_ratio": 0.0043
   },
   "features_flagged": [],

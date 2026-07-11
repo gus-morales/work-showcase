@@ -1,6 +1,6 @@
 # Customer LTV & Contribution Analysis
 
-A growth analysis for a synthetic Mexican BNPL fintech: what's driving GMV growth, which acquisition channels actually produce valuable customers, and how to predict a customer's lifetime value from their first 30 days. Built on synthetic transaction data, mirroring the growth/contribution analysis work I do alongside credit risk modeling in fintech.
+A growth analysis for a synthetic BNPL fintech: what's driving GMV growth, which acquisition channels actually produce valuable customers, and how to predict a customer's lifetime value from their first 30 days. Built on synthetic transaction data, mirroring the growth/contribution analysis work I do alongside credit risk modeling in fintech.
 
 **For the full technical walkthrough (SQL, BG/NBD + Gamma-Gamma CLV modeling, calibration/holdout validation, gradient boosting), see the [notebook](notebooks/02_ltv_contribution_analysis.ipynb).** This README is the short version.
 
@@ -18,11 +18,11 @@ Decomposes GMV growth into its three multiplicative drivers (active customers, o
 
 ## Results
 
-GMV grew from 868K to 3.36M MXN between month 4 and month 20. Decomposing that change shows active customer growth alone accounts for essentially all of it; order frequency and average order value are each net-negative contributors over the period.
+GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that change shows active customer growth alone accounts for essentially all of it; order frequency and average order value are each net-negative contributors over the period.
 
 | | |
 |---|---|
-| GMV growth, month 4 to month 20 | +2.50M MXN |
+| GMV growth, month 4 to month 20 | +$2.50M |
 | Share of growth from new customers | ~107% (frequency and order value are net drags) |
 | Best vs. worst channel, revenue per customer | Partner store $322 vs. paid social $120 (2.7x) |
 | Paid social's share of new cohorts | Roughly tripled (16% to 47%) |

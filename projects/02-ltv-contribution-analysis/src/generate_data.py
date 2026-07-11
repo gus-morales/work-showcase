@@ -3,7 +3,7 @@ Synthetic order-level transaction data for a BNPL fintech, generated so it
 genuinely follows the BG/NBD + Gamma-Gamma generative process (heterogeneous
 purchase rate, per-transaction dropout probability, and a customer-level
 average order value with per-order noise). This is the same fictional
-company as project 01 (Mexican BNPL), viewed from the growth/LTV side
+company as project 01, viewed from the growth/LTV side
 instead of the credit-risk side.
 
 Not using lifetimes.generate_data directly (it calls a pandas API removed in
@@ -33,10 +33,10 @@ rng = np.random.default_rng(SEED)
 # --- customer attributes (same categories/weights as project 01, for
 # narrative continuity - this is "the same company, different lens") ---
 CITIES = {
-    "CDMX": "tier1", "Guadalajara": "tier1", "Monterrey": "tier1",
-    "Puebla": "tier2", "Queretaro": "tier2", "Merida": "tier2",
-    "Leon": "tier2", "Tijuana": "tier2",
-    "Oaxaca": "tier3", "Chetumal": "tier3", "Zacatecas": "tier3", "Tepic": "tier3",
+    "New York": "tier1", "Los Angeles": "tier1", "Chicago": "tier1",
+    "Houston": "tier2", "Phoenix": "tier2", "Philadelphia": "tier2",
+    "San Antonio": "tier2", "Dallas": "tier2",
+    "Tulsa": "tier3", "Fresno": "tier3", "Toledo": "tier3", "Boise": "tier3",
 }
 CITY_NAMES = list(CITIES.keys())
 CITY_WEIGHTS = np.array([0.18, 0.10, 0.10, 0.07, 0.06, 0.06, 0.06, 0.07, 0.08, 0.08, 0.07, 0.07])
@@ -65,11 +65,11 @@ CHANNEL_PARAMS = {
     "paid_social":   dict(r=0.70, alpha=4.50, a=1.8, b=6.0),   # mean 0.156/wk, mean p=0.231 (worst segment)
 }
 
-# Base average order value (MXN) by city tier x employment type multiplier,
+# Base average order value (USD) by city tier x employment type multiplier,
 # same spirit as project 01's income model.
 TIER_VALUE_MULT = {"tier1": 1.25, "tier2": 1.0, "tier3": 0.82}
 EMPLOYMENT_VALUE_MULT = {"salaried": 1.15, "self_employed": 1.05, "gig_economy": 0.85, "informal": 0.70}
-BASE_ORDER_VALUE = 550.0  # MXN
+BASE_ORDER_VALUE = 550.0  # USD
 TAKE_RATE = 0.065  # merchant/interest fee revenue as a share of order value
 
 
@@ -119,7 +119,7 @@ def make_customers(n):
         "city": city,
         "city_tier": city_tier,
         "employment_type": employment,
-        "mean_order_value_mxn": mean_order_value.round(2),
+        "mean_order_value_usd": mean_order_value.round(2),
     })
 
 
@@ -154,18 +154,18 @@ def simulate_transactions(customers):
             cohort_start = OBS_END - pd.Timedelta(weeks=(N_MONTHS - cust["cohort_month"] + 1) * WEEKS_PER_MONTH)
             for wk in week_offsets:
                 order_date = cohort_start + pd.Timedelta(weeks=wk)
-                order_value = rng.gamma(shape=6.0, scale=cust["mean_order_value_mxn"] / 6.0)
+                order_value = rng.gamma(shape=6.0, scale=cust["mean_order_value_usd"] / 6.0)
                 months_since_acq = int(wk // WEEKS_PER_MONTH)
                 order_month_index = min(int(cust["cohort_month"]) + months_since_acq, N_MONTHS)
                 rows.append((cust["customer_id"], order_date, round(float(order_value), 2),
                              months_since_acq, order_month_index))
 
     orders = pd.DataFrame(rows, columns=[
-        "customer_id", "order_date", "order_value_mxn", "months_since_acquisition", "order_month_index",
+        "customer_id", "order_date", "order_value_usd", "months_since_acquisition", "order_month_index",
     ])
     orders = orders.sort_values(["customer_id", "order_date"]).reset_index(drop=True)
     orders.insert(0, "order_id", np.arange(1, len(orders) + 1))
-    orders["fee_revenue_mxn"] = (orders["order_value_mxn"] * TAKE_RATE).round(2)
+    orders["fee_revenue_usd"] = (orders["order_value_usd"] * TAKE_RATE).round(2)
     orders["order_month"] = orders["order_date"].dt.to_period("M").astype(str)
     return orders
 

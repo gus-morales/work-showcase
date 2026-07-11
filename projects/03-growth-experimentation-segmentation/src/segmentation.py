@@ -68,7 +68,7 @@ def label_segments(profile):
     best-to-worst spectrum instead of bunching at one end."""
     r_rank = profile["recency_days"].rank()       # low recency (rank 1) = most recent
     f_rank = profile["frequency"].rank(ascending=False)
-    m_rank = profile["monetary_mxn"].rank(ascending=False)
+    m_rank = profile["monetary_usd"].rank(ascending=False)
     score = r_rank + f_rank + m_rank
     order = score.sort_values().index
 
@@ -82,9 +82,9 @@ def main():
     n_customers = len(df)
     source_note = f"Source: synthetic BNPL customer data · n = {n_customers:,} customers"
 
-    rfm = df[["customer_id", "recency_days", "frequency", "monetary_mxn"]].copy()
+    rfm = df[["customer_id", "recency_days", "frequency", "monetary_usd"]].copy()
     log_features = np.column_stack([
-        np.log1p(rfm["recency_days"]), np.log1p(rfm["frequency"]), np.log1p(rfm["monetary_mxn"]),
+        np.log1p(rfm["recency_days"]), np.log1p(rfm["frequency"]), np.log1p(rfm["monetary_usd"]),
     ])
     X = StandardScaler().fit_transform(log_features)
 
@@ -92,7 +92,7 @@ def main():
     km = KMeans(n_clusters=best_k, random_state=7, n_init=10).fit(X)
     rfm["cluster"] = km.labels_
 
-    profile = rfm.groupby("cluster")[["recency_days", "frequency", "monetary_mxn"]].mean()
+    profile = rfm.groupby("cluster")[["recency_days", "frequency", "monetary_usd"]].mean()
     label_map = label_segments(profile)
     rfm["segment"] = rfm["cluster"].map(label_map)
     profile.index = profile.index.map(label_map)
@@ -107,7 +107,7 @@ def main():
     # on each metric's own scale avoid that and are just as easy to read.
     panels = [("recency_days", "Recency", "days since last order (lower = more recent)"),
               ("frequency", "Frequency", "orders in the observation window"),
-              ("monetary_mxn", "Monetary", "avg. spend (MXN)")]
+              ("monetary_usd", "Monetary", "avg. spend (USD)")]
     fig, axes = plt.subplots(1, 3, figsize=(13, 5))
     for ax, (col, label, sublabel) in zip(axes, panels):
         ax.bar(profile.index, profile[col], color=PALETTE[:len(profile)], width=0.6, zorder=3)
@@ -119,7 +119,7 @@ def main():
     savefig(fig, FIG_DIR / "segment_rfm_profile.png", footnote=source_note)
 
     # --- Segment size vs. revenue contribution ---
-    seg_summary = rfm.groupby("segment").agg(customers=("customer_id", "count"), revenue=("monetary_mxn", "sum"))
+    seg_summary = rfm.groupby("segment").agg(customers=("customer_id", "count"), revenue=("monetary_usd", "sum"))
     seg_summary = seg_summary.reindex(profile.index)
     seg_summary["pct_customers"] = seg_summary["customers"] / seg_summary["customers"].sum() * 100
     seg_summary["pct_revenue"] = seg_summary["revenue"] / seg_summary["revenue"].sum() * 100

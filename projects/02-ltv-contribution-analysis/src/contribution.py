@@ -30,9 +30,9 @@ def decompose(row_a, row_b):
     """Log-share decomposition of the GMV change between two monthly KPI rows."""
     log_c = np.log(row_b["active_customers"] / row_a["active_customers"])
     log_f = np.log(row_b["orders_per_customer"] / row_a["orders_per_customer"])
-    log_v = np.log(row_b["avg_order_value_mxn"] / row_a["avg_order_value_mxn"])
+    log_v = np.log(row_b["avg_order_value_usd"] / row_a["avg_order_value_usd"])
     total_log = log_c + log_f + log_v
-    delta_gmv = row_b["gmv_mxn"] - row_a["gmv_mxn"]
+    delta_gmv = row_b["gmv_usd"] - row_a["gmv_usd"]
 
     if abs(total_log) < 1e-9:
         shares = {"customers": 1 / 3, "frequency": 1 / 3, "avg_order_value": 1 / 3}
@@ -56,8 +56,8 @@ def main():
     contributions, delta_gmv = decompose(row_a, row_b)
 
     labels = ["Month 4\nGMV", "Active\ncustomers", "Orders per\ncustomer", "Avg order\nvalue", "Month 20\nGMV"]
-    values = [row_a["gmv_mxn"], contributions["customers"], contributions["frequency"],
-              contributions["avg_order_value"], row_b["gmv_mxn"]]
+    values = [row_a["gmv_usd"], contributions["customers"], contributions["frequency"],
+              contributions["avg_order_value"], row_b["gmv_usd"]]
 
     cumulative = [values[0]]
     for v in values[1:-1]:
@@ -83,7 +83,7 @@ def main():
     ax.set_xticklabels(labels)
     style_ax(ax, title="What drove GMV from month 4 to month 20",
              subtitle="Log-share decomposition into customers, order frequency, and order value",
-             ylabel="GMV (MXN)")
+             ylabel="GMV (USD)")
     savefig(fig, FIG_DIR / "contribution_waterfall.png", footnote=SOURCE)
 
     # --- Monthly driver contributions over time (stacked) ---
@@ -112,11 +112,11 @@ def main():
     ax.axhline(0, color=GREY, linewidth=1)
     style_ax(ax, title="GMV growth comes almost entirely from new customers, not engagement",
              subtitle="Month-over-month GMV change decomposed by driver",
-             xlabel="Month", ylabel="Contribution to MoM GMV change (MXN)")
+             xlabel="Month", ylabel="Contribution to MoM GMV change (USD)")
     ax.legend(loc="upper left", fontsize=9, ncol=2)
     savefig(fig, FIG_DIR / "contribution_monthly.png", footnote=SOURCE)
 
-    print(f"Month 4 GMV: {row_a['gmv_mxn']:,.0f} -> Month 20 GMV: {row_b['gmv_mxn']:,.0f} "
+    print(f"Month 4 GMV: {row_a['gmv_usd']:,.0f} -> Month 20 GMV: {row_b['gmv_usd']:,.0f} "
           f"(delta {delta_gmv:,.0f})")
     print("Contribution breakdown:", {k: round(v, 0) for k, v in contributions.items()})
     print("Wrote reports/monthly_kpis.csv, monthly_contributions.csv, and 2 figures.")

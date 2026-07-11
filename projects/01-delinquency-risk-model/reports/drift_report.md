@@ -11,7 +11,7 @@ Reference window: origination months 1-21. Monitored window: months 22-24 (inclu
 | loan_to_income_ratio           | 0.0047 | ok     |
 | credit_bureau_score            | 0.0046 | ok     |
 | down_payment_ratio             | 0.0043 | ok     |
-| monthly_income_mxn             | 0.0038 | ok     |
+| monthly_income_usd             | 0.0038 | ok     |
 | num_active_loans_elsewhere     | 0.001  | ok     |
 
 

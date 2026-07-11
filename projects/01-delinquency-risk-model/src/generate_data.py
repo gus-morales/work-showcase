@@ -1,7 +1,7 @@
 """
 Synthetic data generator for a BNPL (Buy Now, Pay Later) delinquency dataset.
 
-This mimics the shape of a real lending book at a Mexican BNPL fintech
+This mimics the shape of a real lending book at a BNPL fintech
 (loan-level records with customer demographics, credit-bureau-style
 features, loan terms, and a 30+ days-past-due delinquency outcome).
 
@@ -26,10 +26,10 @@ OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 rng = np.random.default_rng(SEED)
 
 CITIES = {
-    "CDMX": "tier1", "Guadalajara": "tier1", "Monterrey": "tier1",
-    "Puebla": "tier2", "Queretaro": "tier2", "Merida": "tier2",
-    "Leon": "tier2", "Tijuana": "tier2",
-    "Oaxaca": "tier3", "Chetumal": "tier3", "Zacatecas": "tier3", "Tepic": "tier3",
+    "New York": "tier1", "Los Angeles": "tier1", "Chicago": "tier1",
+    "Houston": "tier2", "Phoenix": "tier2", "Philadelphia": "tier2",
+    "San Antonio": "tier2", "Dallas": "tier2",
+    "Tulsa": "tier3", "Fresno": "tier3", "Toledo": "tier3", "Boise": "tier3",
 }
 CITY_NAMES = list(CITIES.keys())
 CITY_WEIGHTS = np.array([0.18, 0.10, 0.10, 0.07, 0.06, 0.06, 0.06, 0.07, 0.08, 0.08, 0.07, 0.07])
@@ -63,7 +63,7 @@ def make_customers(n):
          employment == "gig_economy", employment == "informal"],
         [1.15, 1.05, 0.85, 0.70],
     )
-    base_income = rng.lognormal(mean=9.0, sigma=0.45, size=n)  # MXN monthly
+    base_income = rng.lognormal(mean=9.0, sigma=0.45, size=n)  # USD monthly
     monthly_income = base_income * tier_income_mult * emp_income_mult
 
     tenure_months = rng.integers(1, 48, size=n)
@@ -97,7 +97,7 @@ def make_customers(n):
         "city": city,
         "city_tier": city_tier,
         "employment_type": employment,
-        "monthly_income_mxn": monthly_income.round(2),
+        "monthly_income_usd": monthly_income.round(2),
         "tenure_months_platform": tenure_months,
         "num_previous_loans": num_previous_loans,
         "credit_bureau_score": credit_bureau_score,
@@ -129,7 +129,7 @@ def make_loans(customers, n_months=N_MONTHS):
             loan_id += 1
     loans = pd.DataFrame(rows, columns=[
         "loan_id", "customer_id", "origination_month", "merchant_category",
-        "num_installments", "loan_amount_mxn", "down_payment_ratio",
+        "num_installments", "loan_amount_usd", "down_payment_ratio",
     ])
     return loans
 
@@ -146,8 +146,8 @@ def assign_delinquency(loans, customers, n_months=N_MONTHS):
         -0.010 * (df["credit_bureau_score"] - 650)
         + 0.045 * df["avg_prior_repayment_delay_days"]
         + 0.35 * df["num_active_loans_elsewhere"]
-        - 0.00006 * df["monthly_income_mxn"]
-        + 0.00035 * df["loan_amount_mxn"]
+        - 0.00006 * df["monthly_income_usd"]
+        + 0.00035 * df["loan_amount_usd"]
         + 0.10 * df["num_installments"]
         - 0.35 * df["down_payment_ratio"] * 10
         - 0.020 * df["tenure_months_platform"]

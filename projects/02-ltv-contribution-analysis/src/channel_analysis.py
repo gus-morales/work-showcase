@@ -35,15 +35,15 @@ def main():
 
     # --- Channel quality bar chart ---
     q = quality.set_index("acquisition_channel").reindex(
-        quality.sort_values("avg_revenue_per_customer_mxn", ascending=False)["acquisition_channel"])
+        quality.sort_values("avg_revenue_per_customer_usd", ascending=False)["acquisition_channel"])
     fig, ax = plt.subplots(figsize=(8, 5))
     labels = [CHANNEL_LABELS[c] for c in q.index]
-    ax.bar(labels, q["avg_revenue_per_customer_mxn"], color=PALETTE[:len(q)], width=0.55, zorder=3)
-    for i, v in enumerate(q["avg_revenue_per_customer_mxn"]):
+    ax.bar(labels, q["avg_revenue_per_customer_usd"], color=PALETTE[:len(q)], width=0.55, zorder=3)
+    for i, v in enumerate(q["avg_revenue_per_customer_usd"]):
         ax.text(i, v + 2, f"${v:,.0f}", ha="center", fontsize=10, color="#333")
     style_ax(ax, title="Partner-store customers are worth 2-3x paid-social customers",
              subtitle="Average lifetime revenue per acquired customer, to date",
-             ylabel="Avg revenue per customer (MXN)")
+             ylabel="Avg revenue per customer (USD)")
     savefig(fig, FIG_DIR / "channel_quality.png", footnote=SOURCE)
 
     # --- Channel mix shift over cohorts (stacked area) ---

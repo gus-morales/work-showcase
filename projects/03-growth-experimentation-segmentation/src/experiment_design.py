@@ -105,8 +105,8 @@ def analyze_cuped(df, source_note):
     the confidence interval on the estimated lift without adding
     traffic. Theta is estimated pooled across arms (standard practice,
     since it should not itself depend on treatment)."""
-    y = df["revenue_post_14d_mxn"].values
-    x = df["revenue_pre_30d_mxn"].values
+    y = df["revenue_post_14d_usd"].values
+    x = df["revenue_pre_30d_usd"].values
     theta = np.cov(y, x, ddof=1)[0, 1] / np.var(x, ddof=1)
     y_adj = y - theta * (x - x.mean())
     df = df.copy()
@@ -121,7 +121,7 @@ def analyze_cuped(df, source_note):
         t_stat, p_val = stats.ttest_ind(t, c, equal_var=False)
         return diff, se, ci, p_val
 
-    diff_raw, se_raw, ci_raw, p_raw = arm_stats("revenue_post_14d_mxn")
+    diff_raw, se_raw, ci_raw, p_raw = arm_stats("revenue_post_14d_usd")
     diff_adj, se_adj, ci_adj, p_adj = arm_stats("revenue_adj")
     variance_reduction = 1 - (se_adj / se_raw) ** 2
     ci_width_reduction = 1 - se_adj / se_raw
@@ -137,14 +137,14 @@ def analyze_cuped(df, source_note):
     ylim_max = max(d + e for d, e in zip(diffs, errs)) * 1.35
     ax.set_ylim(0, ylim_max)
     for i, v in enumerate(diffs):
-        ax.text(i, v + errs[i] + ylim_max * 0.03, f"+{v:.1f} MXN", ha="center", fontsize=10, color="#333")
+        ax.text(i, v + errs[i] + ylim_max * 0.03, f"+{v:.1f} USD", ha="center", fontsize=10, color="#333")
     style_ax(ax, title=f"CUPED narrows the confidence interval by {ci_width_reduction:.0%} on the same data",
              subtitle="Estimated treatment lift in 14-day revenue per user, 95% CI",
-             ylabel="Estimated lift (MXN)")
+             ylabel="Estimated lift (USD)")
     savefig(fig, FIG_DIR / "cuped_variance_reduction.png", footnote=source_note)
 
-    print(f"Raw lift: {diff_raw:.2f} MXN, 95% CI [{ci_raw[0]:.2f}, {ci_raw[1]:.2f}], p={p_raw:.4f}")
-    print(f"CUPED lift: {diff_adj:.2f} MXN, 95% CI [{ci_adj[0]:.2f}, {ci_adj[1]:.2f}], p={p_adj:.4f}")
+    print(f"Raw lift: {diff_raw:.2f} USD, 95% CI [{ci_raw[0]:.2f}, {ci_raw[1]:.2f}], p={p_raw:.4f}")
+    print(f"CUPED lift: {diff_adj:.2f} USD, 95% CI [{ci_adj[0]:.2f}, {ci_adj[1]:.2f}], p={p_adj:.4f}")
     print(f"Variance reduction from CUPED: {variance_reduction:.1%}")
     return {"diff_raw": diff_raw, "diff_adj": diff_adj, "variance_reduction": variance_reduction}
 

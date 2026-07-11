@@ -10,5 +10,5 @@
 | employment_type_salaried       | 0.1409 |
 | tenure_months_platform         | 0.1311 |
 | num_installments               | 0.1107 |
-| monthly_income_mxn             | 0.0777 |
+| monthly_income_usd             | 0.0777 |
 | employment_type_self_employed  | 0.0584 |
