@@ -20,7 +20,7 @@ from statsmodels.stats.power import NormalIndPower
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 from scipy import stats
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -155,8 +155,8 @@ def main():
     source_note = f"Source: synthetic BNPL experiment data · n = {n_users:,} users"
 
     power_analysis(source_note)
-    conv_results = analyze_conversion(df, source_note)
-    cuped_results = analyze_cuped(df, source_note)
+    analyze_conversion(df, source_note)
+    analyze_cuped(df, source_note)
 
     print("Wrote reports/figures/power_analysis.png, ab_conversion_result.png, cuped_variance_reduction.png")
 

@@ -45,6 +45,7 @@ Ship the cost-based threshold over the naive 0.5 cutoff; the 66% expected-loss r
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
 - `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants and the feature-engineering functions.
 - `reports/`: generated charts, metrics, and monitoring reports.
 
 ## Reproduce
@@ -60,3 +61,11 @@ python src/monitor_drift.py
 ```
 
 `data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above. `reports/best_params.json` is committed so `train.py` reproduces the same tuned model without re-running the search.
+
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+Runs in CI on every push (see the badge at the [repo root](../../README.md)).

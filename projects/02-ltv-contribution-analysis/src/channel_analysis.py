@@ -5,11 +5,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, PALETTE, SLATE, GREY
+from style import set_style, style_ax, savefig, PALETTE
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -61,7 +59,7 @@ def main():
     savefig(fig, FIG_DIR / "channel_mix_shift.png", footnote=SOURCE)
 
     print(quality.to_string(index=False))
-    print(f"\nWrote reports/channel_quality.csv, channel_mix_shift.csv, and 2 figures.")
+    print("\nWrote reports/channel_quality.csv, channel_mix_shift.csv, and 2 figures.")
 
 
 if __name__ == "__main__":

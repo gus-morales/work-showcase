@@ -6,10 +6,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, GREY
+from style import set_style, style_ax, savefig, SLATE
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -34,7 +33,7 @@ def main():
     pivot = mat.pivot(index="cohort_month", columns="months_since_acquisition", values="retention_rate")
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    im = ax.imshow(pivot.values, cmap="Blues", aspect="auto", vmin=0, vmax=1)
+    ax.imshow(pivot.values, cmap="Blues", aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(len(pivot.columns)))
     ax.set_xticklabels(pivot.columns)
     ax.set_yticks(range(len(pivot.index)))

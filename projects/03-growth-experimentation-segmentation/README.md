@@ -65,6 +65,7 @@ Ship the reminder redesign; the lift is well outside noise and confirmed two way
 
 - `notebooks/03_growth_experimentation_segmentation.ipynb`: full technical walkthrough, executed with all charts and results inline.
 - `src/`: the reproducible pipeline (data generation, experiment design/CUPED, causal inference, segmentation, topic modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the DiD estimator (against a synthetic panel with a known injected effect), and the RFM/topic-modeling helper functions.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -79,3 +80,11 @@ python src/ticket_topics.py
 ```
 
 `data/` and `reports/*.csv` are gitignored; regenerate them by running the scripts above.
+
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+Runs in CI on every push (see the badge at the [repo root](../../README.md)).

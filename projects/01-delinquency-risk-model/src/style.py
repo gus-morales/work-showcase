@@ -1,7 +1,6 @@
 """Shared plotting style for this project's charts. Restrained, quiet
 report style: serif headline, sans body, muted single-accent color use,
 minimal on-chart annotation."""
-import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import seaborn as sns
 

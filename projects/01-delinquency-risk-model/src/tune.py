@@ -30,10 +30,9 @@ import pandas as pd
 from scipy.stats import randint, uniform
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
-from sklearn.metrics import roc_auc_score
 
 from features import build_design_matrix, engineer_features
-from style import set_style, style_ax, savefig, add_footnote, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, add_footnote, SLATE, MUTED_RED, GREY
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -132,8 +131,8 @@ def main():
     with open(BASE / "reports" / "best_params.json", "w") as f:
         json.dump(out, f, indent=2)
 
-    print(f"Wrote reports/best_params.json, reports/figures/cv_search_results.png, "
-          f"reports/figures/cv_fold_stability.png")
+    print("Wrote reports/best_params.json, reports/figures/cv_search_results.png, "
+          "reports/figures/cv_fold_stability.png")
 
 
 if __name__ == "__main__":

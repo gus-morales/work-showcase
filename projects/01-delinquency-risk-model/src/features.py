@@ -1,5 +1,4 @@
 """Feature engineering for the delinquency model."""
-import numpy as np
 import pandas as pd
 
 CATEGORICAL_COLS = [

@@ -1,5 +1,4 @@
 """SHAP-based interpretability for the trained GBM model."""
-import json
 from pathlib import Path
 
 import joblib

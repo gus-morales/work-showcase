@@ -1,0 +1,79 @@
+"""Data-generation invariants: schema, ranges, and no-null checks on a
+small synthetic sample. Not testing exact values (the generator is
+stochastic by design), just the contract the rest of the pipeline
+relies on."""
+import pytest
+
+import generate_data as gd
+
+
+@pytest.fixture(scope="module")
+def customers():
+    # Large enough that the shock-window comparison below isn't noise-dominated
+    # (the shock window is only the last 2 of 24 months of originations).
+    return gd.make_customers(3000)
+
+
+@pytest.fixture(scope="module")
+def loans(customers):
+    return gd.make_loans(customers)
+
+
+@pytest.fixture(scope="module")
+def full(loans, customers):
+    return gd.assign_delinquency(loans, customers)
+
+
+def test_customers_schema_and_ranges(customers):
+    expected_cols = {
+        "customer_id", "age", "city", "city_tier", "employment_type",
+        "monthly_income_usd", "tenure_months_platform", "num_previous_loans",
+        "credit_bureau_score", "avg_prior_repayment_delay_days",
+        "num_active_loans_elsewhere", "device_type", "acquisition_channel",
+    }
+    assert expected_cols.issubset(customers.columns)
+    assert len(customers) == 3000
+    assert customers["customer_id"].is_unique
+    assert customers["age"].between(18, 70).all()
+    assert customers["credit_bureau_score"].between(300, 850).all()
+    assert customers["monthly_income_usd"].gt(0).all()
+    assert customers["city_tier"].isin(["tier1", "tier2", "tier3"]).all()
+    assert not customers.isnull().any().any()
+
+
+def test_income_increases_with_city_tier(customers):
+    # Tier 1 metros should carry a higher mean income than tier 3, since
+    # the multiplier is hard-coded that way; this is the one thing worth
+    # locking in given it drives loan_to_income_ratio downstream.
+    means = customers.groupby("city_tier")["monthly_income_usd"].mean()
+    assert means["tier1"] > means["tier2"] > means["tier3"]
+
+
+def test_loans_schema_and_ranges(loans):
+    assert loans["loan_id"].is_unique
+    assert loans["loan_amount_usd"].between(300, 25_000).all()
+    assert loans["num_installments"].isin(gd.INSTALLMENT_OPTIONS).all()
+    assert loans["down_payment_ratio"].between(0, 0.5).all()
+    assert loans["origination_month"].between(1, gd.N_MONTHS).all()
+    assert not loans.isnull().any().any()
+
+
+def test_loans_reference_valid_customers(loans, customers):
+    assert set(loans["customer_id"]).issubset(set(customers["customer_id"]))
+
+
+def test_delinquency_flag_is_binary(full):
+    assert full["delinquent_30dpd"].isin([0, 1]).all()
+
+
+def test_delinquency_rate_is_plausible(full):
+    rate = full["delinquent_30dpd"].mean()
+    # Loose sanity band, not a tight statistical assertion: catches a
+    # broken generator (e.g. an inverted sign) without being flaky.
+    assert 0.02 < rate < 0.40
+
+
+def test_shock_window_raises_delinquency(full):
+    shocked = full[full.origination_month >= gd.N_MONTHS - 2]
+    normal = full[full.origination_month < gd.N_MONTHS - 2]
+    assert shocked["delinquent_30dpd"].mean() > normal["delinquent_30dpd"].mean()

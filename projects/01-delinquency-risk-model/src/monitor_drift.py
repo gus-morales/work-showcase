@@ -19,7 +19,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from features import build_design_matrix, engineer_features
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -126,8 +126,8 @@ def main():
         json.dump(report, f, indent=2)
 
     lines = ["# Drift monitoring report\n",
-             f"Reference window: origination months 1-21. Monitored window: months 22-24 "
-             f"(includes the synthetic macro-shock).\n",
+             "Reference window: origination months 1-21. Monitored window: months 22-24 "
+             "(includes the synthetic macro-shock).\n",
              "\n## Population Stability Index by feature\n"]
     psi_df = pd.Series(psi_results, name="PSI").sort_values(ascending=False).to_frame()
     psi_df["flag"] = psi_df["PSI"].apply(lambda v: "ALERT" if v > PSI_ALERT_THRESHOLD else "ok")

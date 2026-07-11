@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
-from style import set_style, style_ax, savefig, PALETTE, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"

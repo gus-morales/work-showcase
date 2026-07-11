@@ -10,10 +10,12 @@ SQL_DIR = BASE / "sql"
 DATA_DIR = BASE / "data"
 
 
-def get_connection():
+def get_connection(data_dir: Path = DATA_DIR):
+    """data_dir defaults to the project's data/ folder; tests pass a
+    temp directory instead so they don't depend on (or overwrite) it."""
     con = duckdb.connect(database=":memory:")
-    con.execute(f"CREATE TABLE customers AS SELECT * FROM read_csv_auto('{DATA_DIR / 'customers.csv'}')")
-    con.execute(f"CREATE TABLE orders AS SELECT * FROM read_csv_auto('{DATA_DIR / 'orders.csv'}')")
+    con.execute(f"CREATE TABLE customers AS SELECT * FROM read_csv_auto('{data_dir / 'customers.csv'}')")
+    con.execute(f"CREATE TABLE orders AS SELECT * FROM read_csv_auto('{data_dir / 'orders.csv'}')")
     return con
 
 

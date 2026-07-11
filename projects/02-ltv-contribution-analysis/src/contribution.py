@@ -65,8 +65,6 @@ def main():
     cumulative.append(values[-1])
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    bar_bottoms = [0, cumulative[0], cumulative[1], cumulative[2], 0]
-    bar_heights = [values[0], values[1], values[2], values[3], values[4]]
     bottoms_plot = [0, min(cumulative[0], cumulative[1]), min(cumulative[1], cumulative[2]),
                     min(cumulative[2], cumulative[3]), 0]
     heights_plot = [values[0], abs(values[1]), abs(values[2]), abs(values[3]), values[4]]

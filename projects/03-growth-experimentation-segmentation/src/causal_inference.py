@@ -14,7 +14,6 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 
@@ -61,7 +60,10 @@ def pretrend_placebo(df):
     return coef, pval
 
 
-def diff_in_diff(df, source_note):
+def compute_diff_in_diff(df):
+    """Pure computation half of the DiD estimate (no plotting), so it
+    can be unit tested directly against a synthetic panel with a known
+    injected effect."""
     d = df.copy()
     d["treated_flag"] = (d.group == "treated").astype(int)
     d["post_flag"] = d.post_rollout.astype(int)
@@ -88,6 +90,13 @@ def diff_in_diff(df, source_note):
     simple_did = (means.loc["treated", True] - means.loc["treated", False]) - \
                  (means.loc["control", True] - means.loc["control", False])
 
+    return {"did_coef": did_coef, "ci": ci, "p": did_p, "means": means, "simple_did": simple_did}
+
+
+def diff_in_diff(df, source_note):
+    result = compute_diff_in_diff(df)
+    means, did_coef = result["means"], result["did_coef"]
+
     fig, ax = plt.subplots(figsize=(8, 5.5))
     cats = ["Control\npre", "Control\npost", "Treated\npre", "Treated\npost"]
     vals = [means.loc["control", False] * 100, means.loc["control", True] * 100,
@@ -101,9 +110,10 @@ def diff_in_diff(df, source_note):
              ylabel="On-time repayment rate (%)")
     savefig(fig, FIG_DIR / "did_estimate.png", footnote=source_note)
 
-    print(f"Simple 2x2 DiD: {simple_did*100:.2f}pp")
-    print(f"Fixed-effects DiD: {did_coef*100:.2f}pp, 95% CI [{ci[0]*100:.2f}, {ci[1]*100:.2f}]pp, p={did_p:.5f}")
-    return {"did_coef": did_coef, "ci": ci, "p": did_p}
+    print(f"Simple 2x2 DiD: {result['simple_did']*100:.2f}pp")
+    print(f"Fixed-effects DiD: {did_coef*100:.2f}pp, 95% CI [{result['ci'][0]*100:.2f}, {result['ci'][1]*100:.2f}]pp, "
+          f"p={result['p']:.5f}")
+    return {"did_coef": did_coef, "ci": result["ci"], "p": result["p"]}
 
 
 def main():

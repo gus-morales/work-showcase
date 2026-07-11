@@ -58,6 +58,7 @@ For lifetime value scoring in production, use the day-30 gradient boosting model
 - `notebooks/02_ltv_contribution_analysis.ipynb`: full technical walkthrough, executed with all charts and results inline.
 - `sql/`: cohort revenue, monthly KPIs, channel quality, and channel mix-shift queries, run via DuckDB.
 - `src/`: the reproducible pipeline (data generation, SQL runner, contribution decomposition, channel analysis, CLV modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -72,3 +73,11 @@ python src/clv_model.py
 ```
 
 `data/` and `reports/` are gitignored except for what's needed to render this README; regenerate them by running the scripts above.
+
+## Tests
+
+```bash
+pytest tests/ -v
+```
+
+Runs in CI on every push (see the badge at the [repo root](../../README.md)).

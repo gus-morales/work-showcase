@@ -27,7 +27,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 from features import build_design_matrix, engineer_features
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
 
 BEST_PARAMS_DEFAULT = {
     "max_depth": 5, "learning_rate": 0.06, "max_iter": 300, "l2_regularization": 0.5,
@@ -176,9 +176,11 @@ def main():
     savefig(fig, FIG_DIR / "calibration_curve.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
-    im = ax.imshow(cm, cmap="Blues")
-    ax.set_xticks([0, 1]); ax.set_xticklabels(["Current", "30+ DPD"])
-    ax.set_yticks([0, 1]); ax.set_yticklabels(["Current", "30+ DPD"])
+    ax.imshow(cm, cmap="Blues")
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["Current", "30+ DPD"])
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(["Current", "30+ DPD"])
     ax.grid(False)
     for spine in ax.spines.values():
         spine.set_visible(False)
@@ -199,9 +201,6 @@ def main():
              xlabel="Decision threshold", ylabel="Expected cost (USD, millions)", grid_axis="both")
     ax.legend()
     savefig(fig, FIG_DIR / "threshold_cost_curve.png", footnote=SOURCE)
-
-    # --- Feature importance (permutation-free, from HGB) ---
-    gbm_importances = getattr(gbm, "feature_importances_", None)
 
     metrics = {
         "n_train": int(len(train_df)), "n_val": int(len(val_df)), "n_test": int(len(test_df)),

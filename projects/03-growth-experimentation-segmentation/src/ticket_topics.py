@@ -14,12 +14,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import NMF
 
-from style import set_style, style_ax, savefig, SLATE, PALETTE, GREY
+from style import set_style, style_ax, savefig, SLATE, PALETTE
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"

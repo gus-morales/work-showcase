@@ -18,7 +18,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY, PALETTE
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, PALETTE
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
