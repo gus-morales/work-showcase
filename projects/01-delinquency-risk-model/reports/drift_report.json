@@ -1,0 +1,17 @@
+{
+  "psi_by_feature": {
+    "credit_bureau_score": 0.0046,
+    "loan_to_income_ratio": 0.0047,
+    "avg_prior_repayment_delay_days": 0.0072,
+    "num_active_loans_elsewhere": 0.001,
+    "monthly_income_mxn": 0.0038,
+    "down_payment_ratio": 0.0043
+  },
+  "features_flagged": [],
+  "auc_original_test_month24": 0.7855,
+  "auc_monitored_window_22_24": 0.7855,
+  "observed_rate_reference_months_1_21": 0.1355,
+  "observed_rate_monitored_months_22_24": 0.1906,
+  "mean_predicted_prob_monitored_window": 0.1542,
+  "calibration_gap_monitored_window": 0.0364
+}

@@ -1,0 +1,23 @@
+{
+  "n_train": 13499,
+  "n_val": 2347,
+  "n_test": 2246,
+  "logistic_baseline_auc": 0.8039,
+  "gbm_test_auc": 0.7855,
+  "gbm_test_pr_auc": 0.4613,
+  "brier_raw": 0.1697,
+  "brier_calibrated": 0.1273,
+  "cost_optimal_threshold": 0.06,
+  "expected_cost_at_optimal_threshold_mxn": 158408.12,
+  "expected_cost_at_naive_threshold_mxn": 477216.18,
+  "cost_reduction_vs_naive": 0.6681,
+  "precision_at_optimal_threshold": 0.2895,
+  "recall_at_optimal_threshold": 0.8995,
+  "confusion_matrix": {
+    "tn": 873,
+    "fp": 945,
+    "fn": 43,
+    "tp": 385
+  },
+  "test_base_rate": 0.1906
+}
