@@ -29,6 +29,10 @@ from sklearn.preprocessing import StandardScaler
 from features import build_design_matrix, engineer_features
 from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
 
+BEST_PARAMS_DEFAULT = {
+    "max_depth": 5, "learning_rate": 0.06, "max_iter": 300, "l2_regularization": 0.5,
+}
+
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,9 +91,22 @@ def main():
     logit_auc = roc_auc_score(y_test, logit.predict_proba(X_test_s)[:, 1])
 
     # --- Main model: gradient boosted trees ---
+    # Hyperparameters come from tune.py's time-series CV search (reports/best_params.json)
+    # if it's been run; otherwise falls back to the original hand-picked defaults.
+    best_params_path = BASE / "reports" / "best_params.json"
+    if best_params_path.exists():
+        with open(best_params_path) as f:
+            tuned = json.load(f)
+        gbm_params = tuned["best_params"]
+        print(f"Using tuned hyperparameters from {tuned.get('n_cv_splits')}-fold time-series CV "
+              f"(mean CV AUC {tuned['cv_mean_auc']:.3f} +/- {tuned['cv_std_auc']:.3f}): {gbm_params}")
+    else:
+        gbm_params = BEST_PARAMS_DEFAULT
+        print("No reports/best_params.json found - run src/tune.py first for tuned hyperparameters. "
+              "Falling back to defaults.")
+
     gbm = HistGradientBoostingClassifier(
-        max_depth=5, learning_rate=0.06, max_iter=300, l2_regularization=0.5,
-        random_state=42, class_weight="balanced",
+        **gbm_params, random_state=42, class_weight="balanced",
     )
     gbm.fit(X_train, y_train)
 
@@ -201,7 +218,14 @@ def main():
         "recall_at_optimal_threshold": round(float(recall), 4),
         "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
         "test_base_rate": round(float(base_rate), 4),
+        "gbm_params": gbm_params,
+        "gbm_params_source": "tuned (time-series CV)" if best_params_path.exists() else "hand-picked default",
     }
+    if best_params_path.exists():
+        metrics["cv_mean_auc"] = tuned["cv_mean_auc"]
+        metrics["cv_std_auc"] = tuned["cv_std_auc"]
+        metrics["cv_n_splits"] = tuned["n_cv_splits"]
+        metrics["cv_n_candidates_searched"] = tuned["n_candidates_searched"]
     with open(BASE / "reports" / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
 

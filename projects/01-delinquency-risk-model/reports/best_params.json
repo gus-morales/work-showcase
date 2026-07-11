@@ -1,0 +1,21 @@
+{
+  "best_params": {
+    "l2_regularization": 0.014132610439434812,
+    "learning_rate": 0.024151236507454835,
+    "max_depth": 5,
+    "max_iter": 158,
+    "max_leaf_nodes": 31,
+    "min_samples_leaf": 37
+  },
+  "cv_mean_auc": 0.8127,
+  "cv_std_auc": 0.0038,
+  "cv_fold_auc": [
+    0.813,
+    0.81,
+    0.8191,
+    0.808,
+    0.8134
+  ],
+  "n_candidates_searched": 30,
+  "n_cv_splits": 5
+}

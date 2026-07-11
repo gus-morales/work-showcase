@@ -21,11 +21,11 @@ Reference window: origination months 1-21. Monitored window: months 22-24 (inclu
 
 
 ## Model performance on monitored window
-- AUC (original held-out test set): 0.785
-- AUC (monitored window, months 22-24): 0.786
+- AUC (original held-out test set): 0.789
+- AUC (monitored window, months 22-24): 0.789
 
 
 ## Calibration drift
-- Mean predicted probability (monitored window): 15.42%
+- Mean predicted probability (monitored window): 15.43%
 - Observed delinquency rate (monitored window): 19.06%
-- Gap: 3.64%. The model under-predicts risk once the shock hits, even though PSI is clean. This is concept drift, not covariate drift. Outcome-rate monitoring catches it; PSI alone does not.
+- Gap: 3.63%. The model under-predicts risk once the shock hits, even though PSI is clean. This is concept drift, not covariate drift. Outcome-rate monitoring catches it; PSI alone does not.

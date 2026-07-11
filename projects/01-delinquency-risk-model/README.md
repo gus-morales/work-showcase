@@ -6,7 +6,7 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied.
 
-**Skills demonstrated:** classification modeling (logistic regression + gradient-boosted trees), temporal train/val/test design, probability calibration, cost-based decision optimization, SHAP interpretability, drift and calibration monitoring.
+**Skills demonstrated:** classification modeling (logistic regression + gradient-boosted trees), time-series cross-validated hyperparameter search, probability calibration, cost-based decision optimization, SHAP interpretability, drift and calibration monitoring.
 
 ## The problem
 
@@ -18,13 +18,14 @@ Trains a model to predict delinquency risk at loan approval, then picks the appr
 
 ## Results
 
-Picking the threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **67%** on held-out data.
+The gradient-boosted model's hyperparameters were chosen with a randomized search over 5-fold time-series cross-validation (expanding window, each fold validating on the months right after it), not hand-picked. Picking the decision threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **66%** on held-out data.
 
 | | |
 |---|---|
-| Model accuracy (AUC) | 0.79 |
-| Expected loss reduction vs. a naive 0.5 cutoff | 67% |
-| Share of actual delinquent loans caught | 90% |
+| Model accuracy (AUC), held-out test | 0.79 |
+| Model accuracy (AUC), cross-validated | 0.81 ± 0.004 |
+| Expected loss reduction vs. a naive 0.5 cutoff | 66% |
+| Share of actual delinquent loans caught | 92% |
 
 ![Delinquency by month](reports/figures/delinquency_by_month.png)
 
@@ -38,7 +39,7 @@ The model was stress-tested against a simulated economic shock. Standard drift m
 
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it.
+Ship the cost-based threshold over the naive 0.5 cutoff; the 66% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it.
 
 ## Repo layout
 
@@ -52,9 +53,10 @@ Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss r
 pip install -r requirements.txt
 python src/generate_data.py
 python src/eda.py
-python src/train.py
+python src/tune.py       # hyperparameter search, writes reports/best_params.json
+python src/train.py      # picks up best_params.json automatically if present
 python src/interpret.py
 python src/monitor_drift.py
 ```
 
-`data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above.
+`data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above. `reports/best_params.json` is committed so `train.py` reproduces the same tuned model without re-running the search.
