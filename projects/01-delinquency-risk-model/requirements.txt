@@ -6,3 +6,7 @@ matplotlib==3.10.9
 seaborn==0.13.2
 joblib==1.5.3
 tabulate==0.9.0
+
+# only needed to re-run/re-execute the notebook
+jupyter==1.1.1
+nbconvert==7.17.1

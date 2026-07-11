@@ -27,10 +27,12 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 from features import build_design_matrix, engineer_features
+from style import set_style, style_ax, savefig, NAVY, TEAL, CORAL, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
+set_style()
 
 # Business assumptions used to pick an operating threshold:
 # - Approving a loan that goes delinquent costs (on average) ~70% of the
@@ -124,68 +126,62 @@ def main():
     # --- Figures ---
     fpr, tpr, _ = roc_curve(y_test, y_prob_test)
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot(fpr, tpr, color="#1f3b57", label=f"GBM (AUC={auc:.3f})")
-    ax.plot([0, 1], [0, 1], "--", color="grey", label="Random")
-    ax.set_xlabel("False positive rate")
-    ax.set_ylabel("True positive rate")
-    ax.set_title("ROC curve - held-out months 22-24 (incl. shock)")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "roc_curve.png", dpi=150)
-    plt.close(fig)
+    ax.plot(fpr, tpr, color=NAVY, linewidth=2.4, label=f"GBM (AUC={auc:.3f})")
+    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.3, label="Random")
+    style_ax(ax, title="Model separates good and bad loans well",
+             subtitle="ROC curve, held-out months 22-24 (incl. shock)",
+             xlabel="False positive rate", ylabel="True positive rate", grid_axis="both")
+    ax.legend(loc="lower right")
+    savefig(fig, FIG_DIR / "roc_curve.png")
 
     prec, rec, _ = precision_recall_curve(y_test, y_prob_test)
     base_rate = y_test.mean()
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot(rec, prec, color="#2f7d9e", label=f"GBM (AP={ap:.3f})")
-    ax.axhline(base_rate, ls="--", color="grey", label=f"Base rate ({base_rate:.2%})")
-    ax.set_xlabel("Recall")
-    ax.set_ylabel("Precision")
-    ax.set_title("Precision-Recall curve - held-out months 22-24 (incl. shock)")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "pr_curve.png", dpi=150)
-    plt.close(fig)
+    ax.plot(rec, prec, color=TEAL, linewidth=2.4, label=f"GBM (AP={ap:.3f})")
+    ax.axhline(base_rate, ls="--", color=GREY, linewidth=1.3, label=f"Base rate ({base_rate:.2%})")
+    style_ax(ax, title="Precision holds well above the base rate",
+             subtitle="Precision-recall curve, held-out months 22-24 (incl. shock)",
+             xlabel="Recall", ylabel="Precision", grid_axis="both")
+    ax.legend(loc="upper right")
+    savefig(fig, FIG_DIR / "pr_curve.png")
 
     frac_pos_raw, mean_pred_raw = calibration_curve(y_test, y_prob_raw, n_bins=10, strategy="quantile")
     frac_pos_cal, mean_pred_cal = calibration_curve(y_test, y_prob_test, n_bins=10, strategy="quantile")
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot([0, 1], [0, 1], "--", color="grey", label="Perfect calibration")
-    ax.plot(mean_pred_raw, frac_pos_raw, marker="o", color="#d9544d", label="Raw GBM")
-    ax.plot(mean_pred_cal, frac_pos_cal, marker="o", color="#1f3b57", label="Isotonic-calibrated")
-    ax.set_xlabel("Mean predicted probability")
-    ax.set_ylabel("Observed delinquency rate")
-    ax.set_title("Calibration curve")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "calibration_curve.png", dpi=150)
-    plt.close(fig)
+    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.3, label="Perfect calibration")
+    ax.plot(mean_pred_raw, frac_pos_raw, marker="o", color=CORAL, linewidth=2, label="Raw GBM")
+    ax.plot(mean_pred_cal, frac_pos_cal, marker="o", color=NAVY, linewidth=2, label="Isotonic-calibrated")
+    style_ax(ax, title="Calibration fixes the raw model's overconfidence",
+             subtitle="Predicted probability vs. observed rate, by decile",
+             xlabel="Mean predicted probability", ylabel="Observed delinquency rate", grid_axis="both")
+    ax.legend(loc="upper left")
+    savefig(fig, FIG_DIR / "calibration_curve.png")
 
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(7, 5.5))
     im = ax.imshow(cm, cmap="Blues")
     ax.set_xticks([0, 1]); ax.set_xticklabels(["Current", "30+ DPD"])
     ax.set_yticks([0, 1]); ax.set_yticklabels(["Current", "30+ DPD"])
-    ax.set_xlabel("Predicted"); ax.set_ylabel("Actual")
-    ax.set_title(f"Confusion matrix @ cost-optimal threshold ({best_t:.2f})")
+    ax.grid(False)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    style_ax(ax, title="Confusion matrix at the cost-optimal cutoff",
+             subtitle=f"Decision threshold = {best_t:.2f}",
+             xlabel="Predicted", ylabel="Actual", grid_axis=None)
     for i in range(2):
         for j in range(2):
-            ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center",
-                     color="white" if cm[i, j] > cm.max() / 2 else "black")
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "confusion_matrix.png", dpi=150)
-    plt.close(fig)
+            ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center", fontsize=13,
+                     color="white" if cm[i, j] > cm.max() / 2 else "#222222")
+    savefig(fig, FIG_DIR / "confusion_matrix.png")
 
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(thresholds, costs / 1e6, color="#1f3b57")
-    ax.axvline(best_t, ls="--", color="#d9544d", label=f"Cost-optimal t={best_t:.2f}")
-    ax.axvline(0.50, ls=":", color="grey", label="Naive t=0.50")
-    ax.set_xlabel("Decision threshold")
-    ax.set_ylabel("Expected portfolio cost (MXN, millions)")
-    ax.set_title("Cost-optimal threshold selection")
+    ax.plot(thresholds, costs / 1e6, color=NAVY, linewidth=2.4)
+    ax.axvline(best_t, ls="--", color=CORAL, linewidth=1.6, label=f"Cost-optimal t={best_t:.2f}")
+    ax.axvline(0.50, ls=":", color=GREY, linewidth=1.6, label="Naive t=0.50")
+    style_ax(ax, title="Choosing the threshold from costs, not a 0.5 default",
+             subtitle="Expected portfolio cost across decision thresholds",
+             xlabel="Decision threshold", ylabel="Expected cost (MXN, millions)", grid_axis="both")
     ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "threshold_cost_curve.png", dpi=150)
-    plt.close(fig)
+    savefig(fig, FIG_DIR / "threshold_cost_curve.png")
 
     # --- Feature importance (permutation-free, from HGB) ---
     gbm_importances = getattr(gbm, "feature_importances_", None)

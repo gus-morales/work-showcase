@@ -19,9 +19,11 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from features import build_design_matrix, engineer_features
+from style import set_style, style_ax, savefig, NAVY, TEAL, MINT, CORAL, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
+set_style()
 
 MONITORED_FEATURES = [
     "credit_bureau_score", "loan_to_income_ratio", "avg_prior_repayment_delay_days",
@@ -56,17 +58,18 @@ def main():
     }
 
     fig, ax = plt.subplots(figsize=(9, 5))
-    feats = list(psi_results.keys())
+    feats = [f.replace("_", " ") for f in psi_results.keys()]
     vals = list(psi_results.values())
-    colors = ["#d9544d" if v > PSI_ALERT_THRESHOLD else "#2f7d9e" for v in vals]
-    ax.barh(feats, vals, color=colors)
-    ax.axvline(PSI_ALERT_THRESHOLD, ls="--", color="grey", label=f"Alert threshold ({PSI_ALERT_THRESHOLD})")
-    ax.set_xlabel("PSI (reference: months 1-21, current: months 22-24)")
-    ax.set_title("Feature drift monitoring (PSI)")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "drift_psi.png", dpi=150)
-    plt.close(fig)
+    colors = [CORAL if v > PSI_ALERT_THRESHOLD else TEAL for v in vals]
+    ax.barh(feats, vals, color=colors, zorder=3, height=0.6)
+    ax.axvline(PSI_ALERT_THRESHOLD, ls="--", color=GREY, linewidth=1.5,
+               label=f"Alert threshold ({PSI_ALERT_THRESHOLD})")
+    ax.invert_yaxis()
+    style_ax(ax, title="No input feature has drifted",
+             subtitle="Population Stability Index, reference (months 1-21) vs. monitored (22-24)",
+             xlabel="PSI", grid_axis="x")
+    ax.legend(loc="lower right")
+    savefig(fig, FIG_DIR / "drift_psi.png")
 
     # Performance degradation check: score the "current" window with the
     # frozen model and see how AUC compares to the original held-out test AUC.
@@ -106,20 +109,18 @@ def main():
     ref_by_month = reference.groupby("origination_month")["delinquent_30dpd"].mean()
 
     fig, ax = plt.subplots(figsize=(9, 5))
-    ax.plot(ref_by_month.index, ref_by_month.values * 100, marker="o", color="#57b8b0",
+    ax.plot(ref_by_month.index, ref_by_month.values * 100, marker="o", color=MINT, linewidth=2,
             label="Actual rate (training window)")
-    ax.plot(by_month.index, by_month["actual_rate"] * 100, marker="o", color="#d9544d",
+    ax.plot(by_month.index, by_month["actual_rate"] * 100, marker="o", color=CORAL, linewidth=2.2,
             label="Actual rate (monitored window)")
-    ax.plot(by_month.index, by_month["predicted_rate"] * 100, marker="s", ls="--", color="#1f3b57",
+    ax.plot(by_month.index, by_month["predicted_rate"] * 100, marker="s", ls="--", color=NAVY, linewidth=2.2,
             label="Model-predicted rate (monitored window)")
-    ax.axvline(21.5, ls=":", color="grey", label="Train/monitor cutoff")
-    ax.set_xlabel("Origination month")
-    ax.set_ylabel("30+ DPD rate (%)")
-    ax.set_title("Predicted vs. actual delinquency rate - calibration drift check")
-    ax.legend(fontsize=10)
-    fig.tight_layout()
-    fig.savefig(FIG_DIR / "drift_predicted_vs_actual.png", dpi=150)
-    plt.close(fig)
+    ax.axvline(21.5, ls=":", color=GREY, linewidth=1.4)
+    style_ax(ax, title="The model under-predicts risk once the shock hits",
+             subtitle="Predicted vs. actual delinquency rate by month",
+             xlabel="Origination month", ylabel="30+ DPD rate (%)")
+    ax.legend(fontsize=10, loc="upper left")
+    savefig(fig, FIG_DIR / "drift_predicted_vs_actual.png")
     with open(BASE / "reports" / "drift_report.json", "w") as f:
         json.dump(report, f, indent=2)
 

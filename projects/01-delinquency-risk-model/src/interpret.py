@@ -10,9 +10,11 @@ import pandas as pd
 import shap
 
 from features import build_design_matrix, engineer_features
+from style import set_style
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
+set_style()
 
 
 def main():
@@ -28,10 +30,16 @@ def main():
     explainer = shap.TreeExplainer(model)
     shap_values = explainer(X_test)
 
-    plt.figure()
-    shap.summary_plot(shap_values, X_test, show=False, max_display=15)
+    fig = plt.figure(figsize=(9, 7))
+    shap.summary_plot(shap_values, X_test, show=False, max_display=15, plot_size=None)
+    ax = plt.gca()
+    ax.set_title("What moves the risk score", loc="left", fontsize=15,
+                 fontweight="bold", color="#111111", pad=14)
+    ax.set_xlabel("SHAP value (impact on predicted risk)", fontsize=12, labelpad=8)
+    for spine in ("top", "right"):
+        ax.spines[spine].set_visible(False)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "shap_summary.png", dpi=150, bbox_inches="tight")
+    plt.savefig(FIG_DIR / "shap_summary.png", dpi=170, bbox_inches="tight")
     plt.close()
 
     mean_abs = pd.Series(
