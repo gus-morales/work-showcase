@@ -1,0 +1,12 @@
+pandas==2.3.3
+numpy==2.2.6
+scipy==1.15.3
+scikit-learn==1.7.2
+duckdb==1.5.4
+lifetimes==0.11.3
+matplotlib==3.10.9
+seaborn==0.13.2
+
+# only needed to re-run/re-execute the notebook
+jupyter==1.1.1
+nbconvert==7.17.1

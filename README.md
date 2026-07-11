@@ -7,7 +7,7 @@ Data science and ML projects demonstrating applied skills in credit risk, custom
 | Project | Focus | Status |
 |---|---|---|
 | [01 - BNPL Delinquency Risk Model](projects/01-delinquency-risk-model) | Credit risk classification, probability calibration, cost-based decisioning, SHAP interpretability, drift/monitoring | Done |
-| 02 - Customer LTV & Contribution Analysis | Probabilistic CLV, driver/contribution decomposition, forecasting | Planned |
+| [02 - Customer LTV & Contribution Analysis](projects/02-ltv-contribution-analysis) | SQL cohort analysis, GMV contribution decomposition, probabilistic CLV (BG/NBD + Gamma-Gamma), early-life predictive modeling | Done |
 | 03 - Growth Experimentation & Segmentation | A/B testing design, causal inference, RFM/clustering, light NLP | Planned |
 
 ## About me
