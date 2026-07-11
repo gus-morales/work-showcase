@@ -14,6 +14,13 @@ marketing side. Four datasets, each feeding one section of the analysis:
 4. support_tickets.csv    - synthetic support ticket text across five
    underlying topics, for light NLP topic modeling.
 
+Each generator function owns its own RNG stream, seeded off SEED with a
+fixed offset, rather than sharing one module-level generator. Otherwise a
+change to one function's random draws (a new covariate, a different
+sample size) would silently shift the random-number stream consumed by
+every generator called after it, changing datasets that were never
+intentionally touched.
+
 Run:
     python src/generate_data.py
 """
@@ -22,7 +29,6 @@ import pandas as pd
 from pathlib import Path
 
 SEED = 11
-rng = np.random.default_rng(SEED)
 OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 
 
@@ -30,13 +36,22 @@ OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 # 1. A/B test: repayment-reminder flow
 # ---------------------------------------------------------------------
 
-def make_experiment_users(n=20_000):
+def make_experiment_users(n=40_000):
     """Users randomized into control (current reminder) vs. treatment
     (redesigned reminder with a clearer due-date and one-tap repayment
     link). Outcome: whether they repaid on time and their revenue
     (fees) in the 14 days after exposure. A pre-period revenue covariate
     is included for CUPED variance reduction; it's correlated with the
-    outcome but unaffected by treatment (measured before assignment)."""
+    outcome but unaffected by treatment (measured before assignment).
+
+    Two more covariates, tenure_days and sessions_pre_30d, are included
+    for the uplift/CATE analysis: platform tenure genuinely moderates the
+    treatment effect below (newer, less-habituated users benefit more
+    from the clearer flow), while session count doesn't drive the effect
+    at all, included as a plausible-looking covariate a real analyst
+    would have on hand that a CATE model should correctly learn to
+    downweight rather than one hand-picked to matter."""
+    rng = np.random.default_rng(SEED)
     user_id = np.arange(1, n + 1)
     arm = rng.choice(["control", "treatment"], size=n, p=[0.5, 0.5])
 
@@ -48,9 +63,20 @@ def make_experiment_users(n=20_000):
     quality = rng.gamma(shape=3.0, scale=1.0, size=n)
     revenue_pre_30d = np.clip(rng.normal(loc=quality * 28, scale=18, size=n), 0, None).round(2)
 
+    tenure_days = np.clip(rng.exponential(scale=180, size=n), 0, 900).round(0)
+    sessions_pre_30d = rng.poisson(lam=8, size=n)
+
     base_conversion = 0.34 + 0.09 * (quality - quality.mean()) / quality.std()
     base_conversion = np.clip(base_conversion, 0.03, 0.95)
-    treatment_lift = np.where(arm == "treatment", 0.035, 0.0)  # +3.5pp absolute
+    # Heterogeneous treatment effect: decays with tenure, so newer users
+    # see a much larger lift than long-tenured ones (who already knew how
+    # to navigate the old reminder flow). Calibrated so the *average*
+    # lift lands close to the flat +3.5pp this used to be.
+    treatment_lift = np.where(
+        arm == "treatment",
+        np.clip(0.005 + 0.11 * np.exp(-tenure_days / 100), 0.0, 0.16),
+        0.0,
+    )
     p_convert = np.clip(base_conversion + treatment_lift, 0.01, 0.99)
     converted = rng.binomial(1, p_convert)
 
@@ -62,6 +88,8 @@ def make_experiment_users(n=20_000):
     return pd.DataFrame({
         "user_id": user_id,
         "arm": arm,
+        "tenure_days": tenure_days.astype(int),
+        "sessions_pre_30d": sessions_pre_30d,
         "revenue_pre_30d_usd": revenue_pre_30d,
         "converted_post_14d": converted,
         "revenue_post_14d_usd": revenue_post_14d,
@@ -78,6 +106,7 @@ def make_regional_rollout(n_regions=40, n_days=180, rollout_day=100):
     `rollout_day`. Daily on-time repayment rate per region, with region
     fixed effects, a common time trend, and a true treatment effect
     after rollout in treated regions only."""
+    rng = np.random.default_rng(SEED + 1)
     region_id = np.arange(1, n_regions + 1)
     treated = (region_id <= n_regions // 2)  # first half rolled out first (non-random on purpose)
     region_base_rate = rng.normal(0.62, 0.05, size=n_regions)
@@ -118,6 +147,7 @@ def make_rfm_customers(n=8_000, obs_end=pd.Timestamp("2026-07-01"), window_days=
     smooth blob. Real RFM data is messier than this, but a portfolio
     piece demonstrating segmentation should have segments actually
     worth demonstrating."""
+    rng = np.random.default_rng(SEED + 2)
     customer_id = np.arange(1, n + 1)
 
     archetype = rng.choice(
@@ -225,6 +255,7 @@ FILLER_SUFFIXES = [" Thank you.", " Please help.", " Appreciate any update.", " 
 
 
 def make_support_tickets(n=1500):
+    rng = np.random.default_rng(SEED + 3)
     topics = list(TOPIC_TEMPLATES.keys())
     topic_weights = [0.28, 0.22, 0.18, 0.17, 0.15]
     rows = []
