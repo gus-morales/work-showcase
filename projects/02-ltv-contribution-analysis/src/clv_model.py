@@ -9,10 +9,17 @@ Customer lifetime value modeling, two complementary approaches:
    transaction history. Validated with a calibration/holdout split.
 
 2. Early-life predictive regression - a gradient boosting model that
-   predicts a customer's 12-month revenue from only their first 30 days
+   predicts a customer's 12-month GMV from only their first 30 days
    of behavior plus acquisition attributes. This is the model that would
    actually run in production, since it scores a customer immediately
    after signup rather than waiting for months of transaction history.
+
+Both models are valued in GMV (order_value_usd), not the company's fee
+revenue (order_value_usd times the take rate defined in metrics.py) -
+the two are proportional here since the take rate is constant, so the
+distinction doesn't change R² or the decile-capture read, but the
+column and chart labels below say "GMV" rather than "revenue" so the
+two governed metrics don't get conflated.
 """
 from pathlib import Path
 
@@ -132,7 +139,7 @@ def validate_calibration_holdout(orders, source_note):
 
 
 # ---------------------------------------------------------------------
-# 2. Early-life predictive regression (day-30 features -> 12-month revenue)
+# 2. Early-life predictive regression (day-30 features -> 12-month GMV)
 # ---------------------------------------------------------------------
 
 def build_early_life_dataset(customers, orders):
@@ -144,7 +151,7 @@ def build_early_life_dataset(customers, orders):
     day30 = merged[merged["days_since_acq"] <= 30]
     feats = day30.groupby("customer_id").agg(
         orders_first_30d=("order_id", "count"),
-        revenue_first_30d=("order_value_usd", "sum"),
+        gmv_first_30d=("order_value_usd", "sum"),
     ).reindex(eligible["customer_id"]).fillna(0)
 
     second_order_day = (
@@ -158,7 +165,7 @@ def build_early_life_dataset(customers, orders):
     horizon = merged[merged["months_since_acquisition"] < HORIZON_MONTHS]
     target = horizon.groupby("customer_id")["order_value_usd"].sum().reindex(eligible["customer_id"]).fillna(0)
 
-    df = eligible.set_index("customer_id").join(feats).join(target.rename("revenue_12m"))
+    df = eligible.set_index("customer_id").join(feats).join(target.rename("gmv_12m"))
     df = df.reset_index()
     return df
 
@@ -166,9 +173,9 @@ def build_early_life_dataset(customers, orders):
 def fit_early_life_model(df, source_note, n_customers):
     source_note = f"Source: synthetic BNPL transaction data, gradient boosting regression (day-30 features) · n = {n_customers:,} customers"
     cat_cols = ["acquisition_channel", "city_tier", "employment_type"]
-    num_cols = ["orders_first_30d", "revenue_first_30d", "days_to_second_order", "reordered_in_30d"]
+    num_cols = ["orders_first_30d", "gmv_first_30d", "days_to_second_order", "reordered_in_30d"]
     X = pd.get_dummies(df[cat_cols + num_cols], columns=cat_cols, drop_first=True)
-    y = df["revenue_12m"]
+    y = df["gmv_12m"]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=7)
     model = GradientBoostingRegressor(n_estimators=300, max_depth=3, learning_rate=0.05,
@@ -187,8 +194,8 @@ def fit_early_life_model(df, source_note, n_customers):
     ax.set_xlim(lims)
     ax.set_ylim(lims)
     style_ax(ax, title=f"Day-30 behavior is a meaningful but partial signal (R² = {r2:.2f})",
-             subtitle="Holdout customers: predicted vs. actual 12-month revenue",
-             xlabel="Actual 12-month revenue (USD)", ylabel="Predicted 12-month revenue (USD)")
+             subtitle="Holdout customers: predicted vs. actual 12-month GMV",
+             xlabel="Actual 12-month GMV (USD)", ylabel="Predicted 12-month GMV (USD)")
     savefig(fig, FIG_DIR / "early_life_predicted_vs_actual.png", footnote=source_note)
 
     # --- Feature importance ---
@@ -196,7 +203,7 @@ def fit_early_life_model(df, source_note, n_customers):
     fig, ax = plt.subplots(figsize=(8, 5.5))
     ax.barh(importances.index, importances.values, color=SLATE, zorder=3)
     style_ax(ax, title="First-order timing and early spend drive the prediction most",
-             subtitle="Gradient boosting feature importance, early-life 12-month revenue model",
+             subtitle="Gradient boosting feature importance, early-life 12-month GMV model",
              xlabel="Relative importance")
     savefig(fig, FIG_DIR / "early_life_feature_importance.png", footnote=source_note)
 

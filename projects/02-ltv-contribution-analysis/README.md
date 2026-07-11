@@ -6,7 +6,7 @@ A growth analysis for a synthetic BNPL fintech: what's driving GMV growth, which
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as project 01, viewed from the growth/LTV side instead of the credit-risk side.
 
-**Skills demonstrated:** SQL (window functions, CTEs, cohort joins via DuckDB), cohort retention analysis, log-share contribution decomposition, probabilistic customer lifetime value (BG/NBD + Gamma-Gamma) with calibration/holdout validation, gradient boosting regression with feature importance.
+**Skills demonstrated:** SQL (window functions, CTEs, cohort joins via DuckDB), data contracts and a governed metric layer, cohort retention analysis, log-share contribution decomposition, probabilistic customer lifetime value (BG/NBD + Gamma-Gamma) with calibration/holdout validation, gradient boosting regression with feature importance.
 
 ## The problem
 
@@ -15,6 +15,12 @@ GMV was up sharply over two years, which looks like a growth story on the surfac
 ## What this does
 
 Decomposes GMV growth into its three multiplicative drivers (active customers, orders per customer, average order value) using SQL-aggregated monthly KPIs, then checks whether the answer traces back to a shift in acquisition channel mix. Separately, builds two complementary customer lifetime value models: a probabilistic BG/NBD + Gamma-Gamma model that scores customers from transaction history, and a gradient boosting model that scores customers from just their first 30 days.
+
+## Data contracts and a governed metric layer
+
+Before anything downstream trusts `customers.csv` or `orders.csv`, `src/contracts.py` checks schema, category values, value ranges, and referential integrity between the two tables (`db.get_connection()` runs this automatically, so a broken or stale file fails loudly at the first script that touches it rather than producing a quietly wrong chart three steps later).
+
+`src/metrics.py` centralizes the definitions this project actually uses: GMV is `SUM(order_value_usd)`, revenue is `SUM(fee_revenue_usd)`, and they are not the same number (revenue is GMV times the take rate). Adding this layer surfaced a real inconsistency: the early-life CLV model was labeling its GMV target "revenue." The underlying numbers were never wrong, since GMV and revenue are proportional here with a constant take rate, so R² and the decile-capture read are unaffected. The labels are now corrected to GMV so the two metrics can't drift apart silently as this project grows.
 
 ## Results
 
@@ -43,7 +49,7 @@ BG/NBD + Gamma-Gamma uses only transaction history and needs no features, but it
 
 ![CLV calibration holdout](reports/figures/clv_calibration_holdout.png)
 
-For a model that can score a customer immediately after signup, a gradient boosting regressor trained on day-30 behavior explains about 37% of the variance in 12-month revenue. That's a genuine signal, order count and spend in the first 30 days dominate the prediction, but it's a partial one: some customers front-load a purchase and then churn, which day-30 features alone can't fully separate from a customer who's just getting started.
+For a model that can score a customer immediately after signup, a gradient boosting regressor trained on day-30 behavior explains about 37% of the variance in 12-month GMV. That's a genuine signal, order count and spend in the first 30 days dominate the prediction, but it's a partial one: some customers front-load a purchase and then churn, which day-30 features alone can't fully separate from a customer who's just getting started.
 
 ![Early life predicted vs actual](reports/figures/early_life_predicted_vs_actual.png)
 
@@ -57,8 +63,8 @@ For lifetime value scoring in production, use the day-30 gradient boosting model
 
 - `notebooks/02_ltv_contribution_analysis.ipynb`: full technical walkthrough, executed with all charts and results inline.
 - `sql/`: cohort revenue, monthly KPIs, channel quality, and channel mix-shift queries, run via DuckDB.
-- `src/`: the reproducible pipeline (data generation, SQL runner, contribution decomposition, channel analysis, CLV modeling) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
+- `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, SQL runner, contribution decomposition, channel analysis, CLV modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the data contracts, the metric registry's SQL-consistency check (against this project's actual sql/*.sql files), the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce

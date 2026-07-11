@@ -20,6 +20,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from contracts import run_all_contracts
+
 SEED = 7
 N_CUSTOMERS = 15_000
 N_MONTHS = 24
@@ -170,6 +172,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     customers = make_customers(N_CUSTOMERS)
     orders = simulate_transactions(customers)
+    run_all_contracts(customers, orders)
 
     customers.to_csv(OUT_DIR / "customers.csv", index=False)
     orders.to_csv(OUT_DIR / "orders.csv", index=False)
