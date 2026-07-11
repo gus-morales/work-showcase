@@ -1,67 +1,69 @@
-"""Shared plotting style for this project's charts (editorial/report look:
-left-aligned bold titles, minimal chrome, consistent palette)."""
+"""Shared plotting style for this project's charts. Restrained, quiet
+report style: serif headline, sans body, muted single-accent color use,
+minimal on-chart annotation."""
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-NAVY = "#1B2A4A"
-TEAL = "#2E7D8C"
-MINT = "#4FB0A5"
-AMBER = "#E8A33D"
-CORAL = "#D8574A"
-GREY = "#8C93A6"
-LIGHT_GREY = "#D8DCE5"
+INK = "#2B2B2B"
+SLATE = "#3D5A73"
+MUTED_TEAL = "#5E8C86"
+MUTED_AMBER = "#B98A3D"
+MUTED_RED = "#A8493D"
+GREY = "#8A8A8A"
+LIGHT_GREY = "#E3E3E1"
 
-PALETTE = [NAVY, TEAL, MINT, AMBER, CORAL]
-DIVERGING = [TEAL, CORAL]
+PALETTE = [SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY]
 
-FONT = "DejaVu Sans"
+SANS = "Lato"
+SERIF = "Lora"
 
 
 def set_style():
     sns.set_theme(style="white", context="notebook")
     plt.rcParams.update({
-        "font.family": FONT,
-        "font.size": 12,
+        "font.family": SANS,
+        "font.size": 11.5,
         "axes.titlesize": 15,
         "axes.titleweight": "bold",
-        "axes.labelsize": 12,
-        "axes.labelcolor": "#333333",
+        "axes.labelsize": 11,
+        "axes.labelcolor": "#4a4a4a",
         "axes.edgecolor": LIGHT_GREY,
-        "axes.linewidth": 1.0,
-        "text.color": "#222222",
-        "xtick.color": "#555555",
-        "ytick.color": "#555555",
-        "xtick.labelsize": 10.5,
-        "ytick.labelsize": 10.5,
-        "legend.fontsize": 10.5,
+        "axes.linewidth": 0.9,
+        "text.color": INK,
+        "xtick.color": "#6a6a6a",
+        "ytick.color": "#6a6a6a",
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
         "legend.frameon": False,
         "figure.facecolor": "white",
         "axes.facecolor": "white",
         "savefig.facecolor": "white",
         "grid.color": LIGHT_GREY,
-        "grid.linewidth": 0.8,
+        "grid.linewidth": 0.7,
     })
 
 
 def style_ax(ax, title=None, subtitle=None, xlabel=None, ylabel=None, grid_axis="y"):
-    """Apply a consistent editorial look: bold left-aligned title, optional
-    grey subtitle, only the requested gridlines, no top/right spines."""
+    """Quiet report look: serif title (not oversized/bold-black), grey
+    subtitle, minimal gridlines, no top/right spines."""
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     for spine in ("left", "bottom"):
         ax.spines[spine].set_color(LIGHT_GREY)
 
     if grid_axis:
-        ax.grid(axis=grid_axis, zorder=0)
+        ax.grid(axis=grid_axis, zorder=0, linewidth=0.7)
         ax.set_axisbelow(True)
 
     if title:
-        y = 1.10 if subtitle else 1.04
-        ax.set_title(title, loc="left", fontsize=15, fontweight="bold",
-                      color="#111111", y=y, pad=6)
+        y = 1.13 if subtitle else 1.05
+        ax.set_title(title, loc="left", fontsize=14.5, fontweight="normal",
+                      fontfamily=SERIF, color=INK, y=y, pad=4)
     if subtitle:
-        ax.text(0, 1.03, subtitle, transform=ax.transAxes, fontsize=11,
-                 color=GREY, ha="left", va="bottom")
+        ax.text(0, 1.045, subtitle, transform=ax.transAxes, fontsize=10.5,
+                 color=GREY, ha="left", va="bottom", fontfamily=SANS)
     if xlabel is not None:
         ax.set_xlabel(xlabel, labelpad=8)
     if ylabel is not None:

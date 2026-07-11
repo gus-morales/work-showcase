@@ -27,7 +27,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 from features import build_design_matrix, engineer_features
-from style import set_style, style_ax, savefig, NAVY, TEAL, CORAL, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -126,10 +126,10 @@ def main():
     # --- Figures ---
     fpr, tpr, _ = roc_curve(y_test, y_prob_test)
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot(fpr, tpr, color=NAVY, linewidth=2.4, label=f"GBM (AUC={auc:.3f})")
-    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.3, label="Random")
-    style_ax(ax, title="Model separates good and bad loans well",
-             subtitle="ROC curve, held-out months 22-24 (incl. shock)",
+    ax.plot(fpr, tpr, color=SLATE, linewidth=1.8, label=f"GBM (AUC={auc:.3f})")
+    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.1, label="Random")
+    style_ax(ax, title="ROC curve",
+             subtitle="Held-out months 22-24 (incl. shock)",
              xlabel="False positive rate", ylabel="True positive rate", grid_axis="both")
     ax.legend(loc="lower right")
     savefig(fig, FIG_DIR / "roc_curve.png")
@@ -137,10 +137,10 @@ def main():
     prec, rec, _ = precision_recall_curve(y_test, y_prob_test)
     base_rate = y_test.mean()
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot(rec, prec, color=TEAL, linewidth=2.4, label=f"GBM (AP={ap:.3f})")
-    ax.axhline(base_rate, ls="--", color=GREY, linewidth=1.3, label=f"Base rate ({base_rate:.2%})")
-    style_ax(ax, title="Precision holds well above the base rate",
-             subtitle="Precision-recall curve, held-out months 22-24 (incl. shock)",
+    ax.plot(rec, prec, color=SLATE, linewidth=1.8, label=f"GBM (AP={ap:.3f})")
+    ax.axhline(base_rate, ls="--", color=GREY, linewidth=1.1, label=f"Base rate ({base_rate:.2%})")
+    style_ax(ax, title="Precision-recall curve",
+             subtitle="Held-out months 22-24 (incl. shock)",
              xlabel="Recall", ylabel="Precision", grid_axis="both")
     ax.legend(loc="upper right")
     savefig(fig, FIG_DIR / "pr_curve.png")
@@ -148,10 +148,10 @@ def main():
     frac_pos_raw, mean_pred_raw = calibration_curve(y_test, y_prob_raw, n_bins=10, strategy="quantile")
     frac_pos_cal, mean_pred_cal = calibration_curve(y_test, y_prob_test, n_bins=10, strategy="quantile")
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.3, label="Perfect calibration")
-    ax.plot(mean_pred_raw, frac_pos_raw, marker="o", color=CORAL, linewidth=2, label="Raw GBM")
-    ax.plot(mean_pred_cal, frac_pos_cal, marker="o", color=NAVY, linewidth=2, label="Isotonic-calibrated")
-    style_ax(ax, title="Calibration fixes the raw model's overconfidence",
+    ax.plot([0, 1], [0, 1], "--", color=GREY, linewidth=1.1, label="Perfect calibration")
+    ax.plot(mean_pred_raw, frac_pos_raw, marker="o", markersize=4.5, color=MUTED_RED, linewidth=1.6, label="Raw GBM")
+    ax.plot(mean_pred_cal, frac_pos_cal, marker="o", markersize=4.5, color=SLATE, linewidth=1.6, label="Isotonic-calibrated")
+    style_ax(ax, title="Calibration curve",
              subtitle="Predicted probability vs. observed rate, by decile",
              xlabel="Mean predicted probability", ylabel="Observed delinquency rate", grid_axis="both")
     ax.legend(loc="upper left")
@@ -164,8 +164,8 @@ def main():
     ax.grid(False)
     for spine in ax.spines.values():
         spine.set_visible(False)
-    style_ax(ax, title="Confusion matrix at the cost-optimal cutoff",
-             subtitle=f"Decision threshold = {best_t:.2f}",
+    style_ax(ax, title="Confusion matrix",
+             subtitle=f"At the cost-optimal threshold ({best_t:.2f})",
              xlabel="Predicted", ylabel="Actual", grid_axis=None)
     for i in range(2):
         for j in range(2):
@@ -174,11 +174,10 @@ def main():
     savefig(fig, FIG_DIR / "confusion_matrix.png")
 
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(thresholds, costs / 1e6, color=NAVY, linewidth=2.4)
-    ax.axvline(best_t, ls="--", color=CORAL, linewidth=1.6, label=f"Cost-optimal t={best_t:.2f}")
-    ax.axvline(0.50, ls=":", color=GREY, linewidth=1.6, label="Naive t=0.50")
-    style_ax(ax, title="Choosing the threshold from costs, not a 0.5 default",
-             subtitle="Expected portfolio cost across decision thresholds",
+    ax.plot(thresholds, costs / 1e6, color=SLATE, linewidth=1.8)
+    ax.axvline(best_t, ls="--", color=MUTED_RED, linewidth=1.3, label=f"Cost-optimal t={best_t:.2f}")
+    ax.axvline(0.50, ls=":", color=GREY, linewidth=1.3, label="Naive t=0.50")
+    style_ax(ax, title="Expected portfolio cost by decision threshold",
              xlabel="Decision threshold", ylabel="Expected cost (MXN, millions)", grid_axis="both")
     ax.legend()
     savefig(fig, FIG_DIR / "threshold_cost_curve.png")

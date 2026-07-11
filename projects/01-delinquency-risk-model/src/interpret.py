@@ -33,9 +33,9 @@ def main():
     fig = plt.figure(figsize=(9, 7))
     shap.summary_plot(shap_values, X_test, show=False, max_display=15, plot_size=None)
     ax = plt.gca()
-    ax.set_title("What moves the risk score", loc="left", fontsize=15,
-                 fontweight="bold", color="#111111", pad=14)
-    ax.set_xlabel("SHAP value (impact on predicted risk)", fontsize=12, labelpad=8)
+    ax.set_title("SHAP feature importance", loc="left", fontsize=14.5,
+                 fontweight="normal", fontfamily="Lora", color="#2B2B2B", pad=14)
+    ax.set_xlabel("SHAP value (impact on predicted risk)", fontsize=11, labelpad=8)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
     plt.tight_layout()

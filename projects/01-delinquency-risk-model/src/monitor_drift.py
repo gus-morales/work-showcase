@@ -19,7 +19,7 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from features import build_design_matrix, engineer_features
-from style import set_style, style_ax, savefig, NAVY, TEAL, MINT, CORAL, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -60,13 +60,13 @@ def main():
     fig, ax = plt.subplots(figsize=(9, 5))
     feats = [f.replace("_", " ") for f in psi_results.keys()]
     vals = list(psi_results.values())
-    colors = [CORAL if v > PSI_ALERT_THRESHOLD else TEAL for v in vals]
-    ax.barh(feats, vals, color=colors, zorder=3, height=0.6)
-    ax.axvline(PSI_ALERT_THRESHOLD, ls="--", color=GREY, linewidth=1.5,
+    colors = [MUTED_RED if v > PSI_ALERT_THRESHOLD else SLATE for v in vals]
+    ax.barh(feats, vals, color=colors, zorder=3, height=0.55)
+    ax.axvline(PSI_ALERT_THRESHOLD, ls="--", color=GREY, linewidth=1.2,
                label=f"Alert threshold ({PSI_ALERT_THRESHOLD})")
     ax.invert_yaxis()
-    style_ax(ax, title="No input feature has drifted",
-             subtitle="Population Stability Index, reference (months 1-21) vs. monitored (22-24)",
+    style_ax(ax, title="Population Stability Index by feature",
+             subtitle="Reference (months 1-21) vs. monitored (22-24)",
              xlabel="PSI", grid_axis="x")
     ax.legend(loc="lower right")
     savefig(fig, FIG_DIR / "drift_psi.png")
@@ -109,15 +109,14 @@ def main():
     ref_by_month = reference.groupby("origination_month")["delinquent_30dpd"].mean()
 
     fig, ax = plt.subplots(figsize=(9, 5))
-    ax.plot(ref_by_month.index, ref_by_month.values * 100, marker="o", color=MINT, linewidth=2,
+    ax.plot(ref_by_month.index, ref_by_month.values * 100, marker="o", markersize=4, color=GREY, linewidth=1.4,
             label="Actual rate (training window)")
-    ax.plot(by_month.index, by_month["actual_rate"] * 100, marker="o", color=CORAL, linewidth=2.2,
+    ax.plot(by_month.index, by_month["actual_rate"] * 100, marker="o", markersize=5, color=MUTED_RED, linewidth=1.8,
             label="Actual rate (monitored window)")
-    ax.plot(by_month.index, by_month["predicted_rate"] * 100, marker="s", ls="--", color=NAVY, linewidth=2.2,
+    ax.plot(by_month.index, by_month["predicted_rate"] * 100, marker="s", markersize=5, ls="--", color=SLATE, linewidth=1.8,
             label="Model-predicted rate (monitored window)")
-    ax.axvline(21.5, ls=":", color=GREY, linewidth=1.4)
-    style_ax(ax, title="The model under-predicts risk once the shock hits",
-             subtitle="Predicted vs. actual delinquency rate by month",
+    ax.axvline(21.5, ls=":", color=GREY, linewidth=1.1)
+    style_ax(ax, title="Predicted vs. actual delinquency rate by month",
              xlabel="Origination month", ylabel="30+ DPD rate (%)")
     ax.legend(fontsize=10, loc="upper left")
     savefig(fig, FIG_DIR / "drift_predicted_vs_actual.png")
