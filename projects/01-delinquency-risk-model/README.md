@@ -37,15 +37,29 @@ The model was stress-tested against a simulated economic shock. Standard drift m
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 
+### Is it a mix shift or a rate shift?
+
+Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition rules that out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift, and every employment segment moved together rather than one risky segment simply becoming more common.
+
+| | |
+|---|---|
+| Delinquency rate, reference vs. monitored window | 13.5% vs. 19.1% |
+| Share of the increase from composition shift (mix effect) | 3.6% |
+| Share of the increase from within-segment rate change | 96.4% |
+
+![Rate-mix shift decomposition](reports/figures/rate_mix_shift_decomposition.png)
+
+![Rate-mix shift by segment](reports/figures/rate_mix_shift_by_segment.png)
+
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 66% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it.
+Ship the cost-based threshold over the naive 0.5 cutoff; the 66% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment.
 
 ## Repo layout
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants and the feature-engineering functions.
+- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions, and the rate-mix shift decomposition.
 - `reports/`: generated charts, metrics, and monitoring reports.
 
 ## Reproduce
@@ -58,6 +72,7 @@ python src/tune.py       # hyperparameter search, writes reports/best_params.jso
 python src/train.py      # picks up best_params.json automatically if present
 python src/interpret.py
 python src/monitor_drift.py
+python src/rate_mix_shift.py
 ```
 
 `data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above. `reports/best_params.json` is committed so `train.py` reproduces the same tuned model without re-running the search.
