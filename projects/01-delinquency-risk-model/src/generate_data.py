@@ -25,14 +25,12 @@ OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 
 rng = np.random.default_rng(SEED)
 
-CITIES = {
-    "New York": "tier1", "Los Angeles": "tier1", "Chicago": "tier1",
-    "Houston": "tier2", "Phoenix": "tier2", "Philadelphia": "tier2",
-    "San Antonio": "tier2", "Dallas": "tier2",
-    "Tulsa": "tier3", "Fresno": "tier3", "Toledo": "tier3", "Boise": "tier3",
-}
+# No real geography: just three generic metro-size tiers, since all that
+# actually matters for the income model is cost-of-living tier, not any
+# specific city.
+CITIES = {"Tier 1 metro": "tier1", "Tier 2 metro": "tier2", "Tier 3 metro": "tier3"}
 CITY_NAMES = list(CITIES.keys())
-CITY_WEIGHTS = np.array([0.18, 0.10, 0.10, 0.07, 0.06, 0.06, 0.06, 0.07, 0.08, 0.08, 0.07, 0.07])
+CITY_WEIGHTS = np.array([0.38, 0.32, 0.30])
 CITY_WEIGHTS = CITY_WEIGHTS / CITY_WEIGHTS.sum()
 
 EMPLOYMENT_TYPES = ["salaried", "self_employed", "gig_economy", "informal"]
