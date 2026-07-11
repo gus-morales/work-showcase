@@ -5,6 +5,7 @@ scikit-learn==1.7.2
 statsmodels==0.14.6
 matplotlib==3.10.9
 seaborn==0.13.2
+diff-diff==3.7.0
 
 # only needed to re-run/re-execute the notebook
 jupyter==1.1.1

@@ -6,7 +6,7 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as projects 01 and 02, viewed from the growth/experimentation side.
 
-**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
+**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
 
 ## The problem
 
@@ -53,6 +53,14 @@ A new in-app collections feature was rolled out to 20 of 40 regions first, based
 
 ![Parallel trends](reports/figures/did_parallel_trends.png)
 
+### Two robustness checks on the DiD estimate
+
+Standard errors are clustered by region, but 40 regions with 20 treated is on the edge of "few clusters" territory where the usual asymptotic cluster-robust standard errors can be unreliable. A wild cluster bootstrap (Cameron, Gelbach & Miller 2008) recomputes inference on the same coefficient without relying on that asymptotic approximation, using the [diff-diff](https://github.com/igerber/diff-diff) package: 95% CI of 3.7 to 4.3pp, matching the analytical result almost exactly, which is itself evidence the cluster count here isn't causing problems.
+
+The pre-trends placebo check above fails to detect a trend difference, which is a weaker statement than proving none exists. Honest DiD (Rambachan & Roth 2023) quantifies the gap: how large would an undetected post-period violation of parallel trends have to be, relative to the largest pre-period wobble actually observed, before the effect stops being distinguishable from zero. Here that breakdown point is M = 0.35, meaning the conclusion holds only if any unmeasured drift after rollout stays under about a third of the size of the noisiest pre-period swing.
+
+![Honest DiD sensitivity](reports/figures/did_honest_sensitivity.png)
+
 ## 4. RFM customer segmentation
 
 Recency, frequency, and monetary value, clustered with KMeans (k chosen by silhouette score, not fixed in advance) into three segments.
@@ -75,13 +83,13 @@ One topic, general account questions, doesn't cluster cleanly on its own; it sca
 
 ## Recommendation
 
-Ship the reminder redesign; the lift is well outside noise and confirmed two ways (a standard test and a CUPED-adjusted one with a tighter interval). But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling the redesign out to long-tenured users buys almost nothing while the engineering and support cost of maintaining two reminder flows is the same either way. For the regional rollout, the fixed-effects estimate and the pre-period placebo check both support treating the +4.0pp effect as real rather than a pre-existing regional difference, which makes the case for extending the rollout to the remaining regions. For lifecycle marketing, the RFM segments show where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer targeted at that group would cost little in forgone Champion/Loyal attention. For support operations, route the four cleanly-separated topics to a keyword/topic-based triage rule, but keep a human or supervised classifier in the loop for general account questions, since that category doesn't have a clean unsupervised signature to route on.
+Ship the reminder redesign; the lift is well outside noise and confirmed two ways (a standard test and a CUPED-adjusted one with a tighter interval). But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling the redesign out to long-tenured users buys almost nothing while the engineering and support cost of maintaining two reminder flows is the same either way. For the regional rollout, the fixed-effects estimate, the pre-period placebo check, and both robustness checks (wild cluster bootstrap, Honest DiD) support treating the +4.0pp effect as real rather than a pre-existing regional difference, which makes the case for extending the rollout to the remaining regions. For lifecycle marketing, the RFM segments show where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer targeted at that group would cost little in forgone Champion/Loyal attention. For support operations, route the four cleanly-separated topics to a keyword/topic-based triage rule, but keep a human or supervised classifier in the loop for general account questions, since that category doesn't have a clean unsupervised signature to route on.
 
 ## Repo layout
 
 - `notebooks/03_growth_experimentation_segmentation.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling, causal inference, segmentation, topic modeling) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the DiD estimator (against a synthetic panel with a known injected effect), the uplift model's bucket-calibration and Qini-curve logic, and the RFM/topic-modeling helper functions.
+- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling, causal inference and its robustness checks, segmentation, topic modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the uplift model's bucket-calibration and Qini-curve logic, and the RFM/topic-modeling helper functions.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -92,6 +100,7 @@ python src/generate_data.py
 python src/experiment_design.py
 python src/uplift_modeling.py
 python src/causal_inference.py
+python src/robustness_checks.py
 python src/segmentation.py
 python src/ticket_topics.py
 ```
