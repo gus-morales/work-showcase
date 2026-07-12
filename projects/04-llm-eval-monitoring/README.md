@@ -19,7 +19,9 @@ Teams shipping LLM-powered features tend to reach for an LLM-judge to score outp
 
 ## 1. Validating the LLM-judge against human labels
 
-A 600-ticket golden set was scored by both a human rater and the LLM-judge on a 1-5 scale, before trusting the judge for anything downstream. Raw agreement overstates reliability on a scale like this, since two raters will land on the same score some of the time by chance alone; Cohen's kappa corrects for that by measuring agreement beyond what chance alone would produce, and the quadratic-weighted variant used here also penalizes a 1-vs-5 mismatch far more than a 3-vs-4 one, matching how much those two kinds of disagreement actually matter.
+Before trusting the judge for anything downstream, a 600-ticket golden set was scored by both a human rater and the judge, on a 1-5 scale.
+
+Raw agreement overstates how reliable that really is, two independent raters will land on the same score some of the time purely by chance. Cohen's kappa corrects for that: it measures agreement beyond what chance alone would produce. The specific version used here, quadratic-weighted kappa, also treats a 1-vs-5 mismatch as a much bigger disagreement than a 3-vs-4 one, matching how much those two kinds of miss actually matter in practice.
 
 | | |
 |---|---|
@@ -42,7 +44,7 @@ The bias concentrates on complaints, the category where a bad reply does the mos
 
 ## 2. A/B test: a revised drafting prompt
 
-Prompt v2 adds an explicit instruction to acknowledge the issue and give one concrete next step, tested against the baseline prompt on ~6,000 tickets (well above the ~1,200/arm a power analysis called for; that's the standard pre-test calculation for how many tickets per arm are needed to reliably detect a real 4-point-percentage lift, the minimum detectable effect, rather than mistaking noise for a win or missing a real effect).
+Prompt v2 adds an explicit instruction to acknowledge the issue and give one concrete next step. It was tested against the baseline prompt on roughly 6,000 tickets, well above the ~1,200 per arm a power analysis called for beforehand. That's the standard calculation for how much data is needed to reliably detect a real effect of a given size, here a 4-point lift, rather than mistaking noise for a win or missing a real one.
 
 | | |
 |---|---|
@@ -72,7 +74,7 @@ A single point outside the control limits can be noise, so the chart also flags 
 
 ## 4. Guardrail threshold: auto-send vs. route-to-human
 
-A lightweight safety classifier (AUC 0.85, meaning it ranks a random bad reply above a random fine one 85% of the time) scores every drafted reply before it's sent. The threshold was set from actual costs rather than a default 0.5 cutoff: a bad reply that gets auto-sent costs far more (remediation, trust damage) than a fine reply that gets routed to a human anyway (reviewer time), but that reviewer-time cost is paid on every routed reply, good or bad.
+A lightweight safety classifier scores every drafted reply before it's sent, ranking a random bad reply above a random fine one 85% of the time (AUC 0.85). The auto-send threshold comes from actual costs, not a default 0.5 cutoff: a bad reply that slips through and gets auto-sent costs far more (remediation, trust damage) than a fine reply that gets needlessly routed to a human (reviewer time). But that reviewer-time cost applies to every routed reply, good or bad, so the threshold has to balance the two rather than just avoid the worse mistake at any cost.
 
 | | |
 |---|---|
@@ -88,7 +90,13 @@ Sweeping the threshold against expected cost locates that optimum well below the
 
 ## Recommendation
 
-Don't retire human review of the judge itself: a kappa of 0.49 is below the standard bar for substantial agreement, and the miscalibration concentrates on complaints, the category where it's most costly, so those should get more frequent human audits than the aggregate agreement number alone would suggest. The prompt change is a clear ship: a 6.2pp lift with a tight interval, and the relative-comparison logic holds even given the judge's known bias. For monitoring, the control chart is doing its job (same-day detection here), so the main follow-up is deciding the run-rule length against how expensive a slow-to-detect regression would actually be. For the guardrail, the threshold itself is already cost-optimal; the constraint is the classifier's precision at AUC 0.85, and improving that would do more to shrink the review queue than adjusting the threshold further.
+Don't retire human review of the judge itself. A kappa of 0.49 is below the standard bar for substantial agreement, and the bias concentrates on complaints, the category where it's most costly to get wrong, so that category should get more frequent human audits than the aggregate agreement number alone would suggest.
+
+The prompt change is a clear ship: a 6.2pp lift with a tight interval, and the relative comparison holds up even given the judge's known bias.
+
+For monitoring, the control chart is already doing its job, it caught this regression the same day it started. The main follow-up is tuning the run-rule length against how expensive a slower detection would actually be.
+
+For the guardrail, the threshold itself is already cost-optimal. The real constraint is the classifier's precision at AUC 0.85, and improving that would shrink the review queue more than adjusting the threshold further ever could.
 
 ## Repo layout
 
