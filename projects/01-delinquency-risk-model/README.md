@@ -2,7 +2,7 @@
 
 A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, and a decision threshold picked from actual business costs instead of a default 0.5 cutoff. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I currently do in fintech.
 
-**For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version.
+**For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version. For a validation-style write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan), see the [model validation memo](docs/model_validation_memo.md).
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied.
 
@@ -155,6 +155,7 @@ This is deliberately small: no batching, auth, model versioning, or canary rollo
 - `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis, model serving) as standalone scripts.
 - `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, the fair lending disparate-impact and reason-code logic, the survival-analysis covariate construction and Cox fit, and the serving endpoint's request validation and scoring behavior.
 - `reports/`: generated charts, metrics, and monitoring reports.
+- `docs/model_validation_memo.md`: SR 11-7-style validation write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan).
 
 ## Reproduce
 
