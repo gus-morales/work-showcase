@@ -21,7 +21,7 @@ import pandas as pd
 from statsmodels.stats.power import NormalIndPower
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -100,7 +100,7 @@ def ab_test(df, source_note):
     ax.bar(arms, rates, yerr=[errs, errs], color=[SLATE, MUTED_TEAL], width=0.5, zorder=3,
            error_kw={"ecolor": GREY, "elinewidth": 1.2, "capsize": 4})
     for i, v in enumerate(rates):
-        ax.text(i, v + max(errs) + 0.5, f"{v:.1f}%", ha="center", fontsize=10.5, color="#333")
+        ax.text(i, v + max(errs) + 0.5, f"{v:.1f}%", ha="center", fontsize=10.5, color=INK)
     style_ax(ax, title=f"v2 lifts judge-acceptable rate by {result['lift_abs']*100:.1f}pp (p={result['p_value']:.4f})",
              subtitle="Judge-scored acceptable rate, with 95% Wilson confidence intervals",
              ylabel="Acceptable rate (%)")

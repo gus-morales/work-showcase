@@ -16,7 +16,7 @@ import pandas as pd
 from scipy import stats
 from sklearn.metrics import cohen_kappa_score
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, HEATMAP_CMAP, HEATMAP_TEXT_LOW, HEATMAP_TEXT_HIGH
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -67,7 +67,7 @@ def judge_validation(df, source_note):
     labels = [1, 2, 3, 4, 5]
     mat = pd.crosstab(df["human_label"], df["judge_label"]).reindex(index=labels, columns=labels, fill_value=0)
     fig, ax = plt.subplots(figsize=(7, 6))
-    ax.imshow(mat.values, cmap="Blues", aspect="auto")
+    ax.imshow(mat.values, cmap=HEATMAP_CMAP, aspect="auto")
     ax.set_xticks(range(5))
     ax.set_xticklabels(labels)
     ax.set_yticks(range(5))
@@ -76,7 +76,7 @@ def judge_validation(df, source_note):
         for j in range(5):
             v = mat.values[i, j]
             ax.text(j, i, str(v), ha="center", va="center", fontsize=9.5,
-                    color="white" if v > mat.values.max() * 0.5 else "#333")
+                    color=HEATMAP_TEXT_HIGH if v > mat.values.max() * 0.5 else HEATMAP_TEXT_LOW)
     ax.grid(False)
     for spine in ax.spines.values():
         spine.set_visible(False)

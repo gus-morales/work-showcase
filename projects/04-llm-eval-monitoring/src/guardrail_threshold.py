@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -81,7 +81,7 @@ def guardrail_threshold(df, source_note):
     colors = [GREY, SLATE]
     ax.bar(bars, vals, color=colors, width=0.5, zorder=3)
     for i, v in enumerate(vals):
-        ax.text(i, v + max(vals) * 0.02, f"${v:,.0f}", ha="center", fontsize=10.5, color="#333")
+        ax.text(i, v + max(vals) * 0.02, f"${v:,.0f}", ha="center", fontsize=10.5, color=INK)
     style_ax(ax, title="Expected cost, naive vs. cost-optimal threshold",
              subtitle=f"n = {len(df):,} replies", ylabel="Expected total cost (USD)")
     savefig(fig, FIG_DIR / "guardrail_threshold_comparison.png", footnote=source_note)

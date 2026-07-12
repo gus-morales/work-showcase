@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -39,7 +39,7 @@ def main():
     labels = [o.replace("_", " ").title() for o in order]
     ax.bar(labels, rates.values, color=SLATE, width=0.55, zorder=3)
     for i, v in enumerate(rates.values):
-        ax.text(i, v + 0.6, f"{v:.1f}%", ha="center", fontsize=10, color="#4a4a4a")
+        ax.text(i, v + 0.6, f"{v:.1f}%", ha="center", fontsize=10, color=INK)
     style_ax(ax, title="Delinquency rate by employment type",
              ylabel="30+ DPD rate (%)")
     savefig(fig, FIG_DIR / "delinquency_by_employment.png", footnote=SOURCE)

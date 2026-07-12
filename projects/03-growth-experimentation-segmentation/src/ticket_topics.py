@@ -18,7 +18,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import NMF
 
-from style import set_style, style_ax, savefig, SLATE, PALETTE
+from style import set_style, style_ax, savefig, SLATE, PALETTE, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -90,7 +90,7 @@ def main():
         style_ax(ax, title=f"Topic {i+1}", grid_axis="x")
         ax.tick_params(axis="x", labelsize=8)
     fig.suptitle("Five topics emerge cleanly from ticket text alone", x=0.01, y=1.05,
-                 ha="left", fontsize=14.5, fontfamily="Lora", color="#2B2B2B")
+                 ha="left", fontsize=14.5, fontfamily="Lora", color=INK)
     plt.tight_layout()
     savefig(fig, FIG_DIR / "topic_top_words.png", footnote=source_note)
 
@@ -99,7 +99,7 @@ def main():
     fig, ax = plt.subplots(figsize=(10, 5.5))
     ax.barh(vol.index, vol.values, color=SLATE, zorder=3)
     for i, v in enumerate(vol.values):
-        ax.text(v + 5, i, f"{v} ({v/n_tickets:.0%})", va="center", fontsize=9.5, color="#333")
+        ax.text(v + 5, i, f"{v} ({v/n_tickets:.0%})", va="center", fontsize=9.5, color=INK)
     style_ax(ax, title="Four topics arrive in similar volume; late-fee disputes split into two sub-themes",
              subtitle="Ticket volume by discovered topic", xlabel="Tickets", grid_axis="x")
     savefig(fig, FIG_DIR / "topic_volume.png", footnote=source_note)

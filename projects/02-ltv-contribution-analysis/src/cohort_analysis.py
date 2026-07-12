@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, SLATE
+from style import set_style, style_ax, savefig, SLATE, HEATMAP_CMAP, HEATMAP_TEXT_LOW, HEATMAP_TEXT_HIGH
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -33,7 +33,7 @@ def main():
     pivot = mat.pivot(index="cohort_month", columns="months_since_acquisition", values="retention_rate")
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.imshow(pivot.values, cmap="Blues", aspect="auto", vmin=0, vmax=1)
+    ax.imshow(pivot.values, cmap=HEATMAP_CMAP, aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(len(pivot.columns)))
     ax.set_xticklabels(pivot.columns)
     ax.set_yticks(range(len(pivot.index)))
@@ -43,7 +43,7 @@ def main():
             v = pivot.values[i, j]
             if not np.isnan(v):
                 ax.text(j, i, f"{v:.0%}", ha="center", va="center", fontsize=8.5,
-                         color="white" if v > 0.5 else "#333")
+                         color=HEATMAP_TEXT_HIGH if v > 0.5 else HEATMAP_TEXT_LOW)
     ax.grid(False)
     for spine in ax.spines.values():
         spine.set_visible(False)

@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -76,7 +76,7 @@ def main():
     for i, (v, b) in enumerate(zip(values, bottoms_plot)):
         label_y = b + heights_plot[i] + (max(values[0], values[-1]) * 0.02)
         sign = "+" if (0 < i < 4 and v >= 0) else ("" if i in (0, 4) else "-")
-        ax.text(i, label_y, f"{sign}{abs(v):,.0f}", ha="center", fontsize=10, color="#333")
+        ax.text(i, label_y, f"{sign}{abs(v):,.0f}", ha="center", fontsize=10, color=INK)
     ax.set_xticks(range(5))
     ax.set_xticklabels(labels)
     style_ax(ax, title="What drove GMV from month 4 to month 20",
@@ -105,7 +105,7 @@ def main():
     below = mc.customers + mc.frequency
     ax.bar(mc.month_index, mc.avg_order_value, bottom=np.where(mc.avg_order_value >= 0, below, below),
            color=MUTED_AMBER, label="Avg order value", width=0.7, zorder=3)
-    ax.plot(mc.month_index, mc.delta_gmv, color="#222222", linewidth=1.6, marker="o", markersize=3.5,
+    ax.plot(mc.month_index, mc.delta_gmv, color=INK, linewidth=1.6, marker="o", markersize=3.5,
             label="Net GMV change")
     ax.axhline(0, color=GREY, linewidth=1)
     style_ax(ax, title="GMV growth comes almost entirely from new customers",

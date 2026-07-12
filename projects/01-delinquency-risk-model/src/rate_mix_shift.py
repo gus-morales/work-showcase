@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -97,7 +97,7 @@ def rate_mix_shift(df, segment_col, source_note, plot=True):
     ax.bar(bars, vals, color=colors, width=0.5, zorder=3)
     ax.axhline(0, color=GREY, linewidth=1)
     for i, v in enumerate(vals):
-        ax.text(i, v + (0.05 if v >= 0 else -0.15), f"{v:+.2f}pp", ha="center", fontsize=10.5, color="#333")
+        ax.text(i, v + (0.05 if v >= 0 else -0.15), f"{v:+.2f}pp", ha="center", fontsize=10.5, color=INK)
     style_ax(ax, title=f"{rate_share:.0%} of the delinquency-rate increase is a rate effect",
              subtitle=f"Decomposed by {segment_col.replace('_', ' ')}, months 1-{REFERENCE_END_MONTH} vs. {REFERENCE_END_MONTH+1}-24",
              ylabel="Contribution to rate change (percentage points)")

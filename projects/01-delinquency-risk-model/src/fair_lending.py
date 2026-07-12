@@ -46,7 +46,7 @@ import shap
 from statsmodels.stats.proportion import proportions_ztest
 
 from features import engineer_features, RAW_FEATURE_COLS
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, INK
 from train import temporal_split
 
 BASE = Path(__file__).resolve().parents[1]
@@ -186,7 +186,7 @@ def approval_rate_chart(rates, reference_group, source_note):
     ax.axhline(four_fifths_line, color=GREY, linewidth=1.3, linestyle="--",
                label=f"Four-fifths threshold ({four_fifths_line:.1f}%)")
     for i, v in enumerate(vals):
-        ax.text(i, v + 0.6, f"{v:.1f}%", ha="center", fontsize=10, color="#333")
+        ax.text(i, v + 0.6, f"{v:.1f}%", ha="center", fontsize=10, color=INK)
     style_ax(ax, title="Approval rate by demographic group vs. the four-fifths rule",
              subtitle="Held-out test set, at the cost-optimal decision threshold",
              ylabel="Approval rate (%)")
@@ -199,7 +199,7 @@ def reason_code_chart(top1_counts, n_declined, source_note):
     counts = top1_counts.sort_values(ascending=True)
     ax.barh(counts.index, counts.values / n_declined * 100, color=SLATE, zorder=3)
     for i, v in enumerate(counts.values):
-        ax.text(v / n_declined * 100 + 0.5, i, f"{v/n_declined:.0%}", va="center", fontsize=9.5, color="#333")
+        ax.text(v / n_declined * 100 + 0.5, i, f"{v/n_declined:.0%}", va="center", fontsize=9.5, color=INK)
     style_ax(ax, title="Primary adverse action reason among declined applicants",
              subtitle="Top SHAP-driven reason per decline, restricted to the allowed reason-code list",
              xlabel="Share of declines citing this as the primary reason (%)")

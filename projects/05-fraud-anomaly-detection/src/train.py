@@ -31,7 +31,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 from features import build_feature_pipeline, temporal_split, RAW_FEATURE_COLS
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, HEATMAP_CMAP, HEATMAP_TEXT_LOW, HEATMAP_TEXT_HIGH, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -142,7 +142,7 @@ def main():
     vals = [naive_accuracy * 100, model_accuracy_at_default * 100]
     ax.bar(bars, vals, color=[GREY, SLATE], width=0.5, zorder=3)
     for i, v in enumerate(vals):
-        ax.text(i, v + 0.5, f"{v:.2f}%", ha="center", fontsize=10.5, color="#333")
+        ax.text(i, v + 0.5, f"{v:.2f}%", ha="center", fontsize=10.5, color=INK)
     ax.set_ylim(0, 105)
     style_ax(ax, title="Accuracy alone can't tell these two models apart",
              subtitle=f"Both score {naive_accuracy:.1%} accuracy, despite one catching {tp_at_default} of {n_fraud_test} fraud cases",
@@ -150,7 +150,7 @@ def main():
     savefig(fig, FIG_DIR / "accuracy_paradox.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
-    ax.imshow(cm, cmap="Blues")
+    ax.imshow(cm, cmap=HEATMAP_CMAP)
     ax.set_xticks([0, 1])
     ax.set_xticklabels(["Genuine", "Fraud"])
     ax.set_yticks([0, 1])
@@ -164,7 +164,7 @@ def main():
     for i in range(2):
         for j in range(2):
             ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center", fontsize=13,
-                     color="white" if cm[i, j] > cm.max() / 2 else "#222222")
+                     color=HEATMAP_TEXT_HIGH if cm[i, j] > cm.max() / 2 else HEATMAP_TEXT_LOW)
     savefig(fig, FIG_DIR / "confusion_matrix.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(8, 5))

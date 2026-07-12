@@ -3,16 +3,25 @@ report style: serif headline, sans body, muted single-accent color use,
 minimal on-chart annotation."""
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
-INK = "#2B2B2B"
-SLATE = "#3D5A73"
-MUTED_TEAL = "#5E8C86"
-MUTED_AMBER = "#B98A3D"
-MUTED_RED = "#A8493D"
-GREY = "#8A8A8A"
-LIGHT_GREY = "#E3E3E1"
+INK = "#ECECEA"
+SLATE = "#8FBBDB"
+MUTED_TEAL = "#82C2B7"
+MUTED_AMBER = "#D8AD72"
+MUTED_RED = "#C97B6E"
+GREY = "#9C9C97"
+LIGHT_GREY = "#34383E"
+BG = "#1E2124"
 
 PALETTE = [SLATE, MUTED_TEAL, MUTED_AMBER, MUTED_RED, GREY]
+
+# Heatmap colormap for dark backgrounds: low values sit close to the axes
+# background, high values read as bright slate, so a cell's on-chart text
+# needs light ink at the low end and dark ink at the high end.
+HEATMAP_CMAP = LinearSegmentedColormap.from_list("dark_heat", [BG, SLATE])
+HEATMAP_TEXT_LOW = INK
+HEATMAP_TEXT_HIGH = "#15171A"
 
 SANS = "Lato"
 SERIF = "Lora"
@@ -26,19 +35,19 @@ def set_style():
         "axes.titlesize": 15,
         "axes.titleweight": "bold",
         "axes.labelsize": 11,
-        "axes.labelcolor": "#4a4a4a",
+        "axes.labelcolor": "#C9C9C4",
         "axes.edgecolor": LIGHT_GREY,
         "axes.linewidth": 0.9,
         "text.color": INK,
-        "xtick.color": "#6a6a6a",
-        "ytick.color": "#6a6a6a",
+        "xtick.color": "#B5B5B0",
+        "ytick.color": "#B5B5B0",
         "xtick.labelsize": 10,
         "ytick.labelsize": 10,
         "legend.fontsize": 10,
         "legend.frameon": False,
-        "figure.facecolor": "white",
-        "axes.facecolor": "white",
-        "savefig.facecolor": "white",
+        "figure.facecolor": BG,
+        "axes.facecolor": BG,
+        "savefig.facecolor": BG,
         "grid.color": LIGHT_GREY,
         "grid.linewidth": 0.7,
     })

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import statsmodels.formula.api as smf
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -104,7 +104,7 @@ def diff_in_diff(df, source_note):
     colors = [GREY, GREY, MUTED_TEAL, SLATE]
     ax.bar(cats, vals, color=colors, width=0.55, zorder=3)
     for i, v in enumerate(vals):
-        ax.text(i, v + 0.8, f"{v:.1f}%", ha="center", fontsize=10, color="#333")
+        ax.text(i, v + 0.8, f"{v:.1f}%", ha="center", fontsize=10, color=INK)
     style_ax(ax, title=f"Rollout raised on-time repayment by {did_coef*100:.1f}pp (DiD estimate)",
              subtitle="Region and day fixed-effects regression, clustered SE by region",
              ylabel="On-time repayment rate (%)")

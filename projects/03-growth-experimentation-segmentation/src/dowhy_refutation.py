@@ -47,7 +47,7 @@ import numpy as np
 import pandas as pd
 from dowhy import CausalModel
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_RED, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -111,7 +111,7 @@ def refutation_chart(estimate_value, results, source_note):
     for i, v in enumerate(values):
         y = v * 100
         label_y = y + 0.15 if y >= -0.1 else y - 0.4
-        ax.text(i, label_y, f"{y:.2f}pp", ha="center", fontsize=10, color="#333")
+        ax.text(i, label_y, f"{y:.2f}pp", ha="center", fontsize=10, color=INK)
     ax.axhline(0, color=GREY, linewidth=1)
     style_ax(ax, title="The DiD estimate survives three refutation checks",
              subtitle="DoWhy refutation suite: original estimate vs. each refuter's re-estimated effect",

@@ -9,7 +9,7 @@ import pandas as pd
 import shap
 
 from features import engineer_features, RAW_FEATURE_COLS
-from style import set_style, add_footnote
+from style import set_style, add_footnote, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -36,7 +36,7 @@ def main():
     shap.summary_plot(shap_values, X_test, show=False, max_display=15, plot_size=None)
     ax = plt.gca()
     ax.set_title("SHAP feature importance", loc="left", fontsize=14.5,
-                 fontweight="normal", fontfamily="Lora", color="#2B2B2B", pad=14)
+                 fontweight="normal", fontfamily="Lora", color=INK, pad=14)
     ax.set_xlabel("SHAP value (impact on predicted risk)", fontsize=11, labelpad=8)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)

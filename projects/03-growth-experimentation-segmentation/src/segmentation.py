@@ -18,7 +18,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, PALETTE
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, PALETTE, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -114,7 +114,7 @@ def main():
         style_ax(ax, title=label, subtitle=sublabel, grid_axis="y")
         ax.tick_params(axis="x", labelsize=9.5)
     fig.suptitle("Each segment has a distinct recency, frequency, and value profile",
-                 x=0.01, y=1.06, ha="left", fontsize=14.5, fontfamily="Lora", color="#2B2B2B")
+                 x=0.01, y=1.06, ha="left", fontsize=14.5, fontfamily="Lora", color=INK)
     plt.tight_layout()
     savefig(fig, FIG_DIR / "segment_rfm_profile.png", footnote=source_note)
 

@@ -7,7 +7,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, PALETTE
+from style import set_style, style_ax, savefig, PALETTE, INK
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
@@ -38,7 +38,7 @@ def main():
     labels = [CHANNEL_LABELS[c] for c in q.index]
     ax.bar(labels, q["avg_revenue_per_customer_usd"], color=PALETTE[:len(q)], width=0.55, zorder=3)
     for i, v in enumerate(q["avg_revenue_per_customer_usd"]):
-        ax.text(i, v + 2, f"${v:,.0f}", ha="center", fontsize=10, color="#333")
+        ax.text(i, v + 2, f"${v:,.0f}", ha="center", fontsize=10, color=INK)
     style_ax(ax, title="Partner-store customers are worth 2-3x paid-social customers",
              subtitle="Average lifetime revenue per acquired customer, to date",
              ylabel="Avg revenue per customer (USD)")

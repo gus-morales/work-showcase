@@ -20,7 +20,7 @@ from statsmodels.stats.power import NormalIndPower
 from statsmodels.stats.proportion import proportions_ztest, proportion_confint
 from scipy import stats
 
-from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_TEAL, MUTED_AMBER, GREY, INK
 
 BASE = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE / "data"
@@ -87,7 +87,7 @@ def analyze_conversion(df, source_note):
     ax.bar(arms, rates, yerr=[errs, errs], color=[SLATE, MUTED_TEAL], width=0.5, zorder=3,
            error_kw={"ecolor": GREY, "elinewidth": 1.2, "capsize": 4})
     for i, v in enumerate(rates):
-        ax.text(i, v + max(errs) + 0.5, f"{v:.1f}%", ha="center", fontsize=10.5, color="#333")
+        ax.text(i, v + max(errs) + 0.5, f"{v:.1f}%", ha="center", fontsize=10.5, color=INK)
     style_ax(ax, title=f"Treatment lifts on-time conversion by {lift_abs*100:.1f}pp (p={p_value:.4f})",
              subtitle="14-day post-exposure conversion rate, with 95% Wilson confidence intervals",
              ylabel="Conversion rate (%)")
@@ -132,12 +132,12 @@ def analyze_cuped(df, source_note):
     errs = [1.96 * se_raw, 1.96 * se_adj]
     colors = [GREY, SLATE]
     ax.bar(labels, diffs, yerr=errs, color=colors, width=0.45, zorder=3,
-           error_kw={"ecolor": "#555", "elinewidth": 1.3, "capsize": 5})
+           error_kw={"ecolor": INK, "elinewidth": 1.3, "capsize": 5})
     ax.axhline(0, color=GREY, linewidth=1)
     ylim_max = max(d + e for d, e in zip(diffs, errs)) * 1.35
     ax.set_ylim(0, ylim_max)
     for i, v in enumerate(diffs):
-        ax.text(i, v + errs[i] + ylim_max * 0.03, f"+{v:.1f} USD", ha="center", fontsize=10, color="#333")
+        ax.text(i, v + errs[i] + ylim_max * 0.03, f"+{v:.1f} USD", ha="center", fontsize=10, color=INK)
     style_ax(ax, title=f"CUPED narrows the confidence interval by {ci_width_reduction:.0%} on the same data",
              subtitle="Estimated treatment lift in 14-day revenue per user, 95% CI",
              ylabel="Estimated lift (USD)")

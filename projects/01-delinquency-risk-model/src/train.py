@@ -27,7 +27,7 @@ from sklearn.metrics import (
 from sklearn.preprocessing import StandardScaler
 
 from features import build_feature_pipeline, engineer_features, RAW_FEATURE_COLS
-from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_RED, GREY, HEATMAP_CMAP, HEATMAP_TEXT_LOW, HEATMAP_TEXT_HIGH
 
 BEST_PARAMS_DEFAULT = {
     "max_depth": 5, "learning_rate": 0.06, "max_iter": 300, "l2_regularization": 0.5,
@@ -185,7 +185,7 @@ def main():
     savefig(fig, FIG_DIR / "calibration_curve.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
-    ax.imshow(cm, cmap="Blues")
+    ax.imshow(cm, cmap=HEATMAP_CMAP)
     ax.set_xticks([0, 1])
     ax.set_xticklabels(["Current", "30+ DPD"])
     ax.set_yticks([0, 1])
@@ -199,7 +199,7 @@ def main():
     for i in range(2):
         for j in range(2):
             ax.text(j, i, f"{cm[i, j]:,}", ha="center", va="center", fontsize=13,
-                     color="white" if cm[i, j] > cm.max() / 2 else "#222222")
+                     color=HEATMAP_TEXT_HIGH if cm[i, j] > cm.max() / 2 else HEATMAP_TEXT_LOW)
     savefig(fig, FIG_DIR / "confusion_matrix.png", footnote=SOURCE)
 
     fig, ax = plt.subplots(figsize=(8, 5))
