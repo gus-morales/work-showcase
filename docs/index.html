@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gustavo Morales — Data Science Portfolio</title>
-<meta name="description" content="Gustavo Morales, Senior Data Scientist — five data science and ML projects, synthetic data, real methodology.">
+<meta name="description" content="Gustavo Morales, Senior Data Scientist — PhD astrophysicist turned data scientist. Five data science and ML projects, synthetic data, real methodology.">
 <meta name="theme-color" content="#17191C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,6 +65,65 @@
     margin-top: 14px;
     letter-spacing: 0.06em;
     font-weight: 600;
+  }
+
+  .about {
+    margin-bottom: 30px;
+  }
+
+  .about p {
+    font-size: 15px;
+    color: #A5A5A1;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: 0 0 14px;
+  }
+
+  .skills-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .skill-chip {
+    font-size: 12px;
+    background: var(--chip-bg);
+    color: var(--teal);
+    padding: 4px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: 1px solid var(--light-grey);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .filter-pill {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    background: transparent;
+    color: var(--grey);
+    border: 1px solid var(--light-grey);
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .filter-pill:hover {
+    border-color: var(--teal);
+    color: var(--ink);
+  }
+
+  .filter-pill.active {
+    background: var(--teal);
+    color: var(--bg);
+    border-color: var(--teal);
   }
 
   .grid {
@@ -248,10 +307,36 @@
       <div class="eyebrow">5 PROJECTS · CODE ON GITHUB</div>
     </header>
 
+    <div class="about">
+      <p>PhD astrophysicist turned Senior Data Scientist — 8 years in research, 5+ in industry.</p>
+      <div class="skills-strip">
+        <span class="skill-chip">SHAP</span>
+        <span class="skill-chip">Causal inference (CUPED, DiD, EconML, DoWhy)</span>
+        <span class="skill-chip">Cost-based decisioning</span>
+        <span class="skill-chip">PR-AUC &amp; imbalanced classification</span>
+        <span class="skill-chip">Probabilistic CLV (BG/NBD)</span>
+        <span class="skill-chip">LLM-judge evaluation</span>
+        <span class="skill-chip">Isolation Forest</span>
+        <span class="skill-chip">RFM / KMeans segmentation</span>
+        <span class="skill-chip">SQL / DuckDB</span>
+        <span class="skill-chip">Statistical process control</span>
+        <span class="skill-chip">Survival analysis</span>
+        <span class="skill-chip">A/B testing &amp; power analysis</span>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-pill active" data-filter="all">All</button>
+      <button class="filter-pill" data-filter="credit-risk">Credit &amp; Risk</button>
+      <button class="filter-pill" data-filter="growth">Growth &amp; Customer Analytics</button>
+      <button class="filter-pill" data-filter="ai-llm">AI &amp; LLM Systems</button>
+      <button class="filter-pill" data-filter="fraud">Fraud &amp; Anomaly Detection</button>
+    </div>
+
     <div class="grid">
 
       <!-- Project 1 -->
-      <div class="card">
+      <div class="card" data-category="credit-risk">
         <img class="chart" src="images/01-delinquency.png" alt="Expected portfolio cost by decision threshold, showing the cost-optimal cutoff well below the naive 0.5 default">
         <div class="card-body">
           <div class="card-title">Delinquency Risk Model</div>
@@ -269,7 +354,7 @@
       </div>
 
       <!-- Project 2 -->
-      <div class="card">
+      <div class="card" data-category="growth">
         <img class="chart" src="images/02-ltv.png" alt="GMV growth decomposed into active customers, orders per customer, and average order value">
         <div class="card-body">
           <div class="card-title">Customer LTV &amp; Contribution</div>
@@ -287,7 +372,7 @@
       </div>
 
       <!-- Project 3 -->
-      <div class="card">
+      <div class="card" data-category="growth">
         <img class="chart" src="images/03-experimentation.png" alt="A/B test result, on-time conversion rate by arm, control vs. treatment">
         <div class="card-body">
           <div class="card-title">Growth Experimentation &amp; Segmentation</div>
@@ -305,7 +390,7 @@
       </div>
 
       <!-- Project 4 -->
-      <div class="card">
+      <div class="card" data-category="ai-llm">
         <img class="chart" src="images/04-llm-eval.png" alt="Daily quality control chart flagging a judge-scored acceptable-rate regression the same day it started">
         <div class="card-body">
           <div class="card-title">Evaluating &amp; Monitoring an LLM Feature</div>
@@ -323,7 +408,7 @@
       </div>
 
       <!-- Project 5 -->
-      <div class="card">
+      <div class="card" data-category="fraud">
         <img class="chart" src="images/05-fraud.png" alt="Precision-recall curve for the fraud model against the 1.07% base rate">
         <div class="card-body">
           <div class="card-title">Transaction Fraud Detection</div>
@@ -356,6 +441,10 @@
     <footer>
       <span>Gustavo Morales · Senior Data Scientist</span>
       <span>
+        <a href="mailto:gustavo85@gmail.com">Email</a>
+        &nbsp;·&nbsp;
+        <a href="gustavo-morales-cv.pdf" target="_blank" rel="noopener">CV</a>
+        &nbsp;·&nbsp;
         <a href="https://linkedin.com/in/gus-morales" target="_blank" rel="noopener">LinkedIn</a>
         &nbsp;·&nbsp;
         <a href="https://github.com/gus-morales" target="_blank" rel="noopener">GitHub</a>
@@ -363,5 +452,18 @@
     </footer>
 
   </div>
+
+  <script>
+    document.querySelectorAll('.filter-pill').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        document.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+        var cat = pill.dataset.filter;
+        document.querySelectorAll('.grid .card').forEach(function (card) {
+          card.style.display = (cat === 'all' || card.dataset.category === cat) ? '' : 'none';
+        });
+      });
+    });
+  </script>
 </body>
 </html>
