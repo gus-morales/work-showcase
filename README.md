@@ -15,7 +15,7 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 | [03 - Growth Experimentation & Segmentation](projects/03-growth-experimentation-segmentation) | Power analysis, A/B testing, CUPED, difference-in-differences, RFM/KMeans segmentation, light NLP topic modeling | Done |
 | [04 - Evaluating & Monitoring an LLM-Powered Feature](projects/04-llm-eval-monitoring) | LLM-judge validation (Cohen's kappa, bias analysis), A/B testing, statistical process control for output-quality monitoring, cost-based guardrail thresholds | Done |
 
-## Skills demonstrated
+## Skills and tools featured
 
 **Modeling & ML**
 

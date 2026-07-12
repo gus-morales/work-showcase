@@ -6,7 +6,7 @@ A growth analysis for a synthetic BNPL fintech: what's driving GMV growth, which
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as project 01, viewed from the growth/LTV side instead of the credit-risk side.
 
-**Skills demonstrated:**
+**Skills and tools featured:**
 
 - SQL (window functions, CTEs, cohort joins via DuckDB)
 - Data contracts and a governed metric layer

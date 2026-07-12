@@ -6,7 +6,7 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as projects 01 and 02, viewed from the growth/experimentation side.
 
-**Skills demonstrated:**
+**Skills and tools featured:**
 
 - Experiment design and power analysis
 - Two-proportion hypothesis testing

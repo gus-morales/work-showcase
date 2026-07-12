@@ -6,7 +6,7 @@ A generic company ships an LLM-drafted reply feature for its support inbox: the 
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. Deliberately not tied to the fictional company in projects 01-03; this methodology is meant to generalize across any LLM-powered feature, not read as a one-company demo.
 
-**Skills demonstrated:**
+**Skills and tools featured:**
 
 - LLM-judge validation against human labels (Cohen's kappa, bias decomposition)
 - Experiment design and two-proportion A/B testing
