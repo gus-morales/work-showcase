@@ -183,8 +183,23 @@
     text-decoration: underline;
   }
 
+  .ai-note {
+    margin-top: 40px;
+    font-size: 12.5px;
+    color: var(--grey);
+    line-height: 1.6;
+  }
+
+  .ai-note a {
+    color: var(--slate);
+  }
+
+  .ai-note a:hover {
+    text-decoration: underline;
+  }
+
   footer {
-    margin-top: 48px;
+    margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid var(--light-grey);
     font-size: 12.5px;
@@ -211,7 +226,7 @@
     <header class="page-header">
       <h1 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Gustavo Morales — Data Science Portfolio</h1>
       <div class="name">Gustavo Morales</div>
-      <div class="subtitle">Senior Data Scientist — stuff I've worked on. All data is synthetic; the methodology is real.</div>
+      <div class="subtitle">Senior Data Scientist — stuff I've worked on. Synthetic data, real methodology.</div>
       <div class="eyebrow">5 PROJECTS · CODE ON GITHUB</div>
     </header>
 
@@ -314,6 +329,8 @@
       </div>
 
     </div>
+
+    <p class="ai-note">Obligatory note on generative AI use: it's part of my regular workflow, mainly for automating repetitive tasks. I do favor <a href="https://github.com/github/spec-kit" target="_blank" rel="noopener">Spec-Driven Development</a> over unstructured vibe coding because it keeps AI-assisted work reviewable and reliable. All output is validated before it ships, and only used where it's a genuine improvement over manual work.</p>
 
     <footer>
       <span>Gustavo Morales · Senior Data Scientist</span>
