@@ -11,6 +11,7 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 - Experiment design and power analysis
 - Two-proportion hypothesis testing
 - CUPED variance reduction
+- Multi-armed bandits (Thompson Sampling) vs. fixed-horizon testing
 - Uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation
 - Difference-in-differences with fixed effects and a parallel-trends check
 - Wild cluster bootstrap and Honest DiD sensitivity analysis
@@ -41,6 +42,27 @@ The standard test shows the lift clearly (Figure 1); a CUPED-adjusted estimate o
 ![CUPED variance reduction](reports/figures/cuped_variance_reduction.png)
 
 *Figure 2. Estimated treatment lift, standard vs. CUPED-adjusted, 95% CI.*
+
+### Sequential experimentation: what an adaptive design would have cost or saved
+
+The fixed 50/50 design above is the right choice when a clean, unbiased effect estimate is the goal, exactly what section 1's z-test and CUPED interval need. But every user sent to the losing arm during the test is a real cost, and a fixed design keeps paying it at a constant rate for the whole test, even once the result is obvious. A Thompson Sampling multi-armed bandit, simulated here over the same total traffic (40,000 users) and the same two realized conversion rates (34.3% vs. 38.5%), shows the size of that cost: it shifts traffic toward the treatment arm as its posterior pulls ahead (Figure 11), reaching 96.8% of traffic by the end, and banks 886 more conversions over the same traffic by capping how long it keeps exposing users to the losing arm (Figure 12), a 93.6% reduction in cumulative regret against the fixed design.
+
+| | |
+|---|---|
+| Total conversions, fixed 50/50 vs. Thompson Sampling (same 40,000 users) | 14,521 vs. 15,407 |
+| Additional conversions banked by Thompson Sampling | 886 |
+| Cumulative regret reduction | 93.6% |
+| Traffic on treatment by the end of the run | 50% (fixed) vs. 96.8% (Thompson Sampling) |
+
+![Traffic allocation over time](reports/figures/bandit_traffic_allocation.png)
+
+*Figure 11. Cumulative share of traffic allocated to the treatment arm, fixed 50/50 design vs. Thompson Sampling.*
+
+![Cumulative regret](reports/figures/bandit_cumulative_regret.png)
+
+*Figure 12. Cumulative regret (expected conversions forgone vs. always playing the better arm), fixed design vs. Thompson Sampling.*
+
+The catch is exactly what makes the fixed design useful in the first place: because Thompson Sampling's allocation responds to outcomes as they arrive, the resulting data no longer satisfies the assumptions the standard two-proportion z-test and its confidence interval rely on. A real deployment that wanted both the bandit's lower regret and a valid end-of-test inference would need always-valid or mixture-sequential testing methods built for that purpose, not implemented here. This simulation also collapses the tenure-driven heterogeneous effect from section 2 into two flat rates; a contextual bandit that used tenure the way the CATE model does is the natural next step.
 
 ## 2. Uplift/CATE modeling: who actually benefits
 
@@ -136,13 +158,13 @@ One topic, general account questions, doesn't cluster cleanly on its own; it sca
 
 ## Recommendation
 
-Ship the reminder redesign; the lift is well outside noise and confirmed two ways (a standard test and a CUPED-adjusted one with a tighter interval). But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling the redesign out to long-tenured users buys almost nothing while the engineering and support cost of maintaining two reminder flows is the same either way. For the regional rollout, the fixed-effects estimate, the pre-period placebo check, and both robustness checks (wild cluster bootstrap, Honest DiD) support treating the +4.0pp effect as real rather than a pre-existing regional difference, which makes the case for extending the rollout to the remaining regions. For lifecycle marketing, the RFM segments show where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer targeted at that group would cost little in forgone Champion/Loyal attention. For support operations, route the four cleanly-separated topics to a keyword/topic-based triage rule, but keep a human or supervised classifier in the loop for general account questions, since that category doesn't have a clean unsupervised signature to route on.
+Ship the reminder redesign; the lift is well outside noise and confirmed two ways (a standard test and a CUPED-adjusted one with a tighter interval). For future tests in this same low-stakes, high-traffic category, weigh the fixed-horizon design's clean inference against a Thompson Sampling design's lower regret: the simulation above suggests roughly 900 conversions over 40,000 users, real revenue, were the price paid here for a fixed design's valid p-value. But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling the redesign out to long-tenured users buys almost nothing while the engineering and support cost of maintaining two reminder flows is the same either way. For the regional rollout, the fixed-effects estimate, the pre-period placebo check, and both robustness checks (wild cluster bootstrap, Honest DiD) support treating the +4.0pp effect as real rather than a pre-existing regional difference, which makes the case for extending the rollout to the remaining regions. For lifecycle marketing, the RFM segments show where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer targeted at that group would cost little in forgone Champion/Loyal attention. For support operations, route the four cleanly-separated topics to a keyword/topic-based triage rule, but keep a human or supervised classifier in the loop for general account questions, since that category doesn't have a clean unsupervised signature to route on.
 
 ## Repo layout
 
 - `notebooks/03_growth_experimentation_segmentation.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling and its EconML comparison, causal inference and its robustness checks including the DoWhy refutation suite, segmentation, topic modeling) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the DoWhy refutation suite, the uplift model's bucket-calibration and Qini-curve logic, the CausalForestDML comparison, and the RFM/topic-modeling helper functions.
+- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, sequential experimentation/bandits, uplift/CATE modeling and its EconML comparison, causal inference and its robustness checks including the DoWhy refutation suite, segmentation, topic modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the fixed-horizon vs. Thompson Sampling simulation, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the DoWhy refutation suite, the uplift model's bucket-calibration and Qini-curve logic, the CausalForestDML comparison, and the RFM/topic-modeling helper functions.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -151,6 +173,7 @@ Ship the reminder redesign; the lift is well outside noise and confirmed two way
 pip install -r requirements.txt
 python src/generate_data.py
 python src/experiment_design.py
+python src/sequential_experimentation.py
 python src/uplift_modeling.py
 python src/cate_econml.py
 python src/causal_inference.py

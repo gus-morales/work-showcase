@@ -1,0 +1,16 @@
+{
+  "n_total": 40000,
+  "p_control": 0.3425,
+  "p_treatment": 0.3846,
+  "fixed_horizon": {
+    "total_conversions": 14521,
+    "final_cumulative_regret": 838.295200000089
+  },
+  "thompson_sampling": {
+    "total_conversions": 15407,
+    "final_cumulative_regret": 53.29859999999929,
+    "final_treatment_share": 0.96835
+  },
+  "additional_conversions_vs_fixed": 886,
+  "cumulative_regret_reduction": 0.93642024909603
+}
