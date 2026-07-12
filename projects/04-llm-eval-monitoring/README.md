@@ -12,7 +12,7 @@ A generic company ships an LLM-drafted reply feature for its support inbox: the 
 
 Teams shipping LLM-powered features tend to reach for an LLM-judge to score output quality because human review of everything doesn't scale, then trust the judge's numbers without checking whether it's actually a reliable stand-in for a human. Meanwhile the usual production-monitoring playbook (checking whether input features have drifted) doesn't catch a regression in what the model outputs, and the auto-send/review-queue split is usually set by gut feel rather than by what each type of mistake actually costs.
 
-## 1. Is the judge trustworthy?
+## 1. Validating the LLM-judge against human labels
 
 A 600-ticket golden set was scored by both a human rater and the LLM-judge on a 1-5 scale, before trusting the judge for anything downstream.
 
@@ -25,7 +25,7 @@ A 600-ticket golden set was scored by both a human rater and the LLM-judge on a 
 
 ![Judge confusion matrix](reports/figures/judge_confusion_matrix.png)
 
-The bias isn't uniform. It's worst on complaints, the category where a bad reply does the most damage and where catching it matters most.
+The bias concentrates on complaints, the category where a bad reply does the most damage and where catching it matters most.
 
 ![Judge bias by category](reports/figures/judge_bias_by_category.png)
 
