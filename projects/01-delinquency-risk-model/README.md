@@ -31,6 +31,8 @@ Trains a model to predict delinquency risk at loan approval, then picks the appr
 
 The gradient-boosted model's hyperparameters were chosen with a randomized search over 5-fold time-series cross-validation (expanding window, each fold validating on the months right after it). Picking the decision threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **67%** on held-out data.
 
+AUC (area under the ROC curve) summarizes how well the model ranks delinquent loans above good ones across every possible threshold, 0.5 is a coin flip, 1.0 is perfect separation; it says nothing on its own about which threshold to actually use, which is what the cost-based step below is for.
+
 | | |
 |---|---|
 | Model accuracy (AUC), held-out test | 0.79 |
@@ -52,11 +54,11 @@ Delinquency climbs sharply in the shock window (Figure 1); sweeping the decision
 
 About 9% of customers are thin-file: gig/informal workers and recent platform joiners with no bureau score on record at underwriting time, a routine situation for a BNPL lender rather than an edge case. The feature pipeline (feature-engine, wrapped in an sklearn `Pipeline`) adds a missing-value indicator and median-imputes the score, fit on the training split only and reused unchanged on validation, test, and the monitoring window, so no split ever influences another split's preprocessing statistics.
 
-Bureau score is still by far the model's strongest signal (SHAP), but the missing-score indicator itself carries a small amount of separate signal beyond what employment type and tenure already capture, meaning "no bureau record" isn't fully redundant with the other applicant information the model already has.
+Bureau score is still by far the model's strongest signal by SHAP value (SHAP attributes each prediction back to individual feature contributions, so "strongest signal" here means the largest average push on the model's output), but the missing-score indicator itself carries a small amount of separate signal beyond what employment type and tenure already capture, meaning "no bureau record" isn't fully redundant with the other applicant information the model already has.
 
 ## Calibration drift under a simulated shock
 
-The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed, including the rate of missing bureau scores) showed nothing unusual: every PSI stayed well under the alert threshold, and the missing-score rate barely moved (9.4% reference vs. 9.9% monitored). But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes (Figure 3), since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
+The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed, including the rate of missing bureau scores) showed nothing unusual: every feature's Population Stability Index, or PSI (a standard measure of how much a feature's distribution has shifted between two time windows, with values above roughly 0.2 typically treated as a meaningful shift), stayed well under the alert threshold, and the missing-score rate barely moved (9.4% reference vs. 9.9% monitored). But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes (Figure 3), since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 
@@ -96,7 +98,7 @@ The four-fifths rule (a group's approval rate should be at least 80% of the high
 
 *Figure 6. Approval rate by demographic group vs. the four-fifths rule.*
 
-For every declined applicant, the model's SHAP values also drive an adverse action reason code, the specific reasons a lender is required to give a declined applicant under ECOA. Reason codes are restricted to a fixed allowlist of genuinely credit-relevant factors; `city_tier`, `device_type`, `acquisition_channel`, and `merchant_category` never appear as a reason even when they carry real SHAP signal, matching the standard practice of not citing geography or acquisition channel on an adverse action notice.
+For every declined applicant, the model's SHAP values also drive an adverse action reason code, the specific reasons a lender is required to give a declined applicant under the Equal Credit Opportunity Act (ECOA). Reason codes are restricted to a fixed allowlist of genuinely credit-relevant factors; `city_tier`, `device_type`, `acquisition_channel`, and `merchant_category` never appear as a reason even when they carry real SHAP signal, matching the standard practice of not citing geography or acquisition channel on an adverse action notice.
 
 ![Fair lending reason codes](reports/figures/fair_lending_reason_codes.png)
 
@@ -106,9 +108,9 @@ For every declined applicant, the model's SHAP values also drive an adverse acti
 
 The classification model above answers "will this loan go 30+ days past due within the observation window." That collapses a useful distinction: a loan that defaults in week 2 is a different underwriting problem than one that defaults in month 10, even if both end up in the same "delinquent" bucket. Survival analysis keeps the time dimension instead of collapsing it.
 
-A Kaplan-Meier estimate by employment type shows how fast that gap opens up: by the end of the observation window, 93.1% of salaried loans are still current, against 82.7% of self-employed, 72.4% of gig-economy, and 66.8% of informal loans (Figure 8), a difference too large to be sampling noise (log-rank test, p < 0.001).
+A Kaplan-Meier estimate, the standard way to chart the share of a population that hasn't yet experienced an event as time passes, without needing every loan to have already reached its outcome, by employment type shows how fast that gap opens up: by the end of the observation window, 93.1% of salaried loans are still current, against 82.7% of self-employed, 72.4% of gig-economy, and 66.8% of informal loans (Figure 8), a difference too large to be sampling noise (log-rank test, the standard significance test for comparing two or more Kaplan-Meier curves, p < 0.001).
 
-A Cox proportional hazards model quantifies the same gap as a hazard ratio: holding the other factors fixed, an informal-employment loan defaults at 2.18x the rate of an otherwise-identical salaried loan, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio is the strongest protective factor in the model; every other credit-relevant driver in the classification model above (bureau score, existing obligations, loan amount, income) points the same direction here.
+A Cox proportional hazards model, the standard regression for time-to-event data, quantifies the same gap as a hazard ratio: how much faster or slower one group reaches the event compared to a reference group, holding everything else fixed. An informal-employment loan defaults at 2.18x the rate of an otherwise-identical salaried loan, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio is the strongest protective factor in the model (a hazard ratio well below 1); every other credit-relevant driver in the classification model above (bureau score, existing obligations, loan amount, income) points the same direction here.
 
 | | |
 |---|---|
@@ -116,7 +118,7 @@ A Cox proportional hazards model quantifies the same gap as a hazard ratio: hold
 | Model accuracy (AUC), classification model, held-out test | 0.79 |
 | Log-rank test across employment types | p < 0.001 |
 
-The concordance index lands close to the classification model's AUC, two different framings of the same underlying risk agree on how separable it is. The classification model is still the right choice for a real-time approve/decline decision, it outputs a single probability against a cost-calibrated threshold. The survival model earns its keep downstream of that decision: once a loan is on the books, it says which segments are worth the earliest collections outreach, a question the classification model's single probability doesn't answer on its own.
+The concordance index, the survival-model equivalent of AUC (the probability that, given two random loans, the model ranks the one that defaults first as the higher-risk one), lands close to the classification model's AUC: two different framings of the same underlying risk agree on how separable it is. The classification model is still the right choice for a real-time approve/decline decision, it outputs a single probability against a cost-calibrated threshold. The survival model earns its keep downstream of that decision: once a loan is on the books, it says which segments are worth the earliest collections outreach, a question the classification model's single probability doesn't answer on its own.
 
 ![Time-to-default by employment type](reports/figures/survival_km_by_employment.png)
 
@@ -128,7 +130,7 @@ The concordance index lands close to the classification model's AUC, two differe
 
 ## Serving the model
 
-Everything above is evaluated offline, on a held-out split. `src/serve.py` closes that gap: it wraps the trained pipeline (`reports/model.pkl`, the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
+Everything above is evaluated offline, on a held-out split. `src/serve.py` closes that gap: it wraps the trained pipeline (`reports/model.pkl`, the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic (a Python library that validates request data against a declared schema) rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
 
 ```bash
 uvicorn serve:app --reload   # from src/

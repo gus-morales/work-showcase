@@ -33,7 +33,7 @@ A redesigned in-app reminder (clearer due date, one-tap repayment link) was test
 | Absolute lift | +4.2pp (95% CI: 3.3 to 5.1pp), p < 0.0001 |
 | CUPED confidence interval narrowing | 11%, using pre-period revenue as the covariate |
 
-The standard test shows the lift clearly (Figure 1); a CUPED-adjusted estimate on the same data narrows the interval further (Figure 2).
+The standard test shows the lift clearly (Figure 1); CUPED (Controlled-experiment Using Pre-Experiment Data, a variance-reduction technique that uses a pre-period covariate correlated with the outcome but unaffected by treatment to strip out noise the treatment never touched) narrows the interval further on the same data, same sample, no extra traffic (Figure 2).
 
 ![A/B test result](reports/figures/ab_conversion_result.png)
 
@@ -66,12 +66,12 @@ The catch is exactly what makes the fixed design useful in the first place: beca
 
 ## 2. Uplift/CATE modeling: who actually benefits
 
-The +4.2pp average lift is real, but it's an average across everyone, and averages can hide that some users benefit far more than others. A T-learner (two gradient-boosted classifiers, one fit per arm, on tenure, recent session count, and pre-period revenue) predicts each held-out test user's individual treatment effect, validated the standard way for uplift models: by checking whether a higher predicted effect actually corresponds to a bigger realized effect on data the model never saw during fitting.
+The +4.2pp average lift is real, but it's an average across everyone, and averages can hide that some users benefit far more than others. Uplift modeling estimates the CATE (Conditional Average Treatment Effect), the treatment effect for a given user's covariates rather than the single population-wide number the A/B test above produces. A T-learner (two gradient-boosted classifiers, one fit per arm, on tenure, recent session count, and pre-period revenue) predicts each held-out test user's individual treatment effect, validated the standard way for uplift models: by checking whether a higher predicted effect actually corresponds to a bigger realized effect on data the model never saw during fitting.
 
 | | |
 |---|---|
 | Realized lift, top predicted-CATE quintile vs. bottom | +8.0pp vs. +1.0pp |
-| Qini coefficient (targeting by predicted CATE vs. random) | 52.1 |
+| Qini coefficient (targeting by predicted CATE vs. random) | 52.1 (higher is better; 0 means targeting by the model does no better than random, the same relationship a Gini coefficient has to a classifier's ROC curve) |
 | Predicted CATE, newest users (0-33 days) vs. longest-tenured (320+ days) | +11.8pp vs. -1.3pp |
 
 Predicted effect tracks realized effect on held-out data (Figure 3), and the model recovers platform tenure as the driver of the heterogeneity without being told to look for it (Figure 4): newer users, who haven't yet learned the old reminder flow, get most of the benefit from a clearer one; long-tenured users see essentially none.
@@ -101,7 +101,7 @@ The T-learner's Qini curve still clears random targeting by a wide margin, so it
 
 ## 3. Difference-in-differences: regional rollout
 
-A new in-app collections feature was rolled out to 20 of 40 regions first, based on business priority rather than random assignment, which rules out a simple before/after read. A region and day fixed-effects regression, checked against a pre-period parallel-trends test first, isolates the treatment effect from any shared time trend.
+A new in-app collections feature was rolled out to 20 of 40 regions first, based on business priority rather than random assignment, which rules out a simple before/after read. Difference-in-differences instead compares the *change* in treated regions against the *change* in untreated ones over the same period, which is only valid under the parallel trends assumption: absent the rollout, treated and control regions would have moved together. A region and day fixed-effects regression, checked against a pre-period parallel-trends test first, isolates the treatment effect from any shared time trend.
 
 | | |
 |---|---|
@@ -132,7 +132,7 @@ A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identi
 
 ## 4. RFM customer segmentation
 
-Recency, frequency, and monetary value, clustered with KMeans (k chosen by silhouette score, not fixed in advance) into three segments.
+Recency, frequency, and monetary value, clustered with KMeans (k chosen by silhouette score, a measure of how well-separated the resulting clusters are from each other relative to how tight each one is internally, rather than fixed in advance) into three segments.
 
 | Segment | % of customers | % of revenue |
 |---|---|---|
@@ -148,7 +148,7 @@ Champions are 16% of customers and 46% of revenue; Dormant customers are nearly 
 
 ## 5. Support ticket topic modeling
 
-TF-IDF + NMF on 1,500 synthetic support tickets recovers five topics from text alone, validated at 85% purity against the known ground-truth categories (a check only possible because the data is synthetic) (Figure 10).
+TF-IDF (Term Frequency-Inverse Document Frequency, which weights each word by how distinctive it is to a given ticket rather than how often it appears everywhere) turns the raw ticket text into vectors, then NMF (Non-negative Matrix Factorization, a standard unsupervised way to decompose that matrix into a small number of additive, interpretable topics) recovers five topics from text alone, validated at 85% purity against the known ground-truth categories (a check only possible because the data is synthetic) (Figure 10).
 
 ![Topic volume](reports/figures/topic_volume.png)
 

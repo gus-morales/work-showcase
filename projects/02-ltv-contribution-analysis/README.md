@@ -21,7 +21,7 @@ GMV was up sharply over two years, which looks like a growth story on the surfac
 
 ## What this does
 
-Decomposes GMV growth into its three multiplicative drivers (active customers, orders per customer, average order value) using SQL-aggregated monthly KPIs, then checks whether the answer traces back to a shift in acquisition channel mix. Separately, builds two complementary customer lifetime value models: a probabilistic BG/NBD + Gamma-Gamma model that scores customers from transaction history, and a gradient boosting model that scores customers from just their first 30 days.
+Decomposes GMV growth into its three multiplicative drivers (active customers, orders per customer, average order value; GMV is exactly their product every month, so a log-share decomposition turns the growth rate into an additive split across the three, each one's share of the total log-change) using SQL-aggregated monthly KPIs, then checks whether the answer traces back to a shift in acquisition channel mix. Separately, builds two complementary customer lifetime value models: a probabilistic BG/NBD + Gamma-Gamma model that scores customers from transaction history, and a gradient boosting model that scores customers from just their first 30 days.
 
 ## Data contracts and a governed metric layer
 
@@ -39,8 +39,8 @@ GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that cha
 | Share of growth from new customers | ~107% (frequency and order value are net drags) |
 | Best vs. worst channel, revenue per customer | Partner store $322 vs. paid social $120 (2.7x) |
 | Paid social's share of new cohorts | Roughly tripled (16% to 47%) |
-| Predicted 12-month CLV captured by top decile | 52.7% |
-| Early-life model (day-30 features), holdout R² | 0.37 |
+| Predicted 12-month CLV captured by top decile | 52.7% (top 10% of customers by predicted value account for this share of actual realized value) |
+| Early-life model (day-30 features), holdout R² | 0.37 (the model explains 37% of the variance in 12-month GMV on data it wasn't trained on) |
 
 Active customer growth alone accounts for essentially all of the GMV change (Figure 1).
 
@@ -60,7 +60,7 @@ The channel data explains why: paid social is both the fastest-growing acquisiti
 
 ## Two ways to estimate customer value
 
-BG/NBD + Gamma-Gamma uses only transaction history and needs no features, but it takes months of purchase history to produce a stable read on a customer. Validated against a 6-month calibration/holdout split, its predicted purchase counts track actual holdout behavior closely (Figure 4).
+BG/NBD + Gamma-Gamma is the standard probabilistic pairing for this problem: BG/NBD (Beta-Geometric/Negative Binomial Distribution) models each customer's future purchase count and the probability they've already churned, purely from how often and how recently they've bought before; Gamma-Gamma then adds a monetary-value estimate on top, assuming spend per order is independent of purchase frequency. It uses only transaction history and needs no features, but it takes months of purchase history to produce a stable read on a customer. Validated against a 6-month calibration/holdout split (fit on an earlier window, checked against what customers actually did in the following one), its predicted purchase counts track actual holdout behavior closely (Figure 4).
 
 ![CLV calibration holdout](reports/figures/clv_calibration_holdout.png)
 
@@ -74,14 +74,14 @@ For a model that can score a customer immediately after signup, a gradient boost
 
 ## Recommendation
 
-The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, and both order frequency and order value are quietly declining under the growth line. Before scaling paid social spend further, the marginal CAC on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
+The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, and both order frequency and order value are quietly declining under the growth line. Before scaling paid social spend further, the marginal customer acquisition cost (CAC) on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
 
 For lifetime value scoring in production, use the day-30 gradient boosting model to triage new customers into engagement tiers immediately after signup, then let the BG/NBD + Gamma-Gamma model take over once a customer has enough transaction history for it to stabilize, rather than picking one model for the whole customer lifecycle.
 
 ## Repo layout
 
 - `notebooks/02_ltv_contribution_analysis.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `sql/`: cohort revenue, monthly KPIs, channel quality, and channel mix-shift queries, run via DuckDB.
+- `sql/`: cohort revenue, monthly KPIs, channel quality, and channel mix-shift queries, run via DuckDB (an embedded analytical SQL engine that queries the CSVs directly, no server to stand up).
 - `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, SQL runner, contribution decomposition, channel analysis, CLV modeling) as standalone scripts.
 - `tests/`: pytest suite covering data-generation invariants, the data contracts, the metric registry's SQL-consistency check (against this project's actual sql/*.sql files), the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
 - `reports/`: generated charts and CSV outputs.

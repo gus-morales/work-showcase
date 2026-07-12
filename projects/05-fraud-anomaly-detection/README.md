@@ -28,7 +28,7 @@ Trains a classifier to score each transaction's fraud probability at checkout ti
 |---|---|
 | Fraud rate, held-out test set | 1.07% |
 | GBM PR-AUC (average precision) | 0.117 (~11x the base rate) |
-| GBM ROC-AUC | 0.839 |
+| GBM ROC-AUC | 0.839 (ranks a random fraud case above a random genuine one 84% of the time) |
 | Logistic regression baseline PR-AUC | 0.109 |
 | Expected cost reduction, cost-optimal threshold vs. naive 0.5 cutoff | 31.4% |
 | Precision / recall at the cost-optimal threshold (t = 0.03) | 8.3% / 49.6% |
@@ -55,7 +55,7 @@ At the default 0.5 threshold, the trained GBM and a trivial model that always pr
 
 ## What drives the risk score
 
-SHAP on the held-out test set recovers the risk drivers the data was generated from (Figure 4): account age dominates (newer accounts are riskier), followed by a fast checkout, an unrecognized device, and billing/shipping or IP/billing-country mismatches, the same signals real fraud systems watch for at checkout.
+SHAP (SHapley Additive exPlanations, a method that attributes each individual prediction back to how much each feature pushed it up or down) on the held-out test set recovers the risk drivers the data was generated from (Figure 4): account age dominates (newer accounts are riskier), followed by a fast checkout, an unrecognized device, and billing/shipping or IP/billing-country mismatches, the same signals real fraud systems watch for at checkout.
 
 ![SHAP feature importance](reports/figures/shap_summary.png)
 
@@ -63,7 +63,7 @@ SHAP on the held-out test set recovers the risk drivers the data was generated f
 
 ## Unsupervised anomaly detection vs. a supervised model
 
-Before enough confirmed-fraud labels exist to train a model like the one above, or for a fraud pattern the existing labels don't cover, a fraud team has only unsupervised methods to fall back on. An Isolation Forest, trained on the same features with no access to `is_fraud` at all, scores each transaction's general "unusualness" instead of its fraud probability specifically. On the same held-out set, it clears random ranking by a real margin (2.7x the base rate) but falls well short of the supervised model (11.0x), a 4.2x gap (Figure 5). Having labels is worth a lot; not having them yet is not worth nothing.
+Before enough confirmed-fraud labels exist to train a model like the one above, or for a fraud pattern the existing labels don't cover, a fraud team has only unsupervised methods to fall back on. An Isolation Forest, trained on the same features with no access to `is_fraud` at all, works by randomly splitting the feature space over and over; an outlier tends to get isolated into its own partition in far fewer splits than a typical point does, so a short average path length becomes the anomaly score. It scores each transaction's general "unusualness" instead of its fraud probability specifically. On the same held-out set, it clears random ranking by a real margin (2.7x the base rate) but falls well short of the supervised model (11.0x), a 4.2x gap (Figure 5). Having labels is worth a lot; not having them yet is not worth nothing.
 
 | | |
 |---|---|
