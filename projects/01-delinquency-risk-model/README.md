@@ -17,6 +17,7 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 - Drift and calibration monitoring
 - Fair lending analysis (disparate impact / four-fifths rule, SHAP-derived adverse action reason codes)
 - Survival analysis (Kaplan-Meier, Cox proportional hazards)
+- Model serving (FastAPI scoring endpoint over the trained pipeline)
 
 ## The problem
 
@@ -127,13 +128,32 @@ The concordance index lands close to the classification model's AUC, two differe
 
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach, informal and gig-economy loans aren't just riskier, they get there faster.
+Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach: informal and gig-economy loans carry both a higher default rate and a faster clock.
+
+## Serving the model
+
+`src/serve.py` wraps the trained pipeline (`reports/model.pkl`: the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
+
+```bash
+uvicorn serve:app --reload   # from src/
+curl -X POST localhost:8000/predict -H "Content-Type: application/json" -d '{
+  "age": 34, "monthly_income_usd": 2400, "tenure_months_platform": 8,
+  "num_previous_loans": 3, "credit_bureau_score": 690,
+  "avg_prior_repayment_delay_days": 1.5, "num_active_loans_elsewhere": 1,
+  "num_installments": 6, "loan_amount_usd": 850, "down_payment_ratio": 0.15,
+  "city_tier": "tier1", "employment_type": "salaried", "device_type": "ios",
+  "acquisition_channel": "organic", "merchant_category": "electronics"
+}'
+# {"delinquency_probability": 0.0759, "decision": "decline", "threshold": 0.05}
+```
+
+This is deliberately small: no batching, auth, model versioning, or canary rollout, none of which this project is trying to demonstrate. What it does demonstrate is that the training artifacts round-trip cleanly into something that scores a single application the same way the offline evaluation did.
 
 ## Repo layout
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, the fair lending disparate-impact and reason-code logic, and the survival-analysis covariate construction and Cox fit.
+- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis, model serving) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, the fair lending disparate-impact and reason-code logic, the survival-analysis covariate construction and Cox fit, and the serving endpoint's request validation and scoring behavior.
 - `reports/`: generated charts, metrics, and monitoring reports.
 
 ## Reproduce
