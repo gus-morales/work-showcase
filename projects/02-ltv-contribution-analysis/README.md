@@ -6,7 +6,14 @@ A growth analysis for a synthetic BNPL fintech: what's driving GMV growth, which
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as project 01, viewed from the growth/LTV side instead of the credit-risk side.
 
-**Skills demonstrated:** SQL (window functions, CTEs, cohort joins via DuckDB), data contracts and a governed metric layer, cohort retention analysis, log-share contribution decomposition, probabilistic customer lifetime value (BG/NBD + Gamma-Gamma) with calibration/holdout validation, gradient boosting regression with feature importance.
+**Skills demonstrated:**
+
+- SQL (window functions, CTEs, cohort joins via DuckDB)
+- Data contracts and a governed metric layer
+- Cohort retention analysis
+- Log-share contribution decomposition
+- Probabilistic customer lifetime value (BG/NBD + Gamma-Gamma) with calibration/holdout validation
+- Gradient boosting regression with feature importance
 
 ## The problem
 

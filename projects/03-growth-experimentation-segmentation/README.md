@@ -6,7 +6,17 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as projects 01 and 02, viewed from the growth/experimentation side.
 
-**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, DoWhy's causal model/identify/estimate/refute framework, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
+**Skills demonstrated:**
+
+- Experiment design and power analysis
+- Two-proportion hypothesis testing
+- CUPED variance reduction
+- Uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation
+- Difference-in-differences with fixed effects and a parallel-trends check
+- Wild cluster bootstrap and Honest DiD sensitivity analysis
+- DoWhy's causal model/identify/estimate/refute framework
+- KMeans clustering for RFM segmentation
+- Light NLP topic modeling (TF-IDF + NMF)
 
 ## The problem
 

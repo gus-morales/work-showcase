@@ -6,7 +6,12 @@ A generic company ships an LLM-drafted reply feature for its support inbox: the 
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. Deliberately not tied to the fictional company in projects 01-03; this methodology is meant to generalize across any LLM-powered feature, not read as a one-company demo.
 
-**Skills demonstrated:** LLM-judge validation against human labels (Cohen's kappa, bias decomposition), experiment design and two-proportion A/B testing, statistical process control (p-charts) for output-quality monitoring, cost-based decision threshold optimization.
+**Skills demonstrated:**
+
+- LLM-judge validation against human labels (Cohen's kappa, bias decomposition)
+- Experiment design and two-proportion A/B testing
+- Statistical process control (p-charts) for output-quality monitoring
+- Cost-based decision threshold optimization
 
 ## The problem
 

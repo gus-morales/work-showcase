@@ -6,7 +6,15 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied.
 
-**Skills demonstrated:** classification modeling (logistic regression + gradient-boosted trees), leakage-safe feature pipelines (feature-engine, fit on the training split only), time-series cross-validated hyperparameter search, probability calibration, cost-based decision optimization, SHAP interpretability, drift and calibration monitoring.
+**Skills demonstrated:**
+
+- Classification modeling (logistic regression + gradient-boosted trees)
+- Leakage-safe feature pipelines (feature-engine, fit on the training split only)
+- Time-series cross-validated hyperparameter search
+- Probability calibration
+- Cost-based decision optimization
+- SHAP interpretability
+- Drift and calibration monitoring
 
 ## The problem
 
