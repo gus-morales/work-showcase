@@ -43,11 +43,11 @@ The GBM ranks transactions well above random despite the skew (Figure 1); sweepi
 
 *Figure 2. Expected cost by decision threshold, cost-optimal threshold vs. the naive 0.5 cutoff.*
 
-The threshold sits at 0.03, not 0.5, because the cost asymmetry is large: missing a fraud case costs the transaction amount plus a $25 chargeback fee, while flagging a genuine one costs a flat $3 review cost, so the cost-minimizing policy flags aggressively (catching about half of all fraud cases) even though the resulting precision is only 8.3%, meaning roughly 11 flagged transactions for every real fraud case caught. That's a normal trade for a fraud system to make; it isn't a normal trade for accuracy to make.
+The threshold sits at 0.03 instead of 0.5 because the two mistakes cost very different amounts. Missing a fraud case costs the full transaction amount plus a $25 chargeback fee. Flagging a genuine transaction only costs a flat $3 review. Given that gap, the cost-minimizing policy flags aggressively, catching about half of all fraud cases, even though only 8.3% of what it flags turns out to actually be fraud (roughly 11 flagged transactions for every real case caught). That's a normal trade for a fraud system to make. It would be a terrible trade if the goal were accuracy instead.
 
 ## The accuracy paradox
 
-At the default 0.5 threshold, the trained GBM and a trivial model that always predicts "genuine" score identically on accuracy (98.93%), because the GBM catches exactly 1 of 139 fraud cases in the test set at that cutoff (Figure 3). Accuracy is the wrong metric here by construction, not because the model is bad: with fraud this rare, almost any prediction pattern scores well on accuracy, which is exactly why PR-AUC and a cost-based threshold, not accuracy and a 0.5 cutoff, are the right tools for this kind of skew.
+At the default 0.5 threshold, the trained GBM scores 98.93% accuracy, identical to a trivial model that always predicts "genuine" and never flags anything at all. That's because the GBM only catches 1 of 139 fraud cases in the test set at that cutoff (Figure 3). This isn't a sign the model is bad, it's a sign accuracy is the wrong tool here. With fraud this rare, almost any prediction pattern scores well on accuracy, which is exactly why this project tracks PR-AUC and a cost-based threshold instead.
 
 ![Accuracy paradox](reports/figures/accuracy_paradox.png)
 
@@ -55,7 +55,7 @@ At the default 0.5 threshold, the trained GBM and a trivial model that always pr
 
 ## What drives the risk score
 
-SHAP (SHapley Additive exPlanations, a method that attributes each individual prediction back to how much each feature pushed it up or down) on the held-out test set recovers the risk drivers the data was generated from (Figure 4): account age dominates (newer accounts are riskier), followed by a fast checkout, an unrecognized device, and billing/shipping or IP/billing-country mismatches, the same signals real fraud systems watch for at checkout.
+SHAP, a method that attributes each individual prediction back to how much each feature pushed it up or down, shows what the model is actually keying on. On the held-out test set, it recovers the exact risk drivers the data was generated from (Figure 4): account age dominates, newer accounts are riskier, followed by a fast checkout, an unrecognized device, and billing/shipping or IP/billing-country mismatches. Those are the same signals real fraud systems watch for at checkout.
 
 ![SHAP feature importance](reports/figures/shap_summary.png)
 
@@ -63,7 +63,11 @@ SHAP (SHapley Additive exPlanations, a method that attributes each individual pr
 
 ## Unsupervised anomaly detection vs. a supervised model
 
-Before enough confirmed-fraud labels exist to train a model like the one above, or for a fraud pattern the existing labels don't cover, a fraud team has only unsupervised methods to fall back on. An Isolation Forest, trained on the same features with no access to `is_fraud` at all, works by randomly splitting the feature space over and over; an outlier tends to get isolated into its own partition in far fewer splits than a typical point does, so a short average path length becomes the anomaly score. It scores each transaction's general "unusualness" instead of its fraud probability specifically. On the same held-out set, it clears random ranking by a real margin (2.7x the base rate) but falls well short of the supervised model (11.0x), a 4.2x gap (Figure 5). Having labels is worth a lot; not having them yet is not worth nothing.
+Before enough confirmed-fraud labels exist to train a model like the one above, or for a fraud pattern the existing labels don't cover, a fraud team only has unsupervised methods to fall back on.
+
+An Isolation Forest is one option. Trained on the same features but with no access to the fraud label at all, it works by repeatedly splitting the feature space at random. A genuine outlier tends to get isolated into its own tiny partition in far fewer splits than a typical point does, so a short average path length becomes its anomaly score. It's scoring general "unusualness," not fraud probability specifically.
+
+On the same held-out set, it clears random ranking by a real margin (2.7x the base rate), but falls well short of the supervised model (11.0x), a 4.2x gap (Figure 5). Having labels is clearly worth a lot. But an unsupervised score before those labels exist is still a useful signal in the meantime.
 
 | | |
 |---|---|
@@ -77,7 +81,9 @@ Before enough confirmed-fraud labels exist to train a model like the one above, 
 
 ## Recommendation
 
-Ship the cost-based threshold (0.03) over a default 0.5 cutoff; a 0.5 threshold on this model is functionally identical to not having a model at all, given how rarely predicted probabilities cross it at this fraud rate. Track PR-AUC, not accuracy, as the headline offline metric, and re-derive the threshold whenever the fraud-loss or review-cost assumptions change, since the entire cutoff is a direct function of those two numbers. Where labels are thin, delayed, or don't yet cover a new fraud pattern, the Isolation Forest above is a reasonable interim signal, not a replacement for the supervised model once enough confirmed labels exist to train one.
+Ship the cost-based threshold (0.03), not the default 0.5 cutoff. A 0.5 threshold is functionally the same as having no model at all here, predicted probabilities almost never cross it at this fraud rate. Track PR-AUC, not accuracy, as the headline offline metric, and re-derive the threshold whenever the fraud-loss or review-cost assumptions change, since the whole cutoff is a direct function of those two numbers.
+
+Where labels are thin, delayed, or don't yet cover a new fraud pattern, the Isolation Forest above is a reasonable interim signal. It's not a replacement for the supervised model, once enough confirmed labels exist to train one, that's still the better choice.
 
 ## Repo layout
 
