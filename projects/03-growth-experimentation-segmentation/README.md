@@ -6,7 +6,7 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as projects 01 and 02, viewed from the growth/experimentation side.
 
-**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
+**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, DoWhy's causal model/identify/estimate/refute framework, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
 
 ## The problem
 
@@ -66,13 +66,17 @@ A new in-app collections feature was rolled out to 20 of 40 regions first, based
 
 ![Parallel trends](reports/figures/did_parallel_trends.png)
 
-### Two robustness checks on the DiD estimate
+### Three robustness checks on the DiD estimate
 
 Standard errors are clustered by region, but 40 regions with 20 treated is on the edge of "few clusters" territory where the usual asymptotic cluster-robust standard errors can be unreliable. A wild cluster bootstrap (Cameron, Gelbach & Miller 2008) recomputes inference on the same coefficient without relying on that asymptotic approximation, using the [diff-diff](https://github.com/igerber/diff-diff) package: 95% CI of 3.7 to 4.3pp, matching the analytical result almost exactly, which is itself evidence the cluster count here isn't causing problems.
 
 The pre-trends placebo check above fails to detect a trend difference, which is a weaker statement than proving none exists. Honest DiD (Rambachan & Roth 2023) quantifies the gap: how large would an undetected post-period violation of parallel trends have to be, relative to the largest pre-period wobble actually observed, before the effect stops being distinguishable from zero. Here that breakdown point is M = 0.35, meaning the conclusion holds only if any unmeasured drift after rollout stays under about a third of the size of the noisiest pre-period swing.
 
 ![Honest DiD sensitivity](reports/figures/did_honest_sensitivity.png)
+
+A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identify/estimate/refute framework, which formalizes the causal graph explicitly (region and day as the adjustment set) and runs a generic refutation suite orthogonal to the DiD-specific checks above: adding a random confounder, replacing the real treatment with a permuted placebo, and refitting on random 80% subsets of the data. The estimate survives all three: it barely moves when a random confounder is added or the data is subsetted, and it collapses to essentially zero under a placebo treatment, exactly the pattern that says the effect is real rather than an artifact of the estimation procedure.
+
+![DoWhy refutation suite](reports/figures/dowhy_refutation.png)
 
 ## 4. RFM customer segmentation
 
@@ -101,8 +105,8 @@ Ship the reminder redesign; the lift is well outside noise and confirmed two way
 ## Repo layout
 
 - `notebooks/03_growth_experimentation_segmentation.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling and its EconML comparison, causal inference and its robustness checks, segmentation, topic modeling) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the uplift model's bucket-calibration and Qini-curve logic, the CausalForestDML comparison, and the RFM/topic-modeling helper functions.
+- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling and its EconML comparison, causal inference and its robustness checks including the DoWhy refutation suite, segmentation, topic modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the DoWhy refutation suite, the uplift model's bucket-calibration and Qini-curve logic, the CausalForestDML comparison, and the RFM/topic-modeling helper functions.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -115,6 +119,7 @@ python src/uplift_modeling.py
 python src/cate_econml.py
 python src/causal_inference.py
 python src/robustness_checks.py
+python src/dowhy_refutation.py
 python src/segmentation.py
 python src/ticket_topics.py
 ```

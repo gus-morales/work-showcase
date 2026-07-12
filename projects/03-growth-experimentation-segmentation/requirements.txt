@@ -7,6 +7,7 @@ matplotlib==3.10.9
 seaborn==0.13.2
 diff-diff==3.7.0
 econml==0.16.0
+dowhy==0.14
 
 # only needed to re-run/re-execute the notebook
 jupyter==1.1.1
