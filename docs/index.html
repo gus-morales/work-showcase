@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gustavo Morales — Data Science Portfolio</title>
+<meta name="description" content="Gustavo Morales, Senior Data Scientist — five data science and ML projects, synthetic data, real methodology.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2B2B2B;
+    --slate: #3D5A73;
+    --teal: #5E8C86;
+    --amber: #B98A3D;
+    --red: #A8493D;
+    --grey: #8A8A8A;
+    --light-grey: #E3E3E1;
+    --bg: #FAFAF8;
+    --card-bg: #FFFFFF;
+    --chip-bg: #EEF1F3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 28px 40px;
+  }
+
+  header.page-header {
+    margin-bottom: 34px;
+  }
+
+  .name {
+    font-family: 'Lora', serif;
+    font-weight: 500;
+    font-size: 30px;
+    color: var(--ink);
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: #5a5a5a;
+    margin-top: 6px;
+    max-width: 620px;
+    line-height: 1.5;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    color: var(--amber);
+    margin-top: 14px;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--light-grey);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+
+  .card:hover {
+    box-shadow: 0 6px 18px rgba(43, 43, 43, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .card .chart {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    background: #F5F4F1;
+    border-bottom: 1px solid var(--light-grey);
+  }
+
+  .card-body {
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .card-title {
+    font-family: 'Lora', serif;
+    font-size: 17px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .card-pitch {
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.55;
+    margin-bottom: 14px;
+    flex: 1;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .tag {
+    font-size: 10.5px;
+    background: var(--chip-bg);
+    color: var(--slate);
+    padding: 3px 9px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  .card-links {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .card-links a {
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  .card-links a:hover {
+    text-decoration: underline;
+  }
+
+  .more-card {
+    border: 1px dashed #D8D6D0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    text-align: center;
+    min-height: 220px;
+  }
+
+  .more-card p {
+    font-size: 13px;
+    color: var(--grey);
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+
+  .more-card a {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--teal);
+    text-decoration: none;
+  }
+
+  .more-card a:hover {
+    text-decoration: underline;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--light-grey);
+    font-size: 12.5px;
+    color: var(--grey);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  footer a {
+    color: var(--slate);
+    text-decoration: none;
+  }
+
+  footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="page-header">
+      <h1 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Gustavo Morales — Data Science Portfolio</h1>
+      <div class="name">Gustavo Morales</div>
+      <div class="subtitle">Senior Data Scientist — stuff I've worked on. All data is synthetic; the methodology is real.</div>
+      <div class="eyebrow">5 PROJECTS · CODE ON GITHUB</div>
+    </header>
+
+    <div class="grid">
+
+      <!-- Project 1 -->
+      <div class="card">
+        <img class="chart" src="images/01-delinquency.png" alt="Expected portfolio cost by decision threshold, showing the cost-optimal cutoff well below the naive 0.5 default">
+        <div class="card-body">
+          <div class="card-title">Delinquency Risk Model</div>
+          <div class="card-pitch">A cost-based approve/decline threshold cuts expected losses 67% vs. a naive cutoff — plus a fair lending review and a survival-analysis view of time-to-default.</div>
+          <div class="tags">
+            <span class="tag">SHAP</span>
+            <span class="tag">Fair lending</span>
+            <span class="tag">Survival analysis</span>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/01-delinquency-risk-model/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/01-delinquency-risk-model/notebooks/01_delinquency_risk_model.ipynb" target="_blank" rel="noopener">Notebook →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="card">
+        <img class="chart" src="images/02-ltv.png" alt="GMV growth decomposed into active customers, orders per customer, and average order value">
+        <div class="card-body">
+          <div class="card-title">Customer LTV &amp; Contribution</div>
+          <div class="card-pitch">GMV growth decomposed via SQL window functions — reveals growth is increasingly funded by a channel that produces customers worth a third as much as the best one.</div>
+          <div class="tags">
+            <span class="tag">SQL</span>
+            <span class="tag">BG/NBD</span>
+            <span class="tag">Gradient boosting</span>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/02-ltv-contribution-analysis/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/02-ltv-contribution-analysis/notebooks/02_ltv_contribution_analysis.ipynb" target="_blank" rel="noopener">Notebook →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="card">
+        <img class="chart" src="images/03-experimentation.png" alt="A/B test result, on-time conversion rate by arm, control vs. treatment">
+        <div class="card-body">
+          <div class="card-title">Growth Experimentation &amp; Segmentation</div>
+          <div class="card-pitch">An A/B test with CUPED and an adaptive-bandit comparison, uplift modeling, a causal difference-in-differences read on a rollout, RFM segmentation, and topic modeling.</div>
+          <div class="tags">
+            <span class="tag">CUPED</span>
+            <span class="tag">Causal inference</span>
+            <span class="tag">Uplift/CATE</span>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/03-growth-experimentation-segmentation/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/03-growth-experimentation-segmentation/notebooks/03_growth_experimentation_segmentation.ipynb" target="_blank" rel="noopener">Notebook →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 4 -->
+      <div class="card">
+        <img class="chart" src="images/04-llm-eval.png" alt="Daily quality control chart flagging a judge-scored acceptable-rate regression the same day it started">
+        <div class="card-body">
+          <div class="card-title">Evaluating &amp; Monitoring an LLM Feature</div>
+          <div class="card-pitch">Validates an LLM-judge against human labels, A/B tests a prompt change, and catches a silent quality regression the same day it starts, via a control chart.</div>
+          <div class="tags">
+            <span class="tag">Cohen's kappa</span>
+            <span class="tag">Control charts</span>
+            <span class="tag">LLM evaluation</span>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/04-llm-eval-monitoring/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/04-llm-eval-monitoring/notebooks/04_llm_eval_monitoring.ipynb" target="_blank" rel="noopener">Notebook →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 5 -->
+      <div class="card">
+        <img class="chart" src="images/05-fraud.png" alt="Precision-recall curve for the fraud model against the 1.07% base rate">
+        <div class="card-body">
+          <div class="card-title">Transaction Fraud Detection</div>
+          <div class="card-pitch">At a 1.4% fraud rate, accuracy is meaningless by construction — PR-AUC, a cost-based threshold, SHAP interpretability, and an unsupervised fallback for when labels are scarce.</div>
+          <div class="tags">
+            <span class="tag">PR-AUC</span>
+            <span class="tag">Class imbalance</span>
+            <span class="tag">Isolation Forest</span>
+          </div>
+          <div class="card-links">
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/05-fraud-anomaly-detection/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/05-fraud-anomaly-detection/notebooks/05_fraud_anomaly_detection.ipynb" target="_blank" rel="noopener">Notebook →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- More / GitHub -->
+      <div class="more-card">
+        <p>Full source, tests, and CI<br>for every project.</p>
+        <a href="https://github.com/gus-morales/work-showcase" target="_blank" rel="noopener">View on GitHub →</a>
+      </div>
+
+    </div>
+
+    <footer>
+      <span>Gustavo Morales · Senior Data Scientist</span>
+      <span>
+        <a href="https://linkedin.com/in/gus-morales" target="_blank" rel="noopener">LinkedIn</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/gus-morales" target="_blank" rel="noopener">GitHub</a>
+      </span>
+    </footer>
+
+  </div>
+</body>
+</html>
