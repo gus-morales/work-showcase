@@ -1,4 +1,4 @@
-# Model Validation Memo: BNPL Delinquency Risk Model
+# Model Validation Memo: Delinquency Risk Model
 
 **Model owner:** Gustavo Morales, Data Science
 **Model type:** Binary classifier (gradient-boosted trees), calibrated, cost-based decision threshold

@@ -1,6 +1,6 @@
-# BNPL Delinquency Risk Model
+# Delinquency Risk Model
 
-A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due. It picks its approve/decline threshold from actual business costs instead of a default 0.5 cutoff, checks that its decisions don't disadvantage any group unfairly, looks at how fast different segments default rather than just whether they do, and ships as a small scoring service to prove the whole thing actually runs. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I did in fintech.
+A risk model that flags which buy now, pay later (BNPL) loans are likely to go 30+ days past due. It picks its approve/decline threshold from actual business costs instead of a default 0.5 cutoff, checks that its decisions don't disadvantage any group unfairly, looks at how fast different segments default rather than just whether they do, and ships as a small scoring service to prove the whole thing actually runs. Built on synthetic data modeled after such a lending book, mirroring delinquency-prediction work I did in fintech.
 
 **For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version. For a validation-style write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan), see the [model validation memo](docs/model_validation_memo.md).
 
@@ -21,7 +21,7 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 
 ## The problem
 
-A BNPL lender approves a loan in seconds at checkout. Approve a customer who pays on time, and the lender earns a small merchant fee. Approve one who defaults, and the lender loses most of the loan amount. Getting the approve/decline line right is worth real money.
+The lender approves a loan in seconds at checkout. Approve a customer who pays on time, and the lender earns a small merchant fee. Approve one who defaults, and the lender loses most of the loan amount. Getting the approve/decline line right is worth real money.
 
 ## What this does
 
@@ -54,7 +54,7 @@ Delinquency spikes in the last three months of data, which carry a simulated eco
 
 ## Missing bureau scores
 
-About 9% of applicants have no credit bureau score on file: gig workers, informal workers, and people who just joined the platform. That's routine for a BNPL lender, not an edge case, so the model has to handle it directly instead of dropping those applicants.
+About 9% of applicants have no credit bureau score on file: gig workers, informal workers, and people who just joined the platform. That's routine for this lender, not an edge case, so the model has to handle it directly instead of dropping those applicants.
 
 The fix has two parts. First, fill in the missing score with the median score across all applicants, a safe default that isn't thrown off by outliers. Second, add a separate yes/no flag marking that the score was missing in the first place, since that fact alone can be informative, on top of whatever value gets filled in.
 

@@ -1,6 +1,6 @@
-# BNPL Transaction Fraud Detection
+# Transaction Fraud Detection
 
-A transaction-fraud model for a buy-now-pay-later checkout flow, at a realistic 1.4% fraud rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual fraud-loss and review-cost numbers rather than a default 0.5 cutoff. Built on synthetic data, the same fictional BNPL fintech as projects 01-04, viewed from the fraud/risk operations side.
+A transaction-fraud model for a buy now, pay later (BNPL) checkout flow, at a realistic 1.4% fraud rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual fraud-loss and review-cost numbers rather than a default 0.5 cutoff. Built on synthetic data, the same fictional fintech as projects 01-04, viewed from the fraud/risk operations side.
 
 **For the full technical walkthrough (feature pipeline, PR-AUC vs. ROC-AUC, cost-based thresholding, SHAP, unsupervised comparison), see the [notebook](notebooks/05_fraud_anomaly_detection.ipynb).** This README is the short version.
 

@@ -27,7 +27,7 @@ BASE = Path(__file__).resolve().parents[1]
 MODEL_PATH = BASE / "reports" / "model.pkl"
 
 app = FastAPI(
-    title="BNPL Delinquency Risk Model",
+    title="Delinquency Risk Model",
     description="Scores a loan application for 30+ days-past-due risk at origination.",
     version="1.0.0",
 )
