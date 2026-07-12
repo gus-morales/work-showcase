@@ -29,6 +29,10 @@ rng = np.random.default_rng(SEED)
 # shift the shared `rng` sequence and change every downstream customer,
 # loan, and delinquency draw that depends on it.
 demo_rng = np.random.default_rng(SEED + 1)
+# Same reasoning again for the survival-analysis time-to-event columns
+# (added after demographic_group): isolated so it can't perturb anything
+# upstream of it either.
+survival_rng = np.random.default_rng(SEED + 2)
 
 # No real geography: just three generic metro-size tiers, since all that
 # actually matters for the income model is cost-of-living tier, not any
@@ -160,15 +164,16 @@ def make_loans(customers, n_months=N_MONTHS):
     return loans
 
 
-def assign_delinquency(loans, customers, n_months=N_MONTHS):
-    df = loans.merge(customers, on="customer_id", how="left")
-
-    # Late-window macro shock: inflation/rate spike in the last 3 months of the
-    # window pushes delinquency up and shifts income/bureau distributions a bit,
-    # used later to demonstrate drift detection.
+def _systematic_risk(df, n_months=N_MONTHS):
+    """The deterministic part of the risk score, shared between the binary
+    delinquency label (assign_delinquency, which adds an intercept and
+    idiosyncratic noise on top) and the survival-time hazard (add_survival_
+    columns, which uses it directly as a Cox-style log-hazard multiplier).
+    Kept as its own function so both draws are driven by the same
+    underlying risk factors instead of two independently hand-tuned
+    formulas that could disagree with each other."""
     late_window = df["origination_month"] >= (n_months - 2)
-
-    z = (
+    return (
         -0.010 * (df["credit_bureau_score"] - 650)
         + 0.045 * df["avg_prior_repayment_delay_days"]
         + 0.35 * df["num_active_loans_elsewhere"]
@@ -187,12 +192,56 @@ def assign_delinquency(loans, customers, n_months=N_MONTHS):
             [0.20, 0.15], default=0.0,
         )
         + 0.55 * late_window.astype(float)          # macro shock
+    )
+
+
+def assign_delinquency(loans, customers, n_months=N_MONTHS):
+    df = loans.merge(customers, on="customer_id", how="left")
+    z = (
+        _systematic_risk(df, n_months)
         - 4.35                                         # intercept -> ~10-12% base rate
         + rng.normal(0, 0.85, size=len(df))            # idiosyncratic noise
     )
     prob = 1 / (1 + np.exp(-z))
     delinquent = rng.binomial(1, prob)
     df["delinquent_30dpd"] = delinquent
+    return df
+
+
+def add_survival_columns(df, n_months=N_MONTHS):
+    """Adds time_to_30dpd_days and event_observed for a Cox/Kaplan-Meier
+    read on the same delinquency outcome, instead of the fixed-horizon
+    binary framing used everywhere else in this project.
+
+    delinquent_30dpd is left untouched (every already-reported number in
+    this project's README and notebook depends on it), so this function
+    draws all of its own randomness from survival_rng, a stream isolated
+    from the shared rng the same way demo_rng is in fair_lending.py.
+    The systematic risk score is reused as a Cox-style log-hazard
+    multiplier so riskier loans fail faster, then the generated failure
+    time is clipped to be consistent with the already-fixed binary label
+    (before the observation cutoff if delinquent_30dpd is 1, at the
+    cutoff otherwise). That clipping is a simplification real censored
+    survival data doesn't need, made here specifically to keep this
+    bolt-on from silently changing any number already reported elsewhere."""
+    risk = _systematic_risk(df, n_months).values
+    shape = 1.3
+    scale = np.clip(220 * np.exp(-0.35 * risk), 15, 400)
+    raw_time_days = survival_rng.weibull(shape, size=len(df)) * scale
+
+    loan_term_days = df["num_installments"].values * 30
+    months_remaining = n_months - df["origination_month"].values + 1
+    observation_cutoff_days = np.minimum(loan_term_days, months_remaining * 30).astype(float)
+
+    event_observed = df["delinquent_30dpd"].values.astype(int)
+    time_to_30dpd_days = np.where(
+        event_observed == 1,
+        np.clip(raw_time_days, 1, observation_cutoff_days - 1),
+        observation_cutoff_days,
+    )
+    df = df.copy()
+    df["time_to_30dpd_days"] = time_to_30dpd_days.round(1)
+    df["event_observed"] = event_observed
     return df
 
 
@@ -224,6 +273,7 @@ def main():
     customers = make_customers(N_CUSTOMERS)
     loans = make_loans(customers)
     full = assign_delinquency(loans, customers)
+    full = add_survival_columns(full)
     full = apply_bureau_missingness(full)
     full = full.sample(frac=1.0, random_state=SEED).reset_index(drop=True)
     out_path = OUT_DIR / "loans.csv"

@@ -24,6 +24,11 @@ def full(loans, customers):
     return gd.assign_delinquency(loans, customers)
 
 
+@pytest.fixture(scope="module")
+def with_survival(full):
+    return gd.add_survival_columns(full)
+
+
 def test_customers_schema_and_ranges(customers):
     expected_cols = {
         "customer_id", "age", "city", "city_tier", "employment_type",
@@ -98,3 +103,29 @@ def test_bureau_missingness_concentrates_in_thin_file_segments(full):
     informal_rate = masked.loc[masked.employment_type == "informal", "credit_bureau_score"].isna().mean()
     salaried_rate = masked.loc[masked.employment_type == "salaried", "credit_bureau_score"].isna().mean()
     assert informal_rate > salaried_rate
+
+
+def test_survival_columns_do_not_change_delinquency_labels(full, with_survival):
+    # add_survival_columns draws from its own isolated RNG stream and must
+    # not touch the already-assigned binary label.
+    assert (with_survival["delinquent_30dpd"] == full["delinquent_30dpd"]).all()
+
+
+def test_event_observed_matches_delinquent_flag(with_survival):
+    assert (with_survival["event_observed"] == with_survival["delinquent_30dpd"]).all()
+
+
+def test_time_to_30dpd_is_positive_and_bounded(with_survival):
+    assert (with_survival["time_to_30dpd_days"] > 0).all()
+    loan_term_days = with_survival["num_installments"] * 30
+    assert (with_survival["time_to_30dpd_days"] <= loan_term_days).all()
+
+
+def test_events_fail_faster_than_censored_loans(with_survival):
+    # Loans that actually went delinquent should, on average, have a much
+    # shorter recorded time-to-event than loans that were censored, since
+    # the hazard is parameterized by the same risk score that drives
+    # whether the event happens at all.
+    event_mean = with_survival.loc[with_survival.event_observed == 1, "time_to_30dpd_days"].mean()
+    censored_mean = with_survival.loc[with_survival.event_observed == 0, "time_to_30dpd_days"].mean()
+    assert event_mean < censored_mean

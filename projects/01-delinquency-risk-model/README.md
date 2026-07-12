@@ -16,6 +16,7 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 - SHAP interpretability
 - Drift and calibration monitoring
 - Fair lending analysis (disparate impact / four-fifths rule, SHAP-derived adverse action reason codes)
+- Survival analysis (Kaplan-Meier, Cox proportional hazards)
 
 ## The problem
 
@@ -100,15 +101,39 @@ For every declined applicant, the model's SHAP values also drive an adverse acti
 
 *Figure 7. Primary adverse action reason among declined applicants.*
 
+## Time-to-default
+
+The classification model above answers "will this loan go 30+ days past due within the observation window." That collapses a useful distinction: a loan that defaults in week 2 is a different underwriting problem than one that defaults in month 10, even if both end up in the same "delinquent" bucket. Survival analysis keeps the time dimension instead of collapsing it.
+
+A Kaplan-Meier estimate by employment type shows how fast that gap opens up: by the end of the observation window, 93.1% of salaried loans are still current, against 82.7% of self-employed, 72.4% of gig-economy, and 66.8% of informal loans (Figure 8), a difference too large to be sampling noise (log-rank test, p < 0.001).
+
+A Cox proportional hazards model quantifies the same gap as a hazard ratio: holding the other factors fixed, an informal-employment loan defaults at 2.18x the rate of an otherwise-identical salaried loan, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio is the strongest protective factor in the model; every other credit-relevant driver in the classification model above (bureau score, existing obligations, loan amount, income) points the same direction here.
+
+| | |
+|---|---|
+| Concordance index (Cox model) | 0.814 |
+| Model accuracy (AUC), classification model, held-out test | 0.79 |
+| Log-rank test across employment types | p < 0.001 |
+
+The concordance index lands close to the classification model's AUC, two different framings of the same underlying risk agree on how separable it is. The classification model is still the right choice for a real-time approve/decline decision, it outputs a single probability against a cost-calibrated threshold. The survival model earns its keep downstream of that decision: once a loan is on the books, it says which segments are worth the earliest collections outreach, a question the classification model's single probability doesn't answer on its own.
+
+![Time-to-default by employment type](reports/figures/survival_km_by_employment.png)
+
+*Figure 8. Kaplan-Meier estimate of time-to-default by employment type.*
+
+![Cox hazard ratios](reports/figures/survival_hazard_ratios.png)
+
+*Figure 9. Cox proportional hazards ratios for time-to-default, with 95% confidence intervals.*
+
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance.
+Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach, informal and gig-economy loans aren't just riskier, they get there faster.
 
 ## Repo layout
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, and the fair lending disparate-impact and reason-code logic.
+- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, the fair lending disparate-impact and reason-code logic, and the survival-analysis covariate construction and Cox fit.
 - `reports/`: generated charts, metrics, and monitoring reports.
 
 ## Reproduce
@@ -123,6 +148,7 @@ python src/interpret.py
 python src/monitor_drift.py
 python src/rate_mix_shift.py
 python src/fair_lending.py
+python src/survival_analysis.py
 ```
 
 `data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above. `reports/best_params.json` is committed so `train.py` reproduces the same tuned model without re-running the search.

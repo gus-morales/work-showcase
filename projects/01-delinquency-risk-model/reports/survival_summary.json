@@ -1,0 +1,96 @@
+{
+  "median_time_to_default_days_by_employment": {
+    "salaried": Infinity,
+    "self_employed": Infinity,
+    "gig_economy": Infinity,
+    "informal": Infinity
+  },
+  "logrank_p_value": 1.251164200172916e-303,
+  "cox_concordance_index": 0.8139297173831329,
+  "cox_hazard_ratios": {
+    "avg_prior_repayment_delay_days": {
+      "hazard_ratio": 1.0365743394097564,
+      "p_value": 1.4654904152572484e-59,
+      "ci_lower": 1.0321000953838595,
+      "ci_upper": 1.0410679796741507
+    },
+    "num_active_loans_elsewhere": {
+      "hazard_ratio": 1.3211034502822903,
+      "p_value": 4.786606819161385e-65,
+      "ci_lower": 1.279439218163103,
+      "ci_upper": 1.3641244551292775
+    },
+    "monthly_income_usd": {
+      "hazard_ratio": 0.9342054157623664,
+      "p_value": 1.6683026155406532e-23,
+      "ci_lower": 0.921815477104264,
+      "ci_upper": 0.9467618851240253
+    },
+    "loan_amount_usd": {
+      "hazard_ratio": 1.295377400158917,
+      "p_value": 2.5525543977599644e-62,
+      "ci_lower": 1.2565321517041514,
+      "ci_upper": 1.3354235357740034
+    },
+    "num_installments": {
+      "hazard_ratio": 1.0496092986476808,
+      "p_value": 1.9957647034715735e-12,
+      "ci_lower": 1.0355453868194573,
+      "ci_upper": 1.0638642147702884
+    },
+    "down_payment_ratio": {
+      "hazard_ratio": 0.045136077009905275,
+      "p_value": 1.25372350753869e-81,
+      "ci_lower": 0.0328639692481904,
+      "ci_upper": 0.06199085181885868
+    },
+    "tenure_months_platform": {
+      "hazard_ratio": 0.9797059197514967,
+      "p_value": 2.5558722234844294e-41,
+      "ci_lower": 0.9767861840055858,
+      "ci_upper": 0.9826343829517529
+    },
+    "credit_bureau_score_filled": {
+      "hazard_ratio": 0.49710865107179136,
+      "p_value": 2.0542358154354675e-60,
+      "ci_lower": 0.457261460538754,
+      "ci_upper": 0.5404282501290578
+    },
+    "bureau_score_missing": {
+      "hazard_ratio": 1.5666758774699703,
+      "p_value": 5.925766206494098e-12,
+      "ci_lower": 1.3786222219548718,
+      "ci_upper": 1.7803813589816389
+    },
+    "employment_self_employed": {
+      "hazard_ratio": 1.4248423176066498,
+      "p_value": 2.450332269956158e-06,
+      "ci_lower": 1.2297313205931784,
+      "ci_upper": 1.6509099150726723
+    },
+    "employment_gig_economy": {
+      "hazard_ratio": 1.9243163617678283,
+      "p_value": 4.898625487464945e-19,
+      "ci_lower": 1.666383660812679,
+      "ci_upper": 2.222173408950408
+    },
+    "employment_informal": {
+      "hazard_ratio": 2.1763517864847364,
+      "p_value": 3.853705715535245e-25,
+      "ci_lower": 1.8785491341619962,
+      "ci_upper": 2.5213645000817166
+    },
+    "merchant_electronics": {
+      "hazard_ratio": 1.178107950040343,
+      "p_value": 0.00017858616595722713,
+      "ci_lower": 1.0813222833063088,
+      "ci_upper": 1.2835565893495
+    },
+    "merchant_travel": {
+      "hazard_ratio": 1.2110517326498607,
+      "p_value": 0.003284050969188104,
+      "ci_lower": 1.0659049639602975,
+      "ci_upper": 1.375963475866558
+    }
+  }
+}
