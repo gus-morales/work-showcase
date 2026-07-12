@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gustavo Morales — Data Science Portfolio</title>
 <meta name="description" content="Gustavo Morales, Senior Data Scientist — PhD astrophysicist turned data scientist. Five data science and ML projects, synthetic data, real methodology.">
+<meta name="keywords" content="Gustavo Morales, Senior Data Scientist, Data Science Portfolio, Machine Learning, Credit Risk Modeling, Causal Inference, A/B Testing, SHAP, LLM Evaluation, Fraud Detection">
+<meta name="author" content="Gustavo Morales">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gus-morales.github.io/work-showcase/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gus-morales.github.io/work-showcase/">
+<meta property="og:title" content="Gustavo Morales — Data Science Portfolio">
+<meta property="og:description" content="PhD astrophysicist turned Senior Data Scientist. Five data science and ML projects — credit risk, causal inference, LLM evaluation, and fraud detection — on synthetic data with real methodology.">
+<meta property="og:image" content="https://gus-morales.github.io/work-showcase/images/01-delinquency.png">
+<meta property="og:site_name" content="Gustavo Morales — Data Science Portfolio">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gustavo Morales — Data Science Portfolio">
+<meta name="twitter:description" content="PhD astrophysicist turned Senior Data Scientist. Five data science and ML projects — credit risk, causal inference, LLM evaluation, and fraud detection — on synthetic data with real methodology.">
+<meta name="twitter:image" content="https://gus-morales.github.io/work-showcase/images/01-delinquency.png">
+
 <meta name="theme-color" content="#17191C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -295,6 +312,14 @@
   footer a:hover {
     text-decoration: underline;
   }
+
+  #last-updated {
+    color: var(--grey);
+  }
+
+  #last-updated:not(:empty)::before {
+    content: " · ";
+  }
 </style>
 </head>
 <body>
@@ -439,7 +464,7 @@
     </div>
 
     <footer>
-      <span>Gustavo Morales · Senior Data Scientist</span>
+      <span>Gustavo Morales · Senior Data Scientist<span id="last-updated"></span></span>
       <span>
         <a href="mailto:gustavo85@gmail.com">Email</a>
         &nbsp;·&nbsp;
@@ -454,6 +479,16 @@
   </div>
 
   <script>
+    fetch('https://api.github.com/repos/gus-morales/work-showcase/commits?path=docs/index.html&per_page=1')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data[0]) return;
+        var date = new Date(data[0].commit.committer.date);
+        var formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('last-updated').textContent = 'Last updated ' + formatted;
+      })
+      .catch(function () { /* leave blank if the API is unreachable or rate-limited */ });
+
     document.querySelectorAll('.filter-pill').forEach(function (pill) {
       pill.addEventListener('click', function () {
         document.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('active'); });
