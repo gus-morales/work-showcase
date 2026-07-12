@@ -35,9 +35,15 @@ The gradient-boosted model's hyperparameters were chosen with a randomized searc
 | Expected loss reduction vs. a naive 0.5 cutoff | 67% |
 | Share of actual delinquent loans caught | 92% |
 
+Delinquency climbs sharply in the shock window (Figure 1); sweeping the decision threshold against expected cost locates where that 67% reduction comes from (Figure 2).
+
 ![Delinquency by month](reports/figures/delinquency_by_month.png)
 
+*Figure 1. Delinquency rate by loan origination month. The last three months carry a simulated macro shock.*
+
 ![Threshold selection](reports/figures/threshold_cost_curve.png)
+
+*Figure 2. Expected portfolio cost by decision threshold, cost-optimal threshold vs. the naive 0.5 cutoff.*
 
 ## Missing bureau scores
 
@@ -47,13 +53,15 @@ Bureau score is still by far the model's strongest signal (SHAP), but the missin
 
 ## Calibration drift under a simulated shock
 
-The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed, including the rate of missing bureau scores) showed nothing unusual: every PSI stayed well under the alert threshold, and the missing-score rate barely moved (9.4% reference vs. 9.9% monitored). But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes, since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
+The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed, including the rate of missing bureau scores) showed nothing unusual: every PSI stayed well under the alert threshold, and the missing-score rate barely moved (9.4% reference vs. 9.9% monitored). But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes (Figure 3), since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 
+*Figure 3. Predicted vs. actual delinquency rate by month, reference window vs. the monitored (shock) window.*
+
 ### Rate-mix shift decomposition
 
-Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition rules that out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift, and every employment segment moved together rather than one risky segment simply becoming more common.
+Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition rules that out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift (Figure 4), and every employment segment moved together rather than one risky segment simply becoming more common (Figure 5).
 
 | | |
 |---|---|
@@ -63,7 +71,11 @@ Clean PSI could still hide a subtler explanation: the portfolio quietly shifting
 
 ![Rate-mix shift decomposition](reports/figures/rate_mix_shift_decomposition.png)
 
+*Figure 4. Rate-mix shift decomposition: mix effect (composition shift) vs. rate effect (within-segment change).*
+
 ![Rate-mix shift by segment](reports/figures/rate_mix_shift_by_segment.png)
+
+*Figure 5. Delinquency rate by employment-type segment, reference vs. monitored window.*
 
 ## Recommendation
 
