@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from db import get_connection, run_sql_file
-from style import set_style, style_ax, savefig, SLATE, MUTED_AMBER, GREY
+from style import set_style, style_ax, savefig, SLATE, MUTED_AMBER
 
 BASE = Path(__file__).resolve().parents[1]
 FIG_DIR = BASE / "reports" / "figures"
