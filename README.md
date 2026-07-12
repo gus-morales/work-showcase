@@ -14,16 +14,19 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 | [02 - Customer LTV & Contribution Analysis](projects/02-ltv-contribution-analysis) | SQL cohort analysis, GMV contribution decomposition, probabilistic CLV (BG/NBD + Gamma-Gamma), early-life predictive modeling | Done |
 | [03 - Growth Experimentation & Segmentation](projects/03-growth-experimentation-segmentation) | Power analysis, A/B testing, CUPED, difference-in-differences, RFM/KMeans segmentation, light NLP topic modeling | Done |
 | [04 - Evaluating & Monitoring an LLM-Powered Feature](projects/04-llm-eval-monitoring) | LLM-judge validation (Cohen's kappa, bias analysis), A/B testing, statistical process control for output-quality monitoring, cost-based guardrail thresholds | Done |
+| [05 - BNPL Transaction Fraud Detection](projects/05-fraud-anomaly-detection) | Classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection (Isolation Forest) vs. a supervised model | Done |
 
 ## Skills and tools featured
 
 **Modeling & ML**
 
-- Classification modeling: logistic regression + gradient-boosted trees (01)
+- Classification modeling: logistic regression + gradient-boosted trees (01, 05)
+- Classification under extreme class imbalance, PR-AUC over accuracy/ROC-AUC (05)
 - Gradient boosting regression with feature importance (02)
-- Leakage-safe feature pipelines (feature-engine, fit on the training split only) (01)
+- Leakage-safe feature pipelines (feature-engine, fit on the training split only) (01, 05)
 - Probability calibration (01)
-- SHAP interpretability (01)
+- SHAP interpretability (01, 05)
+- Unsupervised anomaly detection (Isolation Forest) as a labels-scarce alternative (05)
 
 **Causal inference & experimentation**
 
@@ -49,7 +52,7 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 - Drift and calibration monitoring (01)
 - Rate-mix shift decomposition (01)
 - Statistical process control: p-charts for output-quality monitoring (04)
-- Cost-based decision/threshold optimization (01, 04)
+- Cost-based decision/threshold optimization (01, 04, 05)
 
 **NLP & LLM evaluation**
 

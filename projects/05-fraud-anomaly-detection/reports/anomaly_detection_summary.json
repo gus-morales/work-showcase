@@ -1,0 +1,8 @@
+{
+  "test_base_rate": 0.01065,
+  "supervised_gbm_pr_auc": 0.1173,
+  "isolation_forest_pr_auc": 0.0282,
+  "supervised_lift_over_base_rate": 11.01,
+  "isolation_forest_lift_over_base_rate": 2.65,
+  "supervised_advantage_ratio": 4.15
+}

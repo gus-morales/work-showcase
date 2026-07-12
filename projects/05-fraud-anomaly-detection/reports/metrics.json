@@ -1,0 +1,26 @@
+{
+  "n_train": 63375,
+  "n_val": 13802,
+  "n_test": 13047,
+  "train_fraud_rate": 0.01545,
+  "test_fraud_rate": 0.01065,
+  "logistic_baseline_pr_auc": 0.1091,
+  "gbm_test_roc_auc": 0.8387,
+  "gbm_test_pr_auc": 0.1173,
+  "naive_always_genuine_accuracy": 0.9893,
+  "gbm_accuracy_at_default_threshold": 0.9893,
+  "gbm_true_positives_at_default_threshold": 1,
+  "n_fraud_test": 139,
+  "cost_optimal_threshold": 0.03,
+  "expected_cost_at_optimal_threshold_usd": 8234.24,
+  "expected_cost_at_naive_threshold_usd": 11999.22,
+  "cost_reduction_vs_naive": 0.3138,
+  "precision_at_optimal_threshold": 0.0827,
+  "recall_at_optimal_threshold": 0.4964,
+  "confusion_matrix": {
+    "tn": 12143,
+    "fp": 765,
+    "fn": 70,
+    "tp": 69
+  }
+}

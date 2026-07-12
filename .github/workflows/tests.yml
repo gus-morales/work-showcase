@@ -17,6 +17,7 @@ jobs:
           - 02-ltv-contribution-analysis
           - 03-growth-experimentation-segmentation
           - 04-llm-eval-monitoring
+          - 05-fraud-anomaly-detection
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}
