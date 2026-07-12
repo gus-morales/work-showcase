@@ -1,0 +1,28 @@
+{
+  "reference_group": "Group B",
+  "approval_rates": {
+    "Group A": 0.3702,
+    "Group B": 0.3853
+  },
+  "disparate_impact_results": {
+    "Group A": {
+      "approval_rate": 0.370242214532872,
+      "disparate_impact_ratio": 0.9608666996210249,
+      "passes_four_fifths_rule": true,
+      "z_stat": -0.736740931872697,
+      "p_value": 0.46127991004847435,
+      "statistically_significant_gap": false
+    }
+  },
+  "n_declined": 1398,
+  "primary_reason_breakdown": {
+    "Credit score": 0.5494,
+    "Down payment amount": 0.1409,
+    "Delinquent past credit obligations": 0.108,
+    "Number of existing credit obligations": 0.0994,
+    "Excessive obligations relative to income": 0.0551,
+    "Length of relationship with lender": 0.0286,
+    "Term of credit requested": 0.0157,
+    "Income insufficient for amount of credit requested": 0.0029
+  }
+}

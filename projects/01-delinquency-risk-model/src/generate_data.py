@@ -24,6 +24,11 @@ N_MONTHS = 24
 OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 
 rng = np.random.default_rng(SEED)
+# A separate, independently-seeded stream for demographic_group (added
+# after every other column was already finalized), so drawing it doesn't
+# shift the shared `rng` sequence and change every downstream customer,
+# loan, and delinquency draw that depends on it.
+demo_rng = np.random.default_rng(SEED + 1)
 
 # No real geography: just three generic metro-size tiers, since all that
 # actually matters for the income model is cost-of-living tier, not any
@@ -35,6 +40,24 @@ CITY_WEIGHTS = CITY_WEIGHTS / CITY_WEIGHTS.sum()
 
 EMPLOYMENT_TYPES = ["salaried", "self_employed", "gig_economy", "informal"]
 EMPLOYMENT_WEIGHTS = [0.45, 0.20, 0.20, 0.15]
+
+# A synthetic stand-in for a protected-class attribute under fair lending
+# law (ECOA/Reg B covers race, color, religion, national origin, sex,
+# marital status, and age; a real analysis would use self-reported data
+# or a BISG-style proxy). Deliberately unlabeled with any real ethnicity,
+# since the point is the analysis method, not a claim about any real
+# group. It is never used as a model feature (see fair_lending.py and
+# features.RAW_FEATURE_COLS), but it is generated with a mild dependence
+# on city tier, which *is* a feature, so that a facially-neutral,
+# legitimate variable can still produce indirect disparate impact, the
+# scenario fair-lending monitoring exists to catch even when the
+# protected attribute itself is nowhere in the model.
+DEMOGRAPHIC_GROUPS = ["Group A", "Group B"]
+GROUP_PROBS_BY_CITY_TIER = {
+    "tier1": [0.40, 0.60],
+    "tier2": [0.50, 0.50],
+    "tier3": [0.60, 0.40],
+}
 
 CHANNELS = ["organic", "paid_social", "partner_store", "referral"]
 CHANNEL_WEIGHTS = [0.30, 0.25, 0.35, 0.10]
@@ -89,11 +112,16 @@ def make_customers(n):
     device = rng.choice(["android", "ios", "web"], size=n, p=[0.62, 0.23, 0.15])
     channel = rng.choice(CHANNELS, size=n, p=CHANNEL_WEIGHTS)
 
+    demographic_group = np.array([
+        demo_rng.choice(DEMOGRAPHIC_GROUPS, p=GROUP_PROBS_BY_CITY_TIER[t]) for t in city_tier
+    ])
+
     return pd.DataFrame({
         "customer_id": np.arange(1, n + 1),
         "age": age,
         "city": city,
         "city_tier": city_tier,
+        "demographic_group": demographic_group,
         "employment_type": employment,
         "monthly_income_usd": monthly_income.round(2),
         "tenure_months_platform": tenure_months,

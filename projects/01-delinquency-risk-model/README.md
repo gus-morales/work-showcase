@@ -15,6 +15,7 @@ A risk model that flags which buy-now-pay-later loans are likely to go 30+ days 
 - Cost-based decision optimization
 - SHAP interpretability
 - Drift and calibration monitoring
+- Fair lending analysis (disparate impact / four-fifths rule, SHAP-derived adverse action reason codes)
 
 ## The problem
 
@@ -77,15 +78,37 @@ Clean PSI could still hide a subtler explanation: the portfolio quietly shifting
 
 *Figure 5. Delinquency rate by employment-type segment, reference vs. monitored window.*
 
+## Fair lending review
+
+A credit model that never uses a protected-class attribute directly can still produce disparate outcomes through facially-neutral variables correlated with it, indirect discrimination is the scenario a fair lending review exists to catch. This project adds a synthetic protected-class-proxy attribute, `demographic_group`, held out of the model entirely and used only to test approve/decline decisions after the fact.
+
+The four-fifths rule (a group's approval rate should be at least 80% of the highest-approval group's) is the standard screening threshold for disparate impact. Here it passes with room to spare, and the gap isn't statistically distinguishable from noise (Figure 6).
+
+| | |
+|---|---|
+| Approval rate, Group A vs. Group B (reference) | 37.0% vs. 38.5% |
+| Disparate impact ratio | 0.961 (passes the 0.80 four-fifths threshold) |
+| Statistical significance of the gap | Not significant, p = 0.46 |
+
+![Fair lending approval rate](reports/figures/fair_lending_approval_rate.png)
+
+*Figure 6. Approval rate by demographic group vs. the four-fifths rule.*
+
+For every declined applicant, the model's SHAP values also drive an adverse action reason code, the specific reasons a lender is required to give a declined applicant under ECOA. Reason codes are restricted to a fixed allowlist of genuinely credit-relevant factors; `city_tier`, `device_type`, `acquisition_channel`, and `merchant_category` never appear as a reason even when they carry real SHAP signal, matching the standard practice of not citing geography or acquisition channel on an adverse action notice.
+
+![Fair lending reason codes](reports/figures/fair_lending_reason_codes.png)
+
+*Figure 7. Primary adverse action reason among declined applicants.*
+
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment.
+Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance.
 
 ## Repo layout
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), and the rate-mix shift decomposition.
+- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, and the fair lending disparate-impact and reason-code logic.
 - `reports/`: generated charts, metrics, and monitoring reports.
 
 ## Reproduce
@@ -99,6 +122,7 @@ python src/train.py      # picks up best_params.json automatically if present
 python src/interpret.py
 python src/monitor_drift.py
 python src/rate_mix_shift.py
+python src/fair_lending.py
 ```
 
 `data/` and `reports/model.pkl` are gitignored; regenerate them by running the scripts above. `reports/best_params.json` is committed so `train.py` reproduces the same tuned model without re-running the search.
