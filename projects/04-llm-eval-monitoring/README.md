@@ -28,11 +28,17 @@ A 600-ticket golden set was scored by both a human rater and the LLM-judge on a 
 | Quadratic-weighted kappa | 0.49 (below the 0.60 "substantial agreement" floor) |
 | Judge bias vs. human | +0.31 points, systematically generous (p < 0.0001) |
 
+Human and judge scores agree closely but not perfectly (Figure 1).
+
 ![Judge confusion matrix](reports/figures/judge_confusion_matrix.png)
 
-The bias concentrates on complaints, the category where a bad reply does the most damage and where catching it matters most.
+*Figure 1. Judge score vs. human score, confusion matrix over the golden set.*
+
+The bias concentrates on complaints, the category where a bad reply does the most damage and where catching it matters most (Figure 2).
 
 ![Judge bias by category](reports/figures/judge_bias_by_category.png)
+
+*Figure 2. Judge bias vs. human rating, by ticket category.*
 
 ## 2. A/B test: a revised drafting prompt
 
@@ -45,11 +51,13 @@ Prompt v2 adds an explicit instruction to acknowledge the issue and give one con
 
 ![A/B test result](reports/figures/ab_test_result.png)
 
+*Figure 3. Judge-acceptable rate by arm, v1 vs. v2.*
+
 Since the judge's generosity bias applies to both arms about equally, this relative lift is a fair read even though neither arm's raw acceptable-rate should be quoted as a trustworthy standalone number.
 
 ## 3. Production monitoring: catching a silent quality regression
 
-A daily p-chart (control chart for a proportion) tracks the judge-scored acceptable rate against control limits set from a stable reference period. A regression was injected on day 90 with no change in ticket volume or category mix, exactly the kind of shift that standard input-drift monitoring would miss entirely.
+A daily p-chart (control chart for a proportion) tracks the judge-scored acceptable rate against control limits set from a stable reference period. A regression was injected on day 90 with no change in ticket volume or category mix, exactly the kind of shift that standard input-drift monitoring would miss entirely (Figure 4).
 
 | | |
 |---|---|
@@ -57,6 +65,8 @@ A daily p-chart (control chart for a proportion) tracks the judge-scored accepta
 | Regression detected | Day 90, the same day it started (3-day run rule) |
 
 ![Quality control chart](reports/figures/quality_control_chart.png)
+
+*Figure 4. Daily p-chart: judge-scored acceptable rate against control limits.*
 
 ## 4. Guardrail threshold: auto-send vs. route-to-human
 
@@ -68,7 +78,11 @@ A lightweight safety classifier (AUC 0.85) scores every drafted reply before it'
 | Expected cost reduction | 48.3% ($13,730 vs. $26,556 per 8,000 replies) |
 | Share routed to human review | 72.7% at the optimal threshold vs. 27.2% at 0.50 |
 
+Sweeping the threshold against expected cost locates that optimum well below the naive 0.50 cutoff (Figure 5).
+
 ![Guardrail cost curve](reports/figures/guardrail_cost_curve.png)
+
+*Figure 5. Expected cost by auto-send threshold, cost-optimal threshold vs. the naive 0.50 cutoff.*
 
 ## Recommendation
 
