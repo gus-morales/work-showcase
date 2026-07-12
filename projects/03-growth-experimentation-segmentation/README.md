@@ -32,9 +32,15 @@ A redesigned in-app reminder (clearer due date, one-tap repayment link) was test
 | Absolute lift | +4.2pp (95% CI: 3.3 to 5.1pp), p < 0.0001 |
 | CUPED confidence interval narrowing | 11%, using pre-period revenue as the covariate |
 
+The standard test shows the lift clearly (Figure 1); a CUPED-adjusted estimate on the same data narrows the interval further (Figure 2).
+
 ![A/B test result](reports/figures/ab_conversion_result.png)
 
+*Figure 1. On-time conversion by arm, control vs. treatment.*
+
 ![CUPED variance reduction](reports/figures/cuped_variance_reduction.png)
+
+*Figure 2. Estimated treatment lift, standard vs. CUPED-adjusted, 95% CI.*
 
 ## 2. Uplift/CATE modeling: who actually benefits
 
@@ -46,11 +52,15 @@ The +4.2pp average lift is real, but it's an average across everyone, and averag
 | Qini coefficient (targeting by predicted CATE vs. random) | 52.1 |
 | Predicted CATE, newest users (0-33 days) vs. longest-tenured (320+ days) | +11.8pp vs. -1.3pp |
 
+Predicted effect tracks realized effect on held-out data (Figure 3), and the model recovers platform tenure as the driver of the heterogeneity without being told to look for it (Figure 4): newer users, who haven't yet learned the old reminder flow, get most of the benefit from a clearer one; long-tenured users see essentially none.
+
 ![Uplift calibration](reports/figures/uplift_calibration.png)
+
+*Figure 3. Predicted CATE vs. realized lift, by quintile of predicted effect.*
 
 ![Predicted CATE by tenure](reports/figures/uplift_by_tenure.png)
 
-The model recovers platform tenure as the driver of the heterogeneity without being told to look for it: newer users, who haven't yet learned the old reminder flow, get most of the benefit from a clearer one; long-tenured users see essentially none.
+*Figure 4. Predicted CATE by platform-tenure bucket.*
 
 ### A second, more rigorous CATE estimator
 
@@ -63,7 +73,9 @@ The T-learner's weakness is structural: differencing two independently-fit model
 
 ![Qini comparison, T-learner vs. CausalForestDML](reports/figures/cate_econml_qini_comparison.png)
 
-The T-learner's Qini curve still clears random targeting by a wide margin, so it was never a bad model. The gap is what a hand-rolled two-model difference costs against an estimator built specifically to avoid the noise-amplification problem that causes.
+*Figure 5. Qini curves, T-learner vs. CausalForestDML, on the identical held-out test set.*
+
+The T-learner's Qini curve still clears random targeting by a wide margin, so it was never a bad model (Figure 5). The gap is what a hand-rolled two-model difference costs against an estimator built specifically to avoid the noise-amplification problem that causes.
 
 ## 3. Difference-in-differences: regional rollout
 
@@ -74,19 +86,27 @@ A new in-app collections feature was rolled out to 20 of 40 regions first, based
 | Pre-period trend difference (placebo check) | Not significant (p = 0.70), supports parallel trends |
 | DiD estimate | +4.0pp on-time repayment (95% CI: 3.7 to 4.3pp), p < 0.0001 |
 
+Treated and control regions move together before rollout and diverge after (Figure 6).
+
 ![Parallel trends](reports/figures/did_parallel_trends.png)
+
+*Figure 6. On-time repayment rate by day, treated vs. control regions.*
 
 ### Three robustness checks on the DiD estimate
 
 Standard errors are clustered by region, but 40 regions with 20 treated is on the edge of "few clusters" territory where the usual asymptotic cluster-robust standard errors can be unreliable. A wild cluster bootstrap (Cameron, Gelbach & Miller 2008) recomputes inference on the same coefficient without relying on that asymptotic approximation, using the [diff-diff](https://github.com/igerber/diff-diff) package: 95% CI of 3.7 to 4.3pp, matching the analytical result almost exactly, which is itself evidence the cluster count here isn't causing problems.
 
-The pre-trends placebo check above fails to detect a trend difference, which is a weaker statement than proving none exists. Honest DiD (Rambachan & Roth 2023) quantifies the gap: how large would an undetected post-period violation of parallel trends have to be, relative to the largest pre-period wobble actually observed, before the effect stops being distinguishable from zero. Here that breakdown point is M = 0.35, meaning the conclusion holds only if any unmeasured drift after rollout stays under about a third of the size of the noisiest pre-period swing.
+The pre-trends placebo check above fails to detect a trend difference, which is a weaker statement than proving none exists. Honest DiD (Rambachan & Roth 2023) quantifies the gap: how large would an undetected post-period violation of parallel trends have to be, relative to the largest pre-period wobble actually observed, before the effect stops being distinguishable from zero. Here that breakdown point is M = 0.35, meaning the conclusion holds only if any unmeasured drift after rollout stays under about a third of the size of the noisiest pre-period swing (Figure 7).
 
 ![Honest DiD sensitivity](reports/figures/did_honest_sensitivity.png)
 
-A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identify/estimate/refute framework, which formalizes the causal graph explicitly (region and day as the adjustment set) and runs a generic refutation suite orthogonal to the DiD-specific checks above: adding a random confounder, replacing the real treatment with a permuted placebo, and refitting on random 80% subsets of the data. The estimate survives all three: it barely moves when a random confounder is added or the data is subsetted, and it collapses to essentially zero under a placebo treatment, exactly the pattern that says the effect is real rather than an artifact of the estimation procedure.
+*Figure 7. Honest DiD sensitivity analysis: breakdown point M.*
+
+A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identify/estimate/refute framework, which formalizes the causal graph explicitly (region and day as the adjustment set) and runs a generic refutation suite orthogonal to the DiD-specific checks above: adding a random confounder, replacing the real treatment with a permuted placebo, and refitting on random 80% subsets of the data. The estimate survives all three (Figure 8): it barely moves when a random confounder is added or the data is subsetted, and it collapses to essentially zero under a placebo treatment, exactly the pattern that says the effect is real rather than an artifact of the estimation procedure.
 
 ![DoWhy refutation suite](reports/figures/dowhy_refutation.png)
+
+*Figure 8. DoWhy refutation suite: original estimate vs. each refuter's re-estimated effect.*
 
 ## 4. RFM customer segmentation
 
@@ -98,13 +118,19 @@ Recency, frequency, and monetary value, clustered with KMeans (k chosen by silho
 | Loyal | 52% | 48% |
 | Dormant | 32% | 6% |
 
+Champions are 16% of customers and 46% of revenue; Dormant customers are nearly a third of the base and 6% of revenue (Figure 9).
+
 ![Segment revenue share](reports/figures/segment_revenue_share.png)
+
+*Figure 9. Share of customers and share of revenue, by RFM segment.*
 
 ## 5. Support ticket topic modeling
 
-TF-IDF + NMF on 1,500 synthetic support tickets recovers five topics from text alone, validated at 85% purity against the known ground-truth categories (a check only possible because the data is synthetic).
+TF-IDF + NMF on 1,500 synthetic support tickets recovers five topics from text alone, validated at 85% purity against the known ground-truth categories (a check only possible because the data is synthetic) (Figure 10).
 
 ![Topic volume](reports/figures/topic_volume.png)
+
+*Figure 10. Ticket volume by recovered topic.*
 
 One topic, general account questions, doesn't cluster cleanly on its own; it scatters across the other four because it shares vocabulary with them rather than having a distinct signature. That's a real limitation of unsupervised topic modeling on short text, not something worth glossing over.
 
