@@ -5,21 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gustavo Morales — Data Science Portfolio</title>
 <meta name="description" content="Gustavo Morales, Senior Data Scientist — five data science and ML projects, synthetic data, real methodology.">
+<meta name="theme-color" content="#17191C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #2B2B2B;
-    --slate: #3D5A73;
-    --teal: #5E8C86;
-    --amber: #B98A3D;
-    --red: #A8493D;
-    --grey: #8A8A8A;
-    --light-grey: #E3E3E1;
-    --bg: #FAFAF8;
-    --card-bg: #FFFFFF;
-    --chip-bg: #EEF1F3;
+    --ink: #ECECEA;
+    --slate: #8FBBDB;
+    --teal: #82C2B7;
+    --amber: #D8AD72;
+    --red: #C97B6E;
+    --grey: #8B8B87;
+    --light-grey: #2E3136;
+    --bg: #17191C;
+    --card-bg: #1E2124;
+    --chip-bg: #262B30;
+    --chart-mat: #F0EFEC;
   }
 
   * { box-sizing: border-box; }
@@ -51,7 +53,7 @@
 
   .subtitle {
     font-size: 15px;
-    color: #5a5a5a;
+    color: #ABABA7;
     margin-top: 6px;
     max-width: 620px;
     line-height: 1.5;
@@ -82,7 +84,8 @@
   }
 
   .card:hover {
-    box-shadow: 0 6px 18px rgba(43, 43, 43, 0.08);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    border-color: #454A51;
     transform: translateY(-1px);
   }
 
@@ -92,7 +95,7 @@
     object-fit: cover;
     object-position: center top;
     display: block;
-    background: #F5F4F1;
+    background: var(--chart-mat);
     border-bottom: 1px solid var(--light-grey);
   }
 
@@ -112,7 +115,7 @@
 
   .card-pitch {
     font-size: 13px;
-    color: #616161;
+    color: #A5A5A1;
     line-height: 1.55;
     margin-bottom: 14px;
     flex: 1;
@@ -151,7 +154,7 @@
   }
 
   .more-card {
-    border: 1px dashed #D8D6D0;
+    border: 1px dashed #383B41;
     border-radius: 8px;
     display: flex;
     align-items: center;
