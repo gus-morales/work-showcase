@@ -98,7 +98,7 @@ def rate_mix_shift(df, segment_col, source_note, plot=True):
     ax.axhline(0, color=GREY, linewidth=1)
     for i, v in enumerate(vals):
         ax.text(i, v + (0.05 if v >= 0 else -0.15), f"{v:+.2f}pp", ha="center", fontsize=10.5, color="#333")
-    style_ax(ax, title=f"{rate_share:.0%} of the delinquency-rate increase is a rate effect, not a mix shift",
+    style_ax(ax, title=f"{rate_share:.0%} of the delinquency-rate increase is a rate effect",
              subtitle=f"Decomposed by {segment_col.replace('_', ' ')}, months 1-{REFERENCE_END_MONTH} vs. {REFERENCE_END_MONTH+1}-24",
              ylabel="Contribution to rate change (percentage points)")
     savefig(fig, FIG_DIR / "rate_mix_shift_decomposition.png", footnote=source_note)

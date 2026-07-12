@@ -132,7 +132,7 @@ TF-IDF + NMF on 1,500 synthetic support tickets recovers five topics from text a
 
 *Figure 10. Ticket volume by recovered topic.*
 
-One topic, general account questions, doesn't cluster cleanly on its own; it scatters across the other four because it shares vocabulary with them rather than having a distinct signature. That's a real limitation of unsupervised topic modeling on short text, not something worth glossing over.
+One topic, general account questions, doesn't cluster cleanly on its own; it scatters across the other four because it shares vocabulary with them rather than having a distinct signature. That's a real limitation of unsupervised topic modeling on short text.
 
 ## Recommendation
 

@@ -108,7 +108,7 @@ def main():
     ax.plot(mc.month_index, mc.delta_gmv, color="#222222", linewidth=1.6, marker="o", markersize=3.5,
             label="Net GMV change")
     ax.axhline(0, color=GREY, linewidth=1)
-    style_ax(ax, title="GMV growth comes almost entirely from new customers, not engagement",
+    style_ax(ax, title="GMV growth comes almost entirely from new customers",
              subtitle="Month-over-month GMV change decomposed by driver",
              xlabel="Month", ylabel="Contribution to MoM GMV change (USD)")
     ax.legend(loc="upper left", fontsize=9, ncol=2)

@@ -78,7 +78,7 @@ def drift_monitoring(df, source_note):
                     xy=(result["detected_day"], result["center"] * 100),
                     xytext=(result["detected_day"] + 3, result["center"] * 100 - 18),
                     fontsize=9.5, color=MUTED_RED)
-    style_ax(ax, title="A p-chart catches the quality regression within days, not weeks",
+    style_ax(ax, title="A p-chart catches the quality regression within days",
              subtitle=f"Daily judge-scored acceptable rate vs. control limits from days 0-{REFERENCE_END_DAY}",
              xlabel="Day", ylabel="Acceptable rate (%)")
     ax.legend(fontsize=9, loc="lower left")
