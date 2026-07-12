@@ -8,7 +8,7 @@ A growth analysis for a synthetic BNPL fintech: what's driving GMV growth, which
 
 **Skills and tools featured:**
 
-- SQL (window functions, CTEs, cohort joins via DuckDB)
+- SQL (ranking and offset window functions, moving averages, CTEs, cohort joins via DuckDB)
 - Data contracts and a governed metric layer
 - Cohort retention analysis
 - Log-share contribution decomposition
@@ -76,17 +76,35 @@ The second model fills the gap for a brand-new customer: a gradient boosting reg
 
 *Figure 5. Early-life model: predicted vs. actual 12-month GMV.*
 
+## Growth trend and revenue concentration
+
+The decomposition above explains what's driving GMV between two snapshots (month 4 vs. month 20). Two more questions need the full monthly series rather than those two points alone: is the growth *rate* itself holding up, and how much of any given cohort's revenue rides on a handful of its biggest spenders.
+
+For the first, a SQL window function does the work directly: `LAG()` pulls each month's prior-month GMV to compute month-over-month growth, and a moving-average window frame (`AVG() OVER (... ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)`) smooths that noisy month-to-month number into a clearer trend line. GMV is still growing every month, but the pace is not: average MoM growth runs 28.6% across months 2-6 and has fallen to 5.3% across months 20-24 (Figure 6). That's a materially different growth story than "GMV tripled," even though both statements are true at once.
+
+![GMV trend with moving average](reports/figures/gmv_trend_moving_average.png)
+
+*Figure 6. Monthly GMV vs. a trailing 3-month moving average.*
+
+For the second, `DENSE_RANK()` partitioned by acquisition cohort ranks customers by revenue within their own cohort, normalized to each cohort's top 5% rather than a fixed headcount, since cohorts range from roughly 300 to 950 customers and a fixed count of 5 would look artificially more "concentrated" in a small cohort than a large one. Across all 24 cohorts, that top 5% consistently accounts for about a quarter of the cohort's total revenue (26.0% on average, ranging from 20.3% to 35.5%), a fairly stable Pareto-style pattern rather than something that drifts as the platform scales (Figure 7).
+
+![Revenue concentration by cohort](reports/figures/revenue_concentration_by_cohort.png)
+
+*Figure 7. Share of cohort revenue from its top 5% of customers by spend, by acquisition cohort.*
+
 ## Recommendation
 
-The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, while order frequency and order value are both quietly declining underneath the growth line. Before scaling paid social spend further, the marginal customer acquisition cost (CAC) on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
+The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, while order frequency and order value are both quietly declining underneath the growth line, and the MoM growth rate itself has slowed from the high-20s to the mid-single digits. Before scaling paid social spend further, the marginal customer acquisition cost (CAC) on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
+
+The steady ~26% top-5% revenue concentration within each cohort is worth watching but not currently a red flag: it's stable rather than worsening, so growth isn't becoming more dependent on a shrinking set of whales over time. A VIP retention program would still be worth the investment given the concentration is real, just not because it's getting worse.
 
 For lifetime value scoring in production, use the day-30 model to triage new customers into engagement tiers right after signup, then let the BG/NBD + Gamma-Gamma model take over once a customer has enough transaction history for it to stabilize, rather than picking one model for the whole customer lifecycle.
 
 ## Repo layout
 
 - `notebooks/02_ltv_contribution_analysis.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `sql/`: cohort revenue, monthly KPIs, channel quality, and channel mix-shift queries, run via DuckDB (an embedded analytical SQL engine that queries the CSVs directly, no server to stand up).
-- `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, SQL runner, contribution decomposition, channel analysis, CLV modeling) as standalone scripts.
+- `sql/`: cohort revenue, monthly KPIs, channel quality, channel mix-shift, month-over-month growth with a moving average, and cohort revenue-concentration queries, run via DuckDB (an embedded analytical SQL engine that queries the CSVs directly, no server to stand up).
+- `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, SQL runner, contribution decomposition, channel analysis, growth trend, revenue concentration, CLV modeling) as standalone scripts.
 - `tests/`: pytest suite covering data-generation invariants, the data contracts, the metric registry's SQL-consistency check (against this project's actual sql/*.sql files), the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
 - `reports/`: generated charts and CSV outputs.
 
@@ -98,6 +116,8 @@ python src/generate_data.py
 python src/cohort_analysis.py
 python src/contribution.py
 python src/channel_analysis.py
+python src/growth_trend.py
+python src/revenue_concentration.py
 python src/clv_model.py
 ```
 

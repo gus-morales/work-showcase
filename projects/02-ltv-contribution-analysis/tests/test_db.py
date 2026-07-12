@@ -52,3 +52,26 @@ def test_channel_mix_shift_query(con):
     # shares within a cohort_month should sum to ~1
     sums = df.groupby("cohort_month")["channel_share"].sum()
     assert sums.round(2).between(0.99, 1.01).all()
+
+
+def test_kpi_trend_with_deltas_query(con):
+    df = run_sql_file(con, "05_kpi_trend_with_deltas.sql")
+    assert not df.empty
+    assert {"month_index", "gmv_usd", "prior_month_gmv_usd",
+            "mom_growth_pct", "gmv_3mo_moving_avg"}.issubset(df.columns)
+    # first month has no prior month to compare against
+    first, rest = df.iloc[0], df.iloc[1:]
+    assert first["prior_month_gmv_usd"] is None or df["prior_month_gmv_usd"].isna().iloc[0]
+    assert rest["mom_growth_pct"].notna().all()
+    # a 3-month moving average can never exceed the max of the last (up to) 3 months
+    assert (df["gmv_3mo_moving_avg"] <= df["gmv_usd"].cummax() + 1e-6).all()
+
+
+def test_top_customers_by_cohort_query(con):
+    df = run_sql_file(con, "06_top_customers_by_cohort.sql")
+    assert not df.empty
+    assert {"cohort_month", "cohort_size", "top5pct_revenue_usd",
+            "cohort_total_revenue_usd", "top5pct_revenue_share"}.issubset(df.columns)
+    # the top 5% can't hold more revenue than the cohort has in total
+    assert (df["top5pct_revenue_usd"] <= df["cohort_total_revenue_usd"] + 1e-6).all()
+    assert df["top5pct_revenue_share"].between(0, 1.0001).all()
