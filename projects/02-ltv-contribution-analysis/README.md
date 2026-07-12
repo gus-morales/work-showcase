@@ -42,23 +42,35 @@ GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that cha
 | Predicted 12-month CLV captured by top decile | 52.7% |
 | Early-life model (day-30 features), holdout R² | 0.37 |
 
+Active customer growth alone accounts for essentially all of the GMV change (Figure 1).
+
 ![GMV contribution by driver](reports/figures/contribution_monthly.png)
 
-The channel data explains why: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin.
+*Figure 1. GMV growth decomposed into active customers, orders per customer, and average order value.*
+
+The channel data explains why: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin (Figure 2), and its share of new cohorts has roughly tripled (Figure 3).
 
 ![Channel quality](reports/figures/channel_quality.png)
 
+*Figure 2. Revenue per customer by acquisition channel.*
+
 ![Channel mix shift](reports/figures/channel_mix_shift.png)
+
+*Figure 3. Acquisition channel mix by cohort month.*
 
 ## Two ways to estimate customer value
 
-BG/NBD + Gamma-Gamma uses only transaction history and needs no features, but it takes months of purchase history to produce a stable read on a customer. Validated against a 6-month calibration/holdout split, its predicted purchase counts track actual holdout behavior closely.
+BG/NBD + Gamma-Gamma uses only transaction history and needs no features, but it takes months of purchase history to produce a stable read on a customer. Validated against a 6-month calibration/holdout split, its predicted purchase counts track actual holdout behavior closely (Figure 4).
 
 ![CLV calibration holdout](reports/figures/clv_calibration_holdout.png)
 
-For a model that can score a customer immediately after signup, a gradient boosting regressor trained on day-30 behavior explains about 37% of the variance in 12-month GMV. That's a genuine signal, order count and spend in the first 30 days dominate the prediction, but it's a partial one: some customers front-load a purchase and then churn, which day-30 features alone can't fully separate from a customer who's just getting started.
+*Figure 4. Predicted vs. actual purchase counts, calibration/holdout validation.*
+
+For a model that can score a customer immediately after signup, a gradient boosting regressor trained on day-30 behavior explains about 37% of the variance in 12-month GMV (Figure 5). That's a genuine signal, order count and spend in the first 30 days dominate the prediction, but it's a partial one: some customers front-load a purchase and then churn, which day-30 features alone can't fully separate from a customer who's just getting started.
 
 ![Early life predicted vs actual](reports/figures/early_life_predicted_vs_actual.png)
+
+*Figure 5. Early-life model: predicted vs. actual 12-month GMV.*
 
 ## Recommendation
 
