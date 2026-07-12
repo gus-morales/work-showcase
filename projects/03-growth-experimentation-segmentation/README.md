@@ -6,7 +6,7 @@ Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-re
 
 > All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied. This is the same fictional company as projects 01 and 02, viewed from the growth/experimentation side.
 
-**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
+**Skills demonstrated:** experiment design and power analysis, two-proportion hypothesis testing, CUPED variance reduction, uplift/CATE modeling (T-learner and EconML's CausalForestDML) with Qini-curve validation, difference-in-differences with fixed effects and a parallel-trends check, wild cluster bootstrap and Honest DiD sensitivity analysis, KMeans clustering for RFM segmentation, light NLP topic modeling (TF-IDF + NMF).
 
 ## The problem
 
@@ -41,6 +41,19 @@ The +4.2pp average lift is real, but it's an average across everyone, and averag
 ![Predicted CATE by tenure](reports/figures/uplift_by_tenure.png)
 
 The model recovers platform tenure as the driver of the heterogeneity without being told to look for it: newer users, who haven't yet learned the old reminder flow, get most of the benefit from a clearer one; long-tenured users see essentially none.
+
+### A second, more rigorous CATE estimator
+
+The T-learner's weakness is structural: differencing two independently-fit models amplifies whatever noise each one picked up on its own. [EconML](https://github.com/py-why/econml)'s `CausalForestDML` avoids that by orthogonalizing the outcome and treatment against the covariates first (the "double" in double machine learning), then fitting a causal forest on what's left. Trained on the identical split, covariates, and held-out test set as the T-learner above, it nearly doubles the Qini coefficient:
+
+| | |
+|---|---|
+| Qini coefficient, T-learner vs. CausalForestDML | 52.1 vs. 95.1 |
+| CausalForestDML average treatment effect | +4.7pp (95% CI: 1.1 to 8.3pp) |
+
+![Qini comparison, T-learner vs. CausalForestDML](reports/figures/cate_econml_qini_comparison.png)
+
+The T-learner's Qini curve still clears random targeting by a wide margin, so it was never a bad model. The gap is what a hand-rolled two-model difference costs against an estimator built specifically to avoid the noise-amplification problem that causes.
 
 ## 3. Difference-in-differences: regional rollout
 
@@ -88,8 +101,8 @@ Ship the reminder redesign; the lift is well outside noise and confirmed two way
 ## Repo layout
 
 - `notebooks/03_growth_experimentation_segmentation.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling, causal inference and its robustness checks, segmentation, topic modeling) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the uplift model's bucket-calibration and Qini-curve logic, and the RFM/topic-modeling helper functions.
+- `src/`: the reproducible pipeline (data generation, experiment design/CUPED, uplift/CATE modeling and its EconML comparison, causal inference and its robustness checks, segmentation, topic modeling) as standalone scripts.
+- `tests/`: pytest suite covering data-generation invariants, the DiD estimator and its robustness checks (against synthetic panels with a known injected effect or a known injected pre-trend violation), the uplift model's bucket-calibration and Qini-curve logic, the CausalForestDML comparison, and the RFM/topic-modeling helper functions.
 - `reports/`: generated charts and CSV outputs.
 
 ## Reproduce
@@ -99,6 +112,7 @@ pip install -r requirements.txt
 python src/generate_data.py
 python src/experiment_design.py
 python src/uplift_modeling.py
+python src/cate_econml.py
 python src/causal_inference.py
 python src/robustness_checks.py
 python src/segmentation.py
