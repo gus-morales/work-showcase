@@ -1,6 +1,6 @@
 # Growth Experimentation & Segmentation
 
-Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-reminder redesign with a proper power analysis and CUPED variance reduction, an uplift/CATE model on that same test showing who actually benefits, a difference-in-differences read on a regional feature rollout that wasn't randomized, RFM customer segmentation, and light NLP topic modeling on support tickets. Built on synthetic data, mirroring the experimentation and lifecycle-analytics work that sits alongside credit risk and growth analysis in fintech.
+Five growth analyses for a synthetic BNPL fintech: an A/B test on a repayment-reminder redesign with a proper power analysis, CUPED variance reduction, and a sequential-experimentation comparison against an adaptive bandit design, an uplift/CATE model on that same test showing who actually benefits, a difference-in-differences read on a regional feature rollout that wasn't randomized, RFM customer segmentation, and light NLP topic modeling on support tickets. Built on synthetic data, mirroring the experimentation and lifecycle-analytics work that sits alongside credit risk and growth analysis in fintech.
 
 **For the full technical walkthrough (power analysis, fixed-effects regression, uplift modeling, clustering, NMF), see the [notebook](notebooks/03_growth_experimentation_segmentation.ipynb).** This README is the short version.
 

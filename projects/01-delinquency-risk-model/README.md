@@ -1,6 +1,6 @@
 # BNPL Delinquency Risk Model
 
-A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, and a decision threshold picked from actual business costs instead of a default 0.5 cutoff. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I currently do in fintech.
+A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, with a decision threshold picked from actual business costs instead of a default 0.5 cutoff, a fair lending review of the resulting approve/decline decisions, a survival-analysis view of how fast different segments default rather than just whether they do, and a small scoring service that proves the trained pipeline is actually deployable. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I currently do in fintech.
 
 **For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version. For a validation-style write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan), see the [model validation memo](docs/model_validation_memo.md).
 
@@ -126,13 +126,9 @@ The concordance index lands close to the classification model's AUC, two differe
 
 *Figure 9. Cox proportional hazards ratios for time-to-default, with 95% confidence intervals.*
 
-## Recommendation
-
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach: informal and gig-economy loans carry both a higher default rate and a faster clock.
-
 ## Serving the model
 
-`src/serve.py` wraps the trained pipeline (`reports/model.pkl`: the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
+Everything above is evaluated offline, on a held-out split. `src/serve.py` closes that gap: it wraps the trained pipeline (`reports/model.pkl`, the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
 
 ```bash
 uvicorn serve:app --reload   # from src/
@@ -148,6 +144,10 @@ curl -X POST localhost:8000/predict -H "Content-Type: application/json" -d '{
 ```
 
 This is deliberately small: no batching, auth, model versioning, or canary rollout, none of which this project is trying to demonstrate. What it does demonstrate is that the training artifacts round-trip cleanly into something that scores a single application the same way the offline evaluation did.
+
+## Recommendation
+
+Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach: informal and gig-economy loans carry both a higher default rate and a faster clock. And since the model is already proven servable, none of this has to wait for a separate deployment project to act on.
 
 ## Repo layout
 
