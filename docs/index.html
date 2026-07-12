@@ -185,9 +185,27 @@
 
   .ai-note {
     margin-top: 40px;
+    background: var(--card-bg);
+    border: 1px solid var(--light-grey);
+    border-left: 3px solid var(--teal);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+
+  .ai-note .ai-note-label {
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .ai-note p {
     font-size: 12.5px;
-    color: var(--grey);
+    color: #A5A5A1;
     line-height: 1.6;
+    margin: 0;
   }
 
   .ai-note a {
@@ -330,7 +348,10 @@
 
     </div>
 
-    <p class="ai-note">Obligatory note on generative AI use: it's part of my regular workflow, mainly for automating repetitive tasks. I do favor <a href="https://github.com/github/spec-kit" target="_blank" rel="noopener">Spec-Driven Development</a> over unstructured vibe coding because it keeps AI-assisted work reviewable and reliable. All output is validated before it ships, and only used where it's a genuine improvement over manual work.</p>
+    <div class="ai-note">
+      <div class="ai-note-label">Obligatory note on generative AI use</div>
+      <p>It's part of my regular workflow, mainly for automating repetitive tasks. I do favor <a href="https://github.com/github/spec-kit" target="_blank" rel="noopener">Spec-Driven Development</a> over unstructured vibe coding because it keeps AI-assisted work reviewable and reliable. All output is validated before it ships, and only used where it's a genuine improvement over manual work.</p>
+    </div>
 
     <footer>
       <span>Gustavo Morales · Senior Data Scientist</span>
