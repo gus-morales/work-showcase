@@ -8,6 +8,7 @@ A growth analysis for a synthetic buy now, pay later (BNPL) fintech: what's driv
 
 **Skills and tools featured:**
 
+- Exploratory data analysis
 - SQL (ranking and offset window functions, moving averages, CTEs, cohort joins via DuckDB)
 - Data contracts and a governed metric layer
 - Cohort retention analysis
@@ -31,6 +32,28 @@ Before anything downstream trusts `customers.csv` or `orders.csv`, `src/contract
 
 `src/metrics.py` centralizes the definitions this project actually uses: GMV is total order value, revenue is total fee revenue, and the two are not the same number, revenue is GMV times the take rate. Adding this layer surfaced a real inconsistency: the early-life CLV model was labeling its GMV target "revenue." The underlying numbers were never wrong, since GMV and revenue move in lockstep here at a constant take rate, so nothing downstream was affected. But the labels are now corrected so the two metrics can't silently drift apart as this project grows.
 
+## Exploratory analysis
+
+Before decomposing GMV or modeling lifetime value, it's worth looking at what the underlying order and customer data actually looks like: 15,000 customers, 94,358 orders, no missing values (the data contracts above enforce that at generation time).
+
+Orders per customer is heavily right-skewed: the median customer orders 4 times, but the mean is pulled up to 6.29 by a long tail, and the 90th percentile customer orders 14+ times (Figure 1). That skew is exactly why the CLV model further down uses BG/NBD, a model built around customers having different purchase rates, rather than assuming everyone orders at roughly the same pace.
+
+![Orders per customer distribution](reports/figures/orders_per_customer_dist.png)
+
+*Figure 1. Orders per customer.*
+
+Order value is right-skewed the same way: a median order of $486 against a mean of $582, with a 90th percentile above $1,076 (Figure 2). That's the same reasoning behind pairing BG/NBD with Gamma-Gamma, one model for how often a customer buys, a separate one for how much they spend when they do, rather than a single flat average.
+
+![Order value distribution](reports/figures/order_value_dist.png)
+
+*Figure 2. Order value.*
+
+Paid social is already the largest acquisition channel overall, 34% of all customers, ahead of organic (28%), partner store (24%), and referral (14%) (Figure 3). That's the starting point for the channel-quality story below: the biggest channel by volume and the weakest by customer value turn out to be the same one.
+
+![Acquisition channel mix, overall](reports/figures/channel_mix_overall.png)
+
+*Figure 3. Acquisition channel mix, overall.*
+
 ## Results
 
 GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that change shows active customer growth alone accounts for essentially all of it. Order frequency and average order value were each a net drag over the same period.
@@ -44,53 +67,53 @@ GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that cha
 | Predicted 12-month CLV captured by top decile | 52.7% (the top 10% of customers by predicted value account for this share of actual realized value) |
 | Early-life model (day-30 features), holdout R² | 0.37 (the model explains 37% of the variance in 12-month GMV on data it wasn't trained on) |
 
-Active customer growth alone accounts for essentially all of the GMV change (Figure 1).
+Active customer growth alone accounts for essentially all of the GMV change (Figure 4).
 
 ![GMV contribution by driver](reports/figures/contribution_monthly.png)
 
-*Figure 1. GMV growth decomposed into active customers, orders per customer, and average order value.*
+*Figure 4. GMV growth decomposed into active customers, orders per customer, and average order value.*
 
-The channel data explains why growth looks healthier than it is: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin (Figure 2), and its share of new customer cohorts has roughly tripled (Figure 3).
+The channel data explains why growth looks healthier than it is: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin (Figure 5), and its share of new customer cohorts has roughly tripled (Figure 6).
 
 ![Channel quality](reports/figures/channel_quality.png)
 
-*Figure 2. Revenue per customer by acquisition channel.*
+*Figure 5. Revenue per customer by acquisition channel.*
 
 ![Channel mix shift](reports/figures/channel_mix_shift.png)
 
-*Figure 3. Acquisition channel mix by cohort month.*
+*Figure 6. Acquisition channel mix by cohort month.*
 
 ## Two ways to estimate customer value
 
 The first model, BG/NBD + Gamma-Gamma, is the standard probabilistic pairing for this problem. One part predicts how many more purchases a customer will make and the odds they've already churned, based purely on how often and how recently they've bought before. The other part adds a dollar estimate on top, based on their typical order size. Together they need no engineered features, just transaction history, but that history has to build up over months before the estimate stabilizes.
 
-It was validated against a 6-month calibration/holdout split: fit on an earlier window, then checked against what customers actually did in the following one. Its predicted purchase counts track actual holdout behavior closely (Figure 4).
+It was validated against a 6-month calibration/holdout split: fit on an earlier window, then checked against what customers actually did in the following one. Its predicted purchase counts track actual holdout behavior closely (Figure 7).
 
 ![CLV calibration holdout](reports/figures/clv_calibration_holdout.png)
 
-*Figure 4. Predicted vs. actual purchase counts, calibration/holdout validation.*
+*Figure 7. Predicted vs. actual purchase counts, calibration/holdout validation.*
 
-The second model fills the gap for a brand-new customer: a gradient boosting regressor trained on just their first 30 days of behavior, which explains about 37% of the variance in their eventual 12-month GMV (Figure 5). That's a real signal, order count and spend in the first month dominate the prediction, but it's a partial one. Some customers front-load a single purchase and then churn, and 30 days of data alone can't fully tell that apart from a customer who's just getting started.
+The second model fills the gap for a brand-new customer: a gradient boosting regressor trained on just their first 30 days of behavior, which explains about 37% of the variance in their eventual 12-month GMV (Figure 8). That's a real signal, order count and spend in the first month dominate the prediction, but it's a partial one. Some customers front-load a single purchase and then churn, and 30 days of data alone can't fully tell that apart from a customer who's just getting started.
 
 ![Early life predicted vs actual](reports/figures/early_life_predicted_vs_actual.png)
 
-*Figure 5. Early-life model: predicted vs. actual 12-month GMV.*
+*Figure 8. Early-life model: predicted vs. actual 12-month GMV.*
 
 ## Growth trend and revenue concentration
 
 The decomposition above explains what's driving GMV between two snapshots (month 4 vs. month 20). Two more questions need the full monthly series rather than those two points alone: is the growth *rate* itself holding up, and how much of any given cohort's revenue rides on a handful of its biggest spenders.
 
-For the first, a SQL window function does the work directly: `LAG()` pulls each month's prior-month GMV to compute month-over-month growth, and a moving-average window frame (`AVG() OVER (... ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)`) smooths that noisy month-to-month number into a clearer trend line. GMV is still growing every month, but the pace is not: average MoM growth runs 28.6% across months 2-6 and has fallen to 5.3% across months 20-24 (Figure 6). That's a materially different growth story than "GMV tripled," even though both statements are true at once.
+For the first, a SQL window function does the work directly: `LAG()` pulls each month's prior-month GMV to compute month-over-month growth, and a moving-average window frame (`AVG() OVER (... ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)`) smooths that noisy month-to-month number into a clearer trend line. GMV is still growing every month, but the pace is not: average MoM growth runs 28.6% across months 2-6 and has fallen to 5.3% across months 20-24 (Figure 9). That's a materially different growth story than "GMV tripled," even though both statements are true at once.
 
 ![GMV trend with moving average](reports/figures/gmv_trend_moving_average.png)
 
-*Figure 6. Monthly GMV vs. a trailing 3-month moving average.*
+*Figure 9. Monthly GMV vs. a trailing 3-month moving average.*
 
-For the second, `DENSE_RANK()` partitioned by acquisition cohort ranks customers by revenue within their own cohort, normalized to each cohort's top 5% rather than a fixed headcount, since cohorts range from roughly 300 to 950 customers and a fixed count of 5 would look artificially more "concentrated" in a small cohort than a large one. Across all 24 cohorts, that top 5% consistently accounts for about a quarter of the cohort's total revenue (26.0% on average, ranging from 20.3% to 35.5%), a fairly stable Pareto-style pattern rather than something that drifts as the platform scales (Figure 7).
+For the second, `DENSE_RANK()` partitioned by acquisition cohort ranks customers by revenue within their own cohort, normalized to each cohort's top 5% rather than a fixed headcount, since cohorts range from roughly 300 to 950 customers and a fixed count of 5 would look artificially more "concentrated" in a small cohort than a large one. Across all 24 cohorts, that top 5% consistently accounts for about a quarter of the cohort's total revenue (26.0% on average, ranging from 20.3% to 35.5%), a fairly stable Pareto-style pattern rather than something that drifts as the platform scales (Figure 10).
 
 ![Revenue concentration by cohort](reports/figures/revenue_concentration_by_cohort.png)
 
-*Figure 7. Share of cohort revenue from its top 5% of customers by spend, by acquisition cohort.*
+*Figure 10. Share of cohort revenue from its top 5% of customers by spend, by acquisition cohort.*
 
 ## Recommendation
 
@@ -104,7 +127,7 @@ For lifetime value scoring in production, use the day-30 model to triage new cus
 
 - `notebooks/02_ltv_contribution_analysis.ipynb`: full technical walkthrough, executed with all charts and results inline.
 - `sql/`: cohort revenue, monthly KPIs, channel quality, channel mix-shift, month-over-month growth with a moving average, and cohort revenue-concentration queries, run via DuckDB (an embedded analytical SQL engine that queries the CSVs directly, no server to stand up).
-- `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, SQL runner, contribution decomposition, channel analysis, growth trend, revenue concentration, CLV modeling) as standalone scripts.
+- `src/`: the reproducible pipeline (data generation, data contracts, the metric registry, exploratory analysis, SQL runner, contribution decomposition, channel analysis, growth trend, revenue concentration, CLV modeling) as standalone scripts.
 - `tests/`: pytest suite covering data-generation invariants, the data contracts, the metric registry's SQL-consistency check (against this project's actual sql/*.sql files), the SQL queries (against a temp dataset), and the log-share decomposition arithmetic.
 - `reports/`: generated charts and CSV outputs.
 
@@ -113,6 +136,7 @@ For lifetime value scoring in production, use the day-30 model to triage new cus
 ```bash
 pip install -r requirements.txt
 python src/generate_data.py
+python src/eda.py
 python src/cohort_analysis.py
 python src/contribution.py
 python src/channel_analysis.py

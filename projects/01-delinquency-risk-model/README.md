@@ -8,6 +8,7 @@ A risk model that flags which buy now, pay later (BNPL) loans are likely to go 3
 
 **Skills and tools featured:**
 
+- Exploratory data analysis
 - Classification modeling (logistic regression + gradient-boosted trees)
 - Leakage-safe feature pipelines (feature-engine, fit on the training split only)
 - Time-series cross-validated hyperparameter search
@@ -27,6 +28,34 @@ The lender approves a loan in seconds at checkout. Approve a customer who pays o
 
 Trains a model to predict delinquency risk at loan approval, then picks the approve/decline threshold that minimizes expected losses given realistic cost assumptions, rather than using a generic 0.5 cutoff.
 
+## Exploratory analysis
+
+Before any model gets trained, the raw loan data has to actually earn the modeling choices made later. Four checks, on 18,092 loans from 9,144 customers, at an overall 30+ DPD rate of 14.23%.
+
+Delinquency rate by origination month is flat for the first 21 months, then jumps in the last three (Figure 1), the simulated macro shock that the drift-monitoring section further down is built around.
+
+![Delinquency by month](reports/figures/delinquency_by_month.png)
+
+*Figure 1. Delinquency rate by loan origination month. The last three months carry a simulated macro shock.*
+
+Delinquency rate also varies sharply by employment type: 29.7% for informal workers, 23.3% for gig-economy, 14.2% for self-employed, 5.2% for salaried (Figure 2), a nearly 6x spread that justifies employment type showing up as a real driver in the model rather than noise.
+
+![Delinquency by employment type](reports/figures/delinquency_by_employment.png)
+
+*Figure 2. Delinquency rate by employment type.*
+
+Credit bureau score separates the two outcomes cleanly, current loans have a median score of 508 against 424 for loans that went 30+ DPD (Figure 3), which is exactly why bureau score turns out to be the model's single strongest signal later on.
+
+![Bureau score by outcome](reports/figures/bureau_score_by_outcome.png)
+
+*Figure 3. Credit bureau score distribution by outcome.*
+
+Loan-to-income ratio moves the same way: a median of 0.17 for current loans vs. 0.27 for delinquent ones, a loan that's large relative to income is a real risk signal on its own, before the model ever sees the rest of the application (Figure 4).
+
+![Loan-to-income ratio by outcome](reports/figures/loan_to_income_by_outcome.png)
+
+*Figure 4. Loan-to-income ratio by outcome.*
+
 ## Results
 
 Two models were compared: a logistic regression baseline, and a gradient-boosted trees model with hyperparameters tuned by cross-validation. They came out close on AUC (a 0-to-1 score for how well a model ranks risky loans above safe ones): 0.79 for gradient boosting, 0.80 for logistic regression. That closeness says the underlying patterns here are fairly straightforward, not deeply nonlinear. Gradient boosting was kept anyway, since it handles interactions between features better as more features get added, and it's what the SHAP interpretability step further down relies on.
@@ -42,15 +71,11 @@ With calibrated probabilities in hand, the next question is where to draw the ap
 | Expected loss reduction vs. a naive 0.5 cutoff | 67% |
 | Share of actual delinquent loans caught | 92% |
 
-Delinquency spikes in the last three months of data, which carry a simulated economic shock (Figure 1). Testing every possible threshold against expected cost shows exactly where that 67% improvement comes from (Figure 2).
-
-![Delinquency by month](reports/figures/delinquency_by_month.png)
-
-*Figure 1. Delinquency rate by loan origination month. The last three months carry a simulated macro shock.*
+Testing every possible threshold against expected cost shows exactly where that 67% improvement comes from (Figure 5).
 
 ![Threshold selection](reports/figures/threshold_cost_curve.png)
 
-*Figure 2. Expected portfolio cost by decision threshold, cost-optimal threshold vs. the naive 0.5 cutoff.*
+*Figure 5. Expected portfolio cost by decision threshold, cost-optimal threshold vs. the naive 0.5 cutoff.*
 
 ## Missing bureau scores
 
@@ -66,17 +91,17 @@ To see how the model holds up when conditions change, it was stress-tested again
 
 The usual way to catch this kind of problem is input-drift monitoring: checking whether the feature distributions in the current data still look like the reference period they were trained on. The standard metric for that is PSI (Population Stability Index), where a value above roughly 0.2 signals a meaningful shift. Every feature's PSI stayed well under that line, and even the rate of missing bureau scores barely moved (9.4% reference vs. 9.9% monitored). By that measure, nothing looked wrong.
 
-But the actual delinquency rate rose anyway, and the model quietly started under-predicting risk. Input-drift monitoring missed this because the inputs themselves hadn't shifted, the relationship between the inputs and the outcome had. Catching it required a second, different check: comparing the model's predicted delinquency rate against the actual one, month by month (Figure 3).
+But the actual delinquency rate rose anyway, and the model quietly started under-predicting risk. Input-drift monitoring missed this because the inputs themselves hadn't shifted, the relationship between the inputs and the outcome had. Catching it required a second, different check: comparing the model's predicted delinquency rate against the actual one, month by month (Figure 6).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 
-*Figure 3. Predicted vs. actual delinquency rate by month, reference window vs. the monitored (shock) window.*
+*Figure 6. Predicted vs. actual delinquency rate by month, reference window vs. the monitored (shock) window.*
 
 ### Rate-mix shift decomposition
 
 One more explanation needed ruling out: maybe the portfolio had quietly shifted toward riskier customers, more gig workers, say, which would raise the overall delinquency rate without tripping any single feature's PSI.
 
-A rate-mix decomposition checks this by splitting the change in the overall delinquency rate into two pieces: how much came from the customer mix shifting, and how much came from existing segments simply getting riskier on their own. The result: 96% of the increase is the second kind, segments getting riskier, not a change in who's being approved (Figure 4). Every employment type moved in the same direction together, which rules out one bad segment dragging up the average by itself (Figure 5).
+A rate-mix decomposition checks this by splitting the change in the overall delinquency rate into two pieces: how much came from the customer mix shifting, and how much came from existing segments simply getting riskier on their own. The result: 96% of the increase is the second kind, segments getting riskier, not a change in who's being approved (Figure 7). Every employment type moved in the same direction together, which rules out one bad segment dragging up the average by itself (Figure 8).
 
 | | |
 |---|---|
@@ -86,11 +111,11 @@ A rate-mix decomposition checks this by splitting the change in the overall deli
 
 ![Rate-mix shift decomposition](reports/figures/rate_mix_shift_decomposition.png)
 
-*Figure 4. Rate-mix shift decomposition: mix effect (composition shift) vs. rate effect (within-segment change).*
+*Figure 7. Rate-mix shift decomposition: mix effect (composition shift) vs. rate effect (within-segment change).*
 
 ![Rate-mix shift by segment](reports/figures/rate_mix_shift_by_segment.png)
 
-*Figure 5. Delinquency rate by employment-type segment, reference vs. monitored window.*
+*Figure 8. Delinquency rate by employment-type segment, reference vs. monitored window.*
 
 ## Fair lending review
 
@@ -98,7 +123,7 @@ A lending model doesn't need to use race, gender, or other protected characteris
 
 Since this project runs on synthetic data, there's no real demographic data to test against. A stand-in column, `demographic_group`, is added instead: generated with a mild correlation to city tier, but never shown to the model. It exists only so the model's approve/decline decisions can be checked against it afterward.
 
-The standard test for this is the four-fifths rule: a group's approval rate should be at least 80% of the highest-approving group's rate. This model clears that comfortably, and a two-proportion z-test confirms the small gap between groups isn't statistically distinguishable from noise (Figure 6).
+The standard test for this is the four-fifths rule: a group's approval rate should be at least 80% of the highest-approving group's rate. This model clears that comfortably, and a two-proportion z-test confirms the small gap between groups isn't statistically distinguishable from noise (Figure 9).
 
 | | |
 |---|---|
@@ -108,21 +133,21 @@ The standard test for this is the four-fifths rule: a group's approval rate shou
 
 ![Fair lending approval rate](reports/figures/fair_lending_approval_rate.png)
 
-*Figure 6. Approval rate by demographic group vs. the four-fifths rule.*
+*Figure 9. Approval rate by demographic group vs. the four-fifths rule.*
 
 Every declined applicant also gets an adverse action reason code, the specific reason a lender is legally required to give a rejected applicant under the Equal Credit Opportunity Act (ECOA). Those reasons come from SHAP but are restricted to a fixed list of legitimate credit factors: things like city, device type, or acquisition channel never appear as a reason, even when they show up in the SHAP breakdown, since a lender shouldn't cite an applicant's neighborhood or how they signed up as grounds for a decline.
 
 ![Fair lending reason codes](reports/figures/fair_lending_reason_codes.png)
 
-*Figure 7. Primary adverse action reason among declined applicants.*
+*Figure 10. Primary adverse action reason among declined applicants.*
 
 ## Time-to-default
 
 The model above treats delinquency as a single yes/no outcome inside a fixed window. But a loan that goes bad in week 2 is a very different problem than one that goes bad in month 10, even though both get labeled "delinquent" the same way. Survival analysis keeps that time dimension instead of collapsing it away.
 
-A Kaplan-Meier curve tracks, for each employment type, what share of loans are still current as time passes. By the end of the observation window: 93.1% of salaried loans are still current, against 82.7% self-employed, 72.4% gig-economy, and 66.8% informal (Figure 8). That gap is far too large to be random chance, a log-rank test (the standard significance test for comparing survival curves across groups) puts it at p < 0.001.
+A Kaplan-Meier curve tracks, for each employment type, what share of loans are still current as time passes. By the end of the observation window: 93.1% of salaried loans are still current, against 82.7% self-employed, 72.4% gig-economy, and 66.8% informal (Figure 11). That gap is far too large to be random chance, a log-rank test (the standard significance test for comparing survival curves across groups) puts it at p < 0.001.
 
-A Cox proportional hazards model turns that same gap into one number per group: how much faster a group defaults relative to salaried loans, everything else held equal. Informal-employment loans default at 2.18x the salaried rate, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio works the other way, the strongest protective factor in the model, in the same direction it has on the classification model above.
+A Cox proportional hazards model turns that same gap into one number per group: how much faster a group defaults relative to salaried loans, everything else held equal. Informal-employment loans default at 2.18x the salaried rate, gig-economy at 1.92x, self-employed at 1.42x (Figure 12). Down payment ratio works the other way, the strongest protective factor in the model, in the same direction it has on the classification model above.
 
 | | |
 |---|---|
@@ -134,11 +159,11 @@ The concordance index (0.81) is the survival model's version of AUC: the probabi
 
 ![Time-to-default by employment type](reports/figures/survival_km_by_employment.png)
 
-*Figure 8. Kaplan-Meier estimate of time-to-default by employment type.*
+*Figure 11. Kaplan-Meier estimate of time-to-default by employment type.*
 
 ![Cox hazard ratios](reports/figures/survival_hazard_ratios.png)
 
-*Figure 9. Cox proportional hazards ratios for time-to-default, with 95% confidence intervals.*
+*Figure 12. Cox proportional hazards ratios for time-to-default, with 95% confidence intervals.*
 
 ## Serving the model
 
@@ -170,7 +195,7 @@ The fair lending review currently passes with a comfortable margin, but it's wor
 ## Repo layout
 
 - `notebooks/01_delinquency_risk_model.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis, model serving) as standalone scripts.
+- `src/`: the reproducible pipeline (data generation, exploratory analysis, features, training, interpretability, monitoring, rate-mix shift decomposition, fair lending review, survival analysis, model serving) as standalone scripts.
 - `tests/`: pytest suite covering data-generation invariants, the feature-engineering functions and pipeline (including the missing-bureau-score handling), the rate-mix shift decomposition, the fair lending disparate-impact and reason-code logic, the survival-analysis covariate construction and Cox fit, and the serving endpoint's request validation and scoring behavior.
 - `reports/`: generated charts, metrics, and monitoring reports.
 - `docs/model_validation_memo.md`: SR 11-7-style validation write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan).
