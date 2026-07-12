@@ -29,9 +29,11 @@ Trains a model to predict delinquency risk at loan approval, then picks the appr
 
 ## Results
 
-The gradient-boosted model's hyperparameters were chosen with a randomized search over 5-fold time-series cross-validation (expanding window, each fold validating on the months right after it). Picking the decision threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **67%** on held-out data.
+The gradient-boosted model's hyperparameters were chosen with a randomized search over 5-fold time-series cross-validation (expanding window, each fold validating on the months right after it, so the choice holds up across time instead of fitting one lucky snapshot). Before committing to gradient boosting, it was checked against a regularized logistic regression baseline: the two land within a point of each other on AUC (area under the ROC curve, 0.5 is a coin flip, 1.0 is perfect separation of delinquent loans from good ones across every threshold) — GBM at 0.79, logistic at 0.80 — which says the underlying relationships here are close to additive, not that the more complex model automatically wins. Gradient boosting was still carried forward: it picks up nonlinear feature interactions a linear model can't as more features get added, and its tree structure is what the SHAP interpretability step below runs on directly.
 
-AUC (area under the ROC curve) summarizes how well the model ranks delinquent loans above good ones across every possible threshold, 0.5 is a coin flip, 1.0 is perfect separation; it says nothing on its own about which threshold to actually use, which is what the cost-based step below is for.
+Raw probabilities out of a tree ensemble like this tend to be overconfident, so they're isotonic-calibrated on a separate validation window (cutting the Brier score, the mean squared error between predicted probability and actual outcome, from 0.17 to 0.13) before anything downstream, the cost-based threshold, the served API's output, treats them as real probabilities.
+
+Picking the decision threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **67%** on held-out data. The cost assumptions behind that number: missing a delinquent loan (a false negative) forfeits roughly 70% of principal net of recoveries, while declining a good customer (a false positive) only forgoes a ~6% fee margin, a roughly 12x asymmetry. Sweeping every threshold from 0 to 1 and taking the one with the lowest total expected cost across the held-out set, rather than defaulting to 0.5, is what actually locates that reduction.
 
 | | |
 |---|---|
@@ -40,7 +42,7 @@ AUC (area under the ROC curve) summarizes how well the model ranks delinquent lo
 | Expected loss reduction vs. a naive 0.5 cutoff | 67% |
 | Share of actual delinquent loans caught | 92% |
 
-Delinquency climbs sharply in the shock window (Figure 1); sweeping the decision threshold against expected cost locates where that 67% reduction comes from (Figure 2).
+Delinquency climbs sharply in the shock window (Figure 1); running that cost sweep across every threshold shows exactly where the 67% reduction comes from (Figure 2).
 
 ![Delinquency by month](reports/figures/delinquency_by_month.png)
 
@@ -52,7 +54,7 @@ Delinquency climbs sharply in the shock window (Figure 1); sweeping the decision
 
 ## Missing bureau scores
 
-About 9% of customers are thin-file: gig/informal workers and recent platform joiners with no bureau score on record at underwriting time, a routine situation for a BNPL lender rather than an edge case. The feature pipeline (feature-engine, wrapped in an sklearn `Pipeline`) adds a missing-value indicator and median-imputes the score, fit on the training split only and reused unchanged on validation, test, and the monitoring window, so no split ever influences another split's preprocessing statistics.
+About 9% of customers are thin-file: gig/informal workers and recent platform joiners with no bureau score on record at underwriting time, a routine situation for a BNPL lender rather than an edge case. The feature pipeline (feature-engine, wrapped in an sklearn `Pipeline`) handles this two ways: it median-imputes the missing score (robust to outliers, unlike a mean, and a defensible stand-in when no other information is available), and it separately adds a binary missing-value indicator, so the model can learn from the fact that a score is missing at all, on top of whatever value got filled in for it. Both steps are fit on the training split only and reused unchanged on validation, test, and the monitoring window, so no split ever influences another split's preprocessing statistics.
 
 Bureau score is still by far the model's strongest signal by SHAP value (SHAP attributes each prediction back to individual feature contributions, so "strongest signal" here means the largest average push on the model's output), but the missing-score indicator itself carries a small amount of separate signal beyond what employment type and tenure already capture, meaning "no bureau record" isn't fully redundant with the other applicant information the model already has.
 
@@ -66,7 +68,7 @@ The model was stress-tested against a simulated economic shock. Standard drift m
 
 ### Rate-mix shift decomposition
 
-Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition rules that out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift (Figure 4), and every employment segment moved together rather than one risky segment simply becoming more common (Figure 5).
+Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition checks this directly by splitting the change in the blended delinquency rate into two pieces: a mix effect (how much the rate would have moved if each segment's own rate had stayed flat but the portfolio's mix across segments shifted) and a rate effect (how much it would have moved if the mix had stayed flat but each segment's own rate changed), with the small interaction between the two split evenly between them rather than arbitrarily assigned to one side. That decomposition rules the mix-shift explanation out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift (Figure 4), and every employment segment moved together rather than one risky segment simply becoming more common (Figure 5).
 
 | | |
 |---|---|
@@ -86,7 +88,7 @@ Clean PSI could still hide a subtler explanation: the portfolio quietly shifting
 
 A credit model that never uses a protected-class attribute directly can still produce disparate outcomes through facially-neutral variables correlated with it, indirect discrimination is the scenario a fair lending review exists to catch. This project adds a synthetic protected-class-proxy attribute, `demographic_group`, held out of the model entirely and used only to test approve/decline decisions after the fact.
 
-The four-fifths rule (a group's approval rate should be at least 80% of the highest-approval group's) is the standard screening threshold for disparate impact. Here it passes with room to spare, and the gap isn't statistically distinguishable from noise (Figure 6).
+The four-fifths rule (a group's approval rate should be at least 80% of the highest-approval group's) is the standard screening threshold for disparate impact. Here it passes with room to spare, and a two-proportion z-test says the gap between groups isn't statistically distinguishable from noise (Figure 6).
 
 | | |
 |---|---|
