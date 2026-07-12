@@ -1,6 +1,6 @@
 # BNPL Delinquency Risk Model
 
-A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due, with a decision threshold picked from actual business costs instead of a default 0.5 cutoff, a fair lending review of the resulting approve/decline decisions, a survival-analysis view of how fast different segments default rather than just whether they do, and a small scoring service that proves the trained pipeline is actually deployable. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I did in fintech.
+A risk model that flags which buy-now-pay-later loans are likely to go 30+ days past due. It picks its approve/decline threshold from actual business costs instead of a default 0.5 cutoff, checks that its decisions don't disadvantage any group unfairly, looks at how fast different segments default rather than just whether they do, and ships as a small scoring service to prove the whole thing actually runs. Built on synthetic data modeled after a BNPL lending book, mirroring delinquency-prediction work I did in fintech.
 
 **For the full technical walkthrough (modeling, calibration, SHAP, drift monitoring), see the [notebook](notebooks/01_delinquency_risk_model.ipynb).** This README is the short version. For a validation-style write-up (data lineage, conceptual soundness, outcomes analysis, ongoing monitoring plan), see the [model validation memo](docs/model_validation_memo.md).
 
@@ -29,11 +29,11 @@ Trains a model to predict delinquency risk at loan approval, then picks the appr
 
 ## Results
 
-The gradient-boosted model's hyperparameters were chosen with a randomized search over 5-fold time-series cross-validation (expanding window, each fold validating on the months right after it, so the choice holds up across time instead of fitting one lucky snapshot). Before committing to gradient boosting, it was checked against a regularized logistic regression baseline: the two land within a point of each other on AUC (area under the ROC curve, 0.5 is a coin flip, 1.0 is perfect separation of delinquent loans from good ones across every threshold) — GBM at 0.79, logistic at 0.80 — which says the underlying relationships here are close to additive, not that the more complex model automatically wins. Gradient boosting was still carried forward: it picks up nonlinear feature interactions a linear model can't as more features get added, and its tree structure is what the SHAP interpretability step below runs on directly.
+Two models were compared: a logistic regression baseline, and a gradient-boosted trees model with hyperparameters tuned by cross-validation. They came out close on AUC (a 0-to-1 score for how well a model ranks risky loans above safe ones): 0.79 for gradient boosting, 0.80 for logistic regression. That closeness says the underlying patterns here are fairly straightforward, not deeply nonlinear. Gradient boosting was kept anyway, since it handles interactions between features better as more features get added, and it's what the SHAP interpretability step further down relies on.
 
-Raw probabilities out of a tree ensemble like this tend to be overconfident, so they're isotonic-calibrated on a separate validation window (cutting the Brier score, the mean squared error between predicted probability and actual outcome, from 0.17 to 0.13) before anything downstream, the cost-based threshold, the served API's output, treats them as real probabilities.
+Before those probabilities can be used for a real decision, they need one more step: calibration. Gradient-boosted models tend to output probabilities that are more extreme than they should be, too close to 0 or 1. Isotonic calibration corrects that, so a predicted "10% chance of default" actually means close to 10% in practice.
 
-Picking the decision threshold from cost instead of defaulting to 0.5 cut expected portfolio losses by **67%** on held-out data. The cost assumptions behind that number: missing a delinquent loan (a false negative) forfeits roughly 70% of principal net of recoveries, while declining a good customer (a false positive) only forgoes a ~6% fee margin, a roughly 12x asymmetry. Sweeping every threshold from 0 to 1 and taking the one with the lowest total expected cost across the held-out set, rather than defaulting to 0.5, is what actually locates that reduction.
+With calibrated probabilities in hand, the next question is where to draw the approve/decline line. A default 0.5 cutoff ignores that the two kinds of mistakes cost very different amounts: missing a loan that goes delinquent costs roughly 70% of its principal, while wrongly declining a loan that would have been repaid only costs a 6% fee. A missed default is about 12x more expensive than a wrongly declined loan, so the model should lean toward declining. Testing every possible cutoff against expected cost confirms exactly how far: the optimal threshold lands at 0.05, and using it instead of 0.5 cuts expected losses by **67%**.
 
 | | |
 |---|---|
@@ -42,7 +42,7 @@ Picking the decision threshold from cost instead of defaulting to 0.5 cut expect
 | Expected loss reduction vs. a naive 0.5 cutoff | 67% |
 | Share of actual delinquent loans caught | 92% |
 
-Delinquency climbs sharply in the shock window (Figure 1); running that cost sweep across every threshold shows exactly where the 67% reduction comes from (Figure 2).
+Delinquency spikes in the last three months of data, which carry a simulated economic shock (Figure 1). Testing every possible threshold against expected cost shows exactly where that 67% improvement comes from (Figure 2).
 
 ![Delinquency by month](reports/figures/delinquency_by_month.png)
 
@@ -54,13 +54,19 @@ Delinquency climbs sharply in the shock window (Figure 1); running that cost swe
 
 ## Missing bureau scores
 
-About 9% of customers are thin-file: gig/informal workers and recent platform joiners with no bureau score on record at underwriting time, a routine situation for a BNPL lender rather than an edge case. The feature pipeline (feature-engine, wrapped in an sklearn `Pipeline`) handles this two ways: it median-imputes the missing score (robust to outliers, unlike a mean, and a defensible stand-in when no other information is available), and it separately adds a binary missing-value indicator, so the model can learn from the fact that a score is missing at all, on top of whatever value got filled in for it. Both steps are fit on the training split only and reused unchanged on validation, test, and the monitoring window, so no split ever influences another split's preprocessing statistics.
+About 9% of applicants have no credit bureau score on file: gig workers, informal workers, and people who just joined the platform. That's routine for a BNPL lender, not an edge case, so the model has to handle it directly instead of dropping those applicants.
 
-Bureau score is still by far the model's strongest signal by SHAP value (SHAP attributes each prediction back to individual feature contributions, so "strongest signal" here means the largest average push on the model's output), but the missing-score indicator itself carries a small amount of separate signal beyond what employment type and tenure already capture, meaning "no bureau record" isn't fully redundant with the other applicant information the model already has.
+The fix has two parts. First, fill in the missing score with the median score across all applicants, a safe default that isn't thrown off by outliers. Second, add a separate yes/no flag marking that the score was missing in the first place, since that fact alone can be informative, on top of whatever value gets filled in.
+
+Bureau score turns out to be the single strongest signal behind the model's predictions, measured by SHAP (a standard way to see how much each feature pushed a given prediction up or down). The missing-score flag also carries a small amount of signal on its own, less than bureau score itself, but enough that "no credit history" tells the model something employment type and tenure don't already cover.
 
 ## Calibration drift under a simulated shock
 
-The model was stress-tested against a simulated economic shock. Standard drift monitoring (checking whether customer profiles have changed, including the rate of missing bureau scores) showed nothing unusual: every feature's Population Stability Index, or PSI (a standard measure of how much a feature's distribution has shifted between two time windows, with values above roughly 0.2 typically treated as a meaningful shift), stayed well under the alert threshold, and the missing-score rate barely moved (9.4% reference vs. 9.9% monitored). But the actual default rate rose anyway, and the model quietly under-predicted risk during the shock. Catching it required watching the gap between predicted and observed outcomes (Figure 3), since input drift alone stayed quiet the whole time. Full detail in section 10 of the [notebook](notebooks/01_delinquency_risk_model.ipynb).
+To see how the model holds up when conditions change, it was stress-tested against a simulated economic shock (higher rates, tighter budgets) covering the last three months of data.
+
+The usual way to catch this kind of problem is input-drift monitoring: checking whether the feature distributions in the current data still look like the reference period they were trained on. The standard metric for that is PSI (Population Stability Index), where a value above roughly 0.2 signals a meaningful shift. Every feature's PSI stayed well under that line, and even the rate of missing bureau scores barely moved (9.4% reference vs. 9.9% monitored). By that measure, nothing looked wrong.
+
+But the actual delinquency rate rose anyway, and the model quietly started under-predicting risk. Input-drift monitoring missed this because the inputs themselves hadn't shifted, the relationship between the inputs and the outcome had. Catching it required a second, different check: comparing the model's predicted delinquency rate against the actual one, month by month (Figure 3).
 
 ![Monitoring](reports/figures/drift_predicted_vs_actual.png)
 
@@ -68,7 +74,9 @@ The model was stress-tested against a simulated economic shock. Standard drift m
 
 ### Rate-mix shift decomposition
 
-Clean PSI could still hide a subtler explanation: the portfolio quietly shifting toward segments (employment type, city tier, merchant category) that were already riskier before the shock. A rate-mix shift decomposition checks this directly by splitting the change in the blended delinquency rate into two pieces: a mix effect (how much the rate would have moved if each segment's own rate had stayed flat but the portfolio's mix across segments shifted) and a rate effect (how much it would have moved if the mix had stayed flat but each segment's own rate changed), with the small interaction between the two split evenly between them rather than arbitrarily assigned to one side. That decomposition rules the mix-shift explanation out directly: 96% of the delinquency-rate increase is a rate effect (loans within the same segment getting riskier), with only 4% attributable to composition shift (Figure 4), and every employment segment moved together rather than one risky segment simply becoming more common (Figure 5).
+One more explanation needed ruling out: maybe the portfolio had quietly shifted toward riskier customers, more gig workers, say, which would raise the overall delinquency rate without tripping any single feature's PSI.
+
+A rate-mix decomposition checks this by splitting the change in the overall delinquency rate into two pieces: how much came from the customer mix shifting, and how much came from existing segments simply getting riskier on their own. The result: 96% of the increase is the second kind, segments getting riskier, not a change in who's being approved (Figure 4). Every employment type moved in the same direction together, which rules out one bad segment dragging up the average by itself (Figure 5).
 
 | | |
 |---|---|
@@ -86,9 +94,11 @@ Clean PSI could still hide a subtler explanation: the portfolio quietly shifting
 
 ## Fair lending review
 
-A credit model that never uses a protected-class attribute directly can still produce disparate outcomes through facially-neutral variables correlated with it, indirect discrimination is the scenario a fair lending review exists to catch. This project adds a synthetic protected-class-proxy attribute, `demographic_group`, held out of the model entirely and used only to test approve/decline decisions after the fact.
+A lending model doesn't need to use race, gender, or other protected characteristics directly to end up treating those groups unequally. If other data the model does use happens to correlate with one of those characteristics, unequal outcomes can show up without the model ever being told what the characteristic is. This section checks whether that happened here.
 
-The four-fifths rule (a group's approval rate should be at least 80% of the highest-approval group's) is the standard screening threshold for disparate impact. Here it passes with room to spare, and a two-proportion z-test says the gap between groups isn't statistically distinguishable from noise (Figure 6).
+Since this project runs on synthetic data, there's no real demographic data to test against. A stand-in column, `demographic_group`, is added instead: generated with a mild correlation to city tier, but never shown to the model. It exists only so the model's approve/decline decisions can be checked against it afterward.
+
+The standard test for this is the four-fifths rule: a group's approval rate should be at least 80% of the highest-approving group's rate. This model clears that comfortably, and a two-proportion z-test confirms the small gap between groups isn't statistically distinguishable from noise (Figure 6).
 
 | | |
 |---|---|
@@ -100,7 +110,7 @@ The four-fifths rule (a group's approval rate should be at least 80% of the high
 
 *Figure 6. Approval rate by demographic group vs. the four-fifths rule.*
 
-For every declined applicant, the model's SHAP values also drive an adverse action reason code, the specific reasons a lender is required to give a declined applicant under the Equal Credit Opportunity Act (ECOA). Reason codes are restricted to a fixed allowlist of genuinely credit-relevant factors; `city_tier`, `device_type`, `acquisition_channel`, and `merchant_category` never appear as a reason even when they carry real SHAP signal, matching the standard practice of not citing geography or acquisition channel on an adverse action notice.
+Every declined applicant also gets an adverse action reason code, the specific reason a lender is legally required to give a rejected applicant under the Equal Credit Opportunity Act (ECOA). Those reasons come from SHAP but are restricted to a fixed list of legitimate credit factors: things like city, device type, or acquisition channel never appear as a reason, even when they show up in the SHAP breakdown, since a lender shouldn't cite an applicant's neighborhood or how they signed up as grounds for a decline.
 
 ![Fair lending reason codes](reports/figures/fair_lending_reason_codes.png)
 
@@ -108,11 +118,11 @@ For every declined applicant, the model's SHAP values also drive an adverse acti
 
 ## Time-to-default
 
-The classification model above answers "will this loan go 30+ days past due within the observation window." That collapses a useful distinction: a loan that defaults in week 2 is a different underwriting problem than one that defaults in month 10, even if both end up in the same "delinquent" bucket. Survival analysis keeps the time dimension instead of collapsing it.
+The model above treats delinquency as a single yes/no outcome inside a fixed window. But a loan that goes bad in week 2 is a very different problem than one that goes bad in month 10, even though both get labeled "delinquent" the same way. Survival analysis keeps that time dimension instead of collapsing it away.
 
-A Kaplan-Meier estimate, the standard way to chart the share of a population that hasn't yet experienced an event as time passes, without needing every loan to have already reached its outcome, by employment type shows how fast that gap opens up: by the end of the observation window, 93.1% of salaried loans are still current, against 82.7% of self-employed, 72.4% of gig-economy, and 66.8% of informal loans (Figure 8), a difference too large to be sampling noise (log-rank test, the standard significance test for comparing two or more Kaplan-Meier curves, p < 0.001).
+A Kaplan-Meier curve tracks, for each employment type, what share of loans are still current as time passes. By the end of the observation window: 93.1% of salaried loans are still current, against 82.7% self-employed, 72.4% gig-economy, and 66.8% informal (Figure 8). That gap is far too large to be random chance, a log-rank test (the standard significance test for comparing survival curves across groups) puts it at p < 0.001.
 
-A Cox proportional hazards model, the standard regression for time-to-event data, quantifies the same gap as a hazard ratio: how much faster or slower one group reaches the event compared to a reference group, holding everything else fixed. An informal-employment loan defaults at 2.18x the rate of an otherwise-identical salaried loan, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio is the strongest protective factor in the model (a hazard ratio well below 1); every other credit-relevant driver in the classification model above (bureau score, existing obligations, loan amount, income) points the same direction here.
+A Cox proportional hazards model turns that same gap into one number per group: how much faster a group defaults relative to salaried loans, everything else held equal. Informal-employment loans default at 2.18x the salaried rate, gig-economy at 1.92x, self-employed at 1.42x (Figure 9). Down payment ratio works the other way, the strongest protective factor in the model, in the same direction it has on the classification model above.
 
 | | |
 |---|---|
@@ -120,7 +130,7 @@ A Cox proportional hazards model, the standard regression for time-to-event data
 | Model accuracy (AUC), classification model, held-out test | 0.79 |
 | Log-rank test across employment types | p < 0.001 |
 
-The concordance index, the survival-model equivalent of AUC (the probability that, given two random loans, the model ranks the one that defaults first as the higher-risk one), lands close to the classification model's AUC: two different framings of the same underlying risk agree on how separable it is. The classification model is still the right choice for a real-time approve/decline decision, it outputs a single probability against a cost-calibrated threshold. The survival model earns its keep downstream of that decision: once a loan is on the books, it says which segments are worth the earliest collections outreach, a question the classification model's single probability doesn't answer on its own.
+The concordance index (0.81) is the survival model's version of AUC: the probability that, given two random loans, it ranks the one that defaults first as the riskier one. It lands close to the classification model's own AUC (0.79), so both models agree on how separable the underlying risk actually is. The classification model still makes the real-time approve/decline call, that's what it's built for. The survival model's job starts after that: once a loan is already on the books, it tells collections which segments are worth chasing first.
 
 ![Time-to-default by employment type](reports/figures/survival_km_by_employment.png)
 
@@ -132,7 +142,9 @@ The concordance index, the survival-model equivalent of AUC (the probability tha
 
 ## Serving the model
 
-Everything above is evaluated offline, on a held-out split. `src/serve.py` closes that gap: it wraps the trained pipeline (`reports/model.pkl`, the feature pipeline, the calibrated model, and the cost-optimal threshold, all fit in `train.py`) in a small FastAPI service, confirming the artifact this project produces is actually servable rather than something that only lives inside a notebook. One endpoint, `POST /predict`, takes the raw applicant/loan fields as JSON, runs them through the same feature engineering and pipeline transform used at training time, and returns a probability plus an approve/decline call at the stored threshold. `credit_bureau_score` is an optional field for the same reason it's handled as a missing-value case everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic (a Python library that validates request data against a declared schema) rejects malformed input (out-of-range values, wrong categorical values, missing fields) before it ever reaches the model.
+Everything above only proves the model works offline, against a saved dataset. `src/serve.py` proves it also works as a live service: it wraps the trained pipeline in a small FastAPI app with one endpoint, `POST /predict`.
+
+Send it an applicant's raw data as JSON, and it runs the same feature engineering used at training time, then returns a probability plus an approve/decline call. `credit_bureau_score` is an optional field, matching how the model handles missing scores everywhere else in this project: about 9% of real applicants would show up thin-file. Pydantic (a library that validates incoming request data against a declared schema) rejects malformed input, out-of-range values, wrong categories, missing fields, before it ever reaches the model.
 
 ```bash
 uvicorn serve:app --reload   # from src/
@@ -147,11 +159,13 @@ curl -X POST localhost:8000/predict -H "Content-Type: application/json" -d '{
 # {"delinquency_probability": 0.0759, "decision": "decline", "threshold": 0.05}
 ```
 
-This is deliberately small: no batching, auth, model versioning, or canary rollout, none of which this project is trying to demonstrate. What it does demonstrate is that the training artifacts round-trip cleanly into something that scores a single application the same way the offline evaluation did.
+This is deliberately small: no batching, auth, model versioning, or canary rollout, none of which this project is trying to demonstrate. What it does prove is that the training artifacts round-trip cleanly into something that scores a single application the same way the offline evaluation did.
 
 ## Recommendation
 
-Ship the cost-based threshold over the naive 0.5 cutoff; the 67% expected-loss reduction is the headline number. But ship it with calibration-gap monitoring running alongside standard PSI checks, not instead of it. This model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock. That gap is the kind of thing that shows up in a loss report a quarter later if nobody's watching for it. And since the rate-mix decomposition rules out a composition shift as the explanation, the fix belongs in the model (retrain or recalibrate on shock-period data) rather than in underwriting policy toward any particular segment. The fair lending review currently passes with a comfortable margin, but it's worth tracking on the same cadence as the drift checks above rather than treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level hazard differences are a reasonable input to how collections prioritizes outreach: informal and gig-economy loans carry both a higher default rate and a faster clock. And since the model is already proven servable, none of this has to wait for a separate deployment project to act on.
+Ship the cost-based threshold over the naive 0.5 cutoff, that's where the 67% expected-loss reduction comes from. But ship it with calibration-gap monitoring running alongside standard PSI checks, not in place of it: this model would have looked healthy on every input-drift dashboard while quietly under-pricing risk through the shock, the kind of gap that only shows up in a loss report a quarter later if nobody's watching for it directly. Since the rate-mix decomposition rules out a change in who's being approved, the fix belongs in the model itself, retrain or recalibrate on shock-period data, rather than in underwriting policy toward any particular segment.
+
+The fair lending review currently passes with a comfortable margin, but it's worth re-running on the same cadence as the drift checks above, not treated as a one-time clearance. Downstream of underwriting, the survival model's segment-level speed-to-default is a reasonable input to how collections prioritizes outreach: informal and gig-economy loans default both more often and faster. And since the model is already proven servable, none of this has to wait on a separate deployment project to act on.
 
 ## Repo layout
 
