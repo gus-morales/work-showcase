@@ -21,17 +21,19 @@ GMV was up sharply over two years, which looks like a growth story on the surfac
 
 ## What this does
 
-Decomposes GMV growth into its three multiplicative drivers (active customers, orders per customer, average order value; GMV is exactly their product every month, so a log-share decomposition turns the growth rate into an additive split across the three, each one's share of the total log-change) using SQL-aggregated monthly KPIs, then checks whether the answer traces back to a shift in acquisition channel mix. Separately, builds two complementary customer lifetime value models: a probabilistic BG/NBD + Gamma-Gamma model that scores customers from transaction history, and a gradient boosting model that scores customers from just their first 30 days.
+GMV is just active customers times orders per customer times average order value, multiplied together. This project decomposes GMV growth into those three drivers using SQL-aggregated monthly KPIs, so it's clear which one is actually responsible for the trend, then checks whether the answer traces back to a shift in acquisition channel mix.
+
+Separately, it builds two complementary customer lifetime value models: a probabilistic model that scores customers from their full transaction history, and a machine learning model that scores customers from just their first 30 days, for cases where a full history isn't available yet.
 
 ## Data contracts and a governed metric layer
 
-Before anything downstream trusts `customers.csv` or `orders.csv`, `src/contracts.py` checks schema, category values, value ranges, and referential integrity between the two tables (`db.get_connection()` runs this automatically, so a broken or stale file fails loudly at the first script that touches it rather than producing a quietly wrong chart three steps later).
+Before anything downstream trusts `customers.csv` or `orders.csv`, `src/contracts.py` checks their schema, category values, value ranges, and that the two tables reference each other correctly. This runs automatically, so a broken or stale file fails loudly at the first script that touches it, rather than quietly producing a wrong chart three steps later.
 
-`src/metrics.py` centralizes the definitions this project actually uses: GMV is `SUM(order_value_usd)`, revenue is `SUM(fee_revenue_usd)`, and they are not the same number (revenue is GMV times the take rate). Adding this layer surfaced a real inconsistency: the early-life CLV model was labeling its GMV target "revenue." The underlying numbers were never wrong, since GMV and revenue are proportional here with a constant take rate, so R² and the decile-capture read are unaffected. The labels are now corrected to GMV so the two metrics can't drift apart silently as this project grows.
+`src/metrics.py` centralizes the definitions this project actually uses: GMV is total order value, revenue is total fee revenue, and the two are not the same number, revenue is GMV times the take rate. Adding this layer surfaced a real inconsistency: the early-life CLV model was labeling its GMV target "revenue." The underlying numbers were never wrong, since GMV and revenue move in lockstep here at a constant take rate, so nothing downstream was affected. But the labels are now corrected so the two metrics can't silently drift apart as this project grows.
 
 ## Results
 
-GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that change shows active customer growth alone accounts for essentially all of it; order frequency and average order value are each net-negative contributors over the period.
+GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that change shows active customer growth alone accounts for essentially all of it. Order frequency and average order value were each a net drag over the same period.
 
 | | |
 |---|---|
@@ -39,7 +41,7 @@ GMV grew from $868K to $3.36M between month 4 and month 20. Decomposing that cha
 | Share of growth from new customers | ~107% (frequency and order value are net drags) |
 | Best vs. worst channel, revenue per customer | Partner store $322 vs. paid social $120 (2.7x) |
 | Paid social's share of new cohorts | Roughly tripled (16% to 47%) |
-| Predicted 12-month CLV captured by top decile | 52.7% (top 10% of customers by predicted value account for this share of actual realized value) |
+| Predicted 12-month CLV captured by top decile | 52.7% (the top 10% of customers by predicted value account for this share of actual realized value) |
 | Early-life model (day-30 features), holdout R² | 0.37 (the model explains 37% of the variance in 12-month GMV on data it wasn't trained on) |
 
 Active customer growth alone accounts for essentially all of the GMV change (Figure 1).
@@ -48,7 +50,7 @@ Active customer growth alone accounts for essentially all of the GMV change (Fig
 
 *Figure 1. GMV growth decomposed into active customers, orders per customer, and average order value.*
 
-The channel data explains why: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin (Figure 2), and its share of new cohorts has roughly tripled (Figure 3).
+The channel data explains why growth looks healthier than it is: paid social is both the fastest-growing acquisition channel and the lowest-quality one by a wide margin (Figure 2), and its share of new customer cohorts has roughly tripled (Figure 3).
 
 ![Channel quality](reports/figures/channel_quality.png)
 
@@ -60,13 +62,15 @@ The channel data explains why: paid social is both the fastest-growing acquisiti
 
 ## Two ways to estimate customer value
 
-BG/NBD + Gamma-Gamma is the standard probabilistic pairing for this problem: BG/NBD (Beta-Geometric/Negative Binomial Distribution) models each customer's future purchase count and the probability they've already churned, purely from how often and how recently they've bought before; Gamma-Gamma then adds a monetary-value estimate on top, assuming spend per order is independent of purchase frequency. It uses only transaction history and needs no features, but it takes months of purchase history to produce a stable read on a customer. Validated against a 6-month calibration/holdout split (fit on an earlier window, checked against what customers actually did in the following one), its predicted purchase counts track actual holdout behavior closely (Figure 4).
+The first model, BG/NBD + Gamma-Gamma, is the standard probabilistic pairing for this problem. One part predicts how many more purchases a customer will make and the odds they've already churned, based purely on how often and how recently they've bought before. The other part adds a dollar estimate on top, based on their typical order size. Together they need no engineered features, just transaction history, but that history has to build up over months before the estimate stabilizes.
+
+It was validated against a 6-month calibration/holdout split: fit on an earlier window, then checked against what customers actually did in the following one. Its predicted purchase counts track actual holdout behavior closely (Figure 4).
 
 ![CLV calibration holdout](reports/figures/clv_calibration_holdout.png)
 
 *Figure 4. Predicted vs. actual purchase counts, calibration/holdout validation.*
 
-For a model that can score a customer immediately after signup, a gradient boosting regressor trained on day-30 behavior explains about 37% of the variance in 12-month GMV (Figure 5). That's a genuine signal, order count and spend in the first 30 days dominate the prediction, but it's a partial one: some customers front-load a purchase and then churn, which day-30 features alone can't fully separate from a customer who's just getting started.
+The second model fills the gap for a brand-new customer: a gradient boosting regressor trained on just their first 30 days of behavior, which explains about 37% of the variance in their eventual 12-month GMV (Figure 5). That's a real signal, order count and spend in the first month dominate the prediction, but it's a partial one. Some customers front-load a single purchase and then churn, and 30 days of data alone can't fully tell that apart from a customer who's just getting started.
 
 ![Early life predicted vs actual](reports/figures/early_life_predicted_vs_actual.png)
 
@@ -74,9 +78,9 @@ For a model that can score a customer immediately after signup, a gradient boost
 
 ## Recommendation
 
-The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, and both order frequency and order value are quietly declining under the growth line. Before scaling paid social spend further, the marginal customer acquisition cost (CAC) on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
+The GMV trend is not the health signal it looks like. Growth is increasingly funded by paid social, a channel that produces customers worth roughly a third as much as the best channel, while order frequency and order value are both quietly declining underneath the growth line. Before scaling paid social spend further, the marginal customer acquisition cost (CAC) on that channel should be checked against its ~$120 average lifetime revenue, not against blended GMV growth.
 
-For lifetime value scoring in production, use the day-30 gradient boosting model to triage new customers into engagement tiers immediately after signup, then let the BG/NBD + Gamma-Gamma model take over once a customer has enough transaction history for it to stabilize, rather than picking one model for the whole customer lifecycle.
+For lifetime value scoring in production, use the day-30 model to triage new customers into engagement tiers right after signup, then let the BG/NBD + Gamma-Gamma model take over once a customer has enough transaction history for it to stabilize, rather than picking one model for the whole customer lifecycle.
 
 ## Repo layout
 
