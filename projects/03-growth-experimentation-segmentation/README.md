@@ -25,7 +25,7 @@ Growth teams run experiments and read metrics on populations that were rarely ha
 
 ## 1. A/B test: repayment-reminder redesign
 
-A redesigned in-app reminder (clearer due date, one-tap repayment link) was tested against the existing one. The test was sized to detect a 3.5 percentage-point lift at 80% power (requiring about 2,900 users per arm) and ran on roughly 40,000 users.
+A redesigned in-app reminder (clearer due date, one-tap repayment link) was tested against the existing one. The test was sized to detect a 3.5 percentage-point lift at 80% power, meaning an 80% chance of catching a real effect that size if one truly exists, which required about 2,900 users per arm. It ran on roughly 40,000 users.
 
 | | |
 |---|---|
@@ -33,7 +33,7 @@ A redesigned in-app reminder (clearer due date, one-tap repayment link) was test
 | Absolute lift | +4.2pp (95% CI: 3.3 to 5.1pp), p < 0.0001 |
 | CUPED confidence interval narrowing | 11%, using pre-period revenue as the covariate |
 
-The standard test shows the lift clearly (Figure 1); CUPED (Controlled-experiment Using Pre-Experiment Data, a variance-reduction technique that uses a pre-period covariate correlated with the outcome but unaffected by treatment to strip out noise the treatment never touched) narrows the interval further on the same data, same sample, no extra traffic (Figure 2).
+The standard test shows the lift clearly (Figure 1). A second technique, CUPED (Controlled-experiment Using Pre-Experiment Data), tightens the estimate further on the exact same data and sample size, no extra traffic needed. It works by using a metric from before the test, each user's prior revenue, that's correlated with the outcome but wasn't touched by the treatment itself, to strip out noise that has nothing to do with the reminder redesign. That narrows the confidence interval by 11% (Figure 2).
 
 ![A/B test result](reports/figures/ab_conversion_result.png)
 
@@ -45,7 +45,9 @@ The standard test shows the lift clearly (Figure 1); CUPED (Controlled-experimen
 
 ### Sequential experimentation: what an adaptive design would have cost or saved
 
-The fixed 50/50 design above is the right choice when a clean, unbiased effect estimate is the goal, exactly what section 1's z-test and CUPED interval need. But every user sent to the losing arm during the test is a real cost, and a fixed design keeps paying it at a constant rate for the whole test, even once the result is obvious. A Thompson Sampling multi-armed bandit, simulated here over the same total traffic (40,000 users) and the same two realized conversion rates (34.3% vs. 38.5%), shows the size of that cost: it shifts traffic toward the treatment arm as its posterior pulls ahead (Figure 11), reaching 96.8% of traffic by the end, and banks 886 more conversions over the same traffic by capping how long it keeps exposing users to the losing arm (Figure 12), a 93.6% reduction in cumulative regret against the fixed design.
+A fixed 50/50 split, like the one above, is the right choice when a clean, unbiased effect estimate is the goal. But it has a real cost: every user sent to the losing arm during the test is a user who didn't get the better experience, and a fixed design keeps sending traffic there at the same rate even once the result is obvious.
+
+An adaptive alternative, a Thompson Sampling multi-armed bandit, shows how large that cost actually is. Simulated over the same 40,000 users and the same two conversion rates, it gradually shifts traffic toward whichever arm looks better as evidence comes in (Figure 11), reaching 96.8% of traffic on the winning arm by the end of the run. Because it stops overexposing users to the losing arm, it banks 886 more conversions over the same total traffic (Figure 12), a 93.6% cut in cumulative regret, the gap between what was actually earned and what a design that always knew the right answer would have earned, compared to the fixed design.
 
 | | |
 |---|---|
@@ -62,16 +64,20 @@ The fixed 50/50 design above is the right choice when a clean, unbiased effect e
 
 *Figure 12. Cumulative regret (expected conversions forgone vs. always playing the better arm), fixed design vs. Thompson Sampling.*
 
-The catch is exactly what makes the fixed design useful in the first place: because Thompson Sampling's allocation responds to outcomes as they arrive, the resulting data no longer satisfies the assumptions the standard two-proportion z-test and its confidence interval rely on. A real deployment that wanted both the bandit's lower regret and a valid end-of-test inference would need always-valid or mixture-sequential testing methods built for that purpose, not implemented here. This simulation also collapses the tenure-driven heterogeneous effect from section 2 into two flat rates; a contextual bandit that used tenure the way the CATE model does is the natural next step.
+There's a real catch, though. Because the bandit's traffic split responds to outcomes as they come in, the resulting data no longer fits the assumptions a standard significance test relies on, the same test used in section 1 above. A production deployment that wanted both the bandit's lower regret and a trustworthy end-of-test result would need specialized "always-valid" testing methods, not implemented here.
+
+This simulation also treats the treatment effect as one flat number for everyone. Section 2 below shows that's not quite true, newer users benefit far more than long-tenured ones, so a contextual bandit that adapts to that difference would be the natural next step.
 
 ## 2. Uplift/CATE modeling: who actually benefits
 
-The +4.2pp average lift is real, but it's an average across everyone, and averages can hide that some users benefit far more than others. Uplift modeling estimates the CATE (Conditional Average Treatment Effect), the treatment effect for a given user's covariates rather than the single population-wide number the A/B test above produces. A T-learner (two gradient-boosted classifiers, one fit per arm, on tenure, recent session count, and pre-period revenue) predicts each held-out test user's individual treatment effect, validated the standard way for uplift models: by checking whether a higher predicted effect actually corresponds to a bigger realized effect on data the model never saw during fitting.
+The +4.2pp average lift from the A/B test is real, but it's an average across everyone, and averages hide that some users benefit far more than others. Uplift modeling estimates that treatment effect per user instead of as one population-wide number; this individualized version is called the CATE (Conditional Average Treatment Effect).
+
+The first approach, a T-learner, fits two separate models, one per arm, on each user's tenure, recent activity, and pre-period revenue, then predicts each user's individual effect as the gap between the two. It's validated the standard way for this kind of model: checking whether users the model predicts will benefit more actually do benefit more, on data it never saw during fitting.
 
 | | |
 |---|---|
 | Realized lift, top predicted-CATE quintile vs. bottom | +8.0pp vs. +1.0pp |
-| Qini coefficient (targeting by predicted CATE vs. random) | 52.1 (higher is better; 0 means targeting by the model does no better than random, the same relationship a Gini coefficient has to a classifier's ROC curve) |
+| Qini coefficient (targeting by predicted CATE vs. random) | 52.1 (higher is better; a model with no real targeting signal scores 0) |
 | Predicted CATE, newest users (0-33 days) vs. longest-tenured (320+ days) | +11.8pp vs. -1.3pp |
 
 Predicted effect tracks realized effect on held-out data (Figure 3), and the model recovers platform tenure as the driver of the heterogeneity without being told to look for it (Figure 4): newer users, who haven't yet learned the old reminder flow, get most of the benefit from a clearer one; long-tenured users see essentially none.
@@ -86,7 +92,9 @@ Predicted effect tracks realized effect on held-out data (Figure 3), and the mod
 
 ### A second, more rigorous CATE estimator
 
-The T-learner's weakness is structural: differencing two independently-fit models amplifies whatever noise each one picked up on its own. [EconML](https://github.com/py-why/econml)'s `CausalForestDML` avoids that by orthogonalizing the outcome and treatment against the covariates first (the "double" in double machine learning), then fitting a causal forest on what's left. Trained on the identical split, covariates, and held-out test set as the T-learner above, it nearly doubles the Qini coefficient:
+The T-learner has a structural weakness: subtracting two separately-fit models amplifies whatever noise each one picked up on its own. A more robust alternative, [EconML](https://github.com/py-why/econml)'s `CausalForestDML`, avoids that by first statistically removing the parts of the outcome and treatment that the covariates alone already explain, a technique called double machine learning, then fitting a causal forest on what's left.
+
+Trained on the exact same data split as the T-learner above, it nearly doubles the Qini coefficient:
 
 | | |
 |---|---|
@@ -101,7 +109,9 @@ The T-learner's Qini curve still clears random targeting by a wide margin, so it
 
 ## 3. Difference-in-differences: regional rollout
 
-A new in-app collections feature was rolled out to 20 of 40 regions first, based on business priority rather than random assignment, which rules out a simple before/after read. Difference-in-differences instead compares the *change* in treated regions against the *change* in untreated ones over the same period, which is only valid under the parallel trends assumption: absent the rollout, treated and control regions would have moved together. A region and day fixed-effects regression, checked against a pre-period parallel-trends test first, isolates the treatment effect from any shared time trend.
+A new in-app collections feature was rolled out to 20 of 40 regions first, chosen by business priority rather than at random. That rules out a simple before/after comparison, since the regions that got it first might have looked different from the rest to begin with.
+
+Difference-in-differences works around that by comparing the *change* over time in treated regions against the *change* over the same period in untreated ones, rather than comparing raw levels directly. That comparison is only valid if, absent the rollout, both groups of regions would have kept moving together, the parallel trends assumption. A regression that controls for region and day, checked against a test of that assumption on the pre-rollout period, isolates the treatment effect from any trend the two groups already shared.
 
 | | |
 |---|---|
@@ -116,15 +126,15 @@ Treated and control regions move together before rollout and diverge after (Figu
 
 ### Three robustness checks on the DiD estimate
 
-Standard errors are clustered by region, but 40 regions with 20 treated is on the edge of "few clusters" territory where the usual asymptotic cluster-robust standard errors can be unreliable. A wild cluster bootstrap (Cameron, Gelbach & Miller 2008) recomputes inference on the same coefficient without relying on that asymptotic approximation, using the [diff-diff](https://github.com/igerber/diff-diff) package: 95% CI of 3.7 to 4.3pp, matching the analytical result almost exactly, which is itself evidence the cluster count here isn't causing problems.
+The first check addresses a technical wrinkle: standard errors here are clustered by region, but with only 40 regions (20 treated), that's on the low end of what the usual clustering math assumes, and results can get unreliable with too few clusters. A wild cluster bootstrap is a resampling-based method built specifically to double-check inference in that situation, without leaning on that same assumption. It comes back with a 95% confidence interval of 3.7 to 4.3pp, almost identical to the original result, which is itself good evidence the low cluster count isn't causing a problem here.
 
-The pre-trends placebo check above fails to detect a trend difference, which is a weaker statement than proving none exists. Honest DiD (Rambachan & Roth 2023) quantifies the gap: how large would an undetected post-period violation of parallel trends have to be, relative to the largest pre-period wobble actually observed, before the effect stops being distinguishable from zero. Here that breakdown point is M = 0.35, meaning the conclusion holds only if any unmeasured drift after rollout stays under about a third of the size of the noisiest pre-period swing (Figure 7).
+The second check addresses a subtler risk: the pre-trends test above failed to detect a difference between the two groups, but "failed to detect" isn't the same as "proved there isn't one." Honest DiD asks how large an undetected violation of parallel trends, happening after the rollout, would have to be before it could actually explain away the effect. Here, that breakdown point works out to about a third of the largest wobble already seen in the pre-rollout data (M = 0.35). In other words, the result holds up unless something several times noisier than anything observed before the rollout was happening quietly afterward (Figure 7).
 
 ![Honest DiD sensitivity](reports/figures/did_honest_sensitivity.png)
 
 *Figure 7. Honest DiD sensitivity analysis: breakdown point M.*
 
-A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identify/estimate/refute framework, which formalizes the causal graph explicitly (region and day as the adjustment set) and runs a generic refutation suite orthogonal to the DiD-specific checks above: adding a random confounder, replacing the real treatment with a permuted placebo, and refitting on random 80% subsets of the data. The estimate survives all three (Figure 8): it barely moves when a random confounder is added or the data is subsetted, and it collapses to essentially zero under a placebo treatment, exactly the pattern that says the effect is real rather than an artifact of the estimation procedure.
+A third check comes from a different angle entirely, using the [DoWhy](https://github.com/py-why/dowhy) library to run three stress tests that don't depend on the DiD-specific assumptions above: adding a made-up confounder that shouldn't matter, swapping in a fake randomly-assigned treatment, and refitting on random subsets of the data. A real effect should barely move under the first and third tests, and collapse toward zero under the second. That's exactly what happens here (Figure 8), the pattern that says the effect is real rather than an artifact of how it was estimated.
 
 ![DoWhy refutation suite](reports/figures/dowhy_refutation.png)
 
@@ -132,7 +142,7 @@ A third check comes from [DoWhy](https://github.com/py-why/dowhy)'s model/identi
 
 ## 4. RFM customer segmentation
 
-Recency, frequency, and monetary value, clustered with KMeans (k chosen by silhouette score, a measure of how well-separated the resulting clusters are from each other relative to how tight each one is internally, rather than fixed in advance) into three segments.
+Customers are grouped by recency, frequency, and monetary value, how recently, how often, and how much they buy, into segments using KMeans clustering. The number of segments wasn't fixed in advance; it was chosen using the silhouette score, a measure of how cleanly separated the resulting groups are from each other. That landed on three segments.
 
 | Segment | % of customers | % of revenue |
 |---|---|---|
@@ -148,7 +158,9 @@ Champions are 16% of customers and 46% of revenue; Dormant customers are nearly 
 
 ## 5. Support ticket topic modeling
 
-TF-IDF (Term Frequency-Inverse Document Frequency, which weights each word by how distinctive it is to a given ticket rather than how often it appears everywhere) turns the raw ticket text into vectors, then NMF (Non-negative Matrix Factorization, a standard unsupervised way to decompose that matrix into a small number of additive, interpretable topics) recovers five topics from text alone, validated at 85% purity against the known ground-truth categories (a check only possible because the data is synthetic) (Figure 10).
+The raw ticket text is converted into numeric vectors using TF-IDF, a standard technique that weights each word by how distinctive it is to a specific ticket rather than how often it appears everywhere. From there, NMF, an unsupervised method for breaking a set of documents into a handful of interpretable topics, recovers five topics from the text alone, with no labels involved.
+
+Since this data is synthetic, the true ticket category is actually known, which makes it possible to check the recovered topics against it directly: 85% purity (Figure 10).
 
 ![Topic volume](reports/figures/topic_volume.png)
 
@@ -158,7 +170,15 @@ One topic, general account questions, doesn't cluster cleanly on its own; it sca
 
 ## Recommendation
 
-Ship the reminder redesign; the lift is well outside noise and confirmed two ways (a standard test and a CUPED-adjusted one with a tighter interval). For future tests in this same low-stakes, high-traffic category, weigh the fixed-horizon design's clean inference against a Thompson Sampling design's lower regret: the simulation above suggests roughly 900 conversions over 40,000 users, real revenue, were the price paid here for a fixed design's valid p-value. But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling the redesign out to long-tenured users buys almost nothing while the engineering and support cost of maintaining two reminder flows is the same either way. For the regional rollout, the fixed-effects estimate, the pre-period placebo check, and both robustness checks (wild cluster bootstrap, Honest DiD) support treating the +4.0pp effect as real rather than a pre-existing regional difference, which makes the case for extending the rollout to the remaining regions. For lifecycle marketing, the RFM segments show where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer targeted at that group would cost little in forgone Champion/Loyal attention. For support operations, route the four cleanly-separated topics to a keyword/topic-based triage rule, but keep a human or supervised classifier in the loop for general account questions, since that category doesn't have a clean unsupervised signature to route on.
+Ship the reminder redesign. The lift is well outside noise and confirmed two ways, a standard test and a CUPED-adjusted one with a tighter interval. But ship it targeted, not blanket: the uplift model shows the benefit concentrates heavily in newer users, so rolling it out to long-tenured users buys almost nothing, while the cost of maintaining two reminder flows is the same either way.
+
+For future tests in this same low-stakes, high-traffic category, weigh a fixed design's clean inference against an adaptive design's lower regret. The simulation above suggests roughly 900 conversions over 40,000 users, real revenue, were the price paid here for a fixed design's straightforward, trustworthy result.
+
+For the regional rollout, the fixed-effects estimate holds up under every check run against it, the pre-period placebo test and both robustness checks, so the +4.0pp effect looks real rather than a pre-existing difference between regions. That supports extending the rollout to the rest.
+
+For lifecycle marketing, the RFM segments point to where a differentiated offer would pay off most: roughly a third of customers are Dormant and contribute barely 6% of revenue, so a win-back offer aimed at that group costs little in attention diverted from Champions and Loyal customers.
+
+For support operations, route the four cleanly-separated topics to a keyword or topic-based triage rule, but keep a human or a supervised classifier in the loop for general account questions, since that category doesn't have a clean enough signature for unsupervised routing.
 
 ## Repo layout
 
