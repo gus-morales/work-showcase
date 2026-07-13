@@ -1,0 +1,26 @@
+{
+  "n_train": 63150,
+  "n_val": 13500,
+  "n_test": 13350,
+  "train_failure_rate": 0.02032,
+  "test_failure_rate": 0.02622,
+  "logistic_baseline_pr_auc": 0.4337,
+  "gbm_test_roc_auc": 0.9059,
+  "gbm_test_pr_auc": 0.4019,
+  "naive_always_healthy_accuracy": 0.9738,
+  "gbm_accuracy_at_default_threshold": 0.976,
+  "gbm_true_positives_at_default_threshold": 78,
+  "n_failures_test": 350,
+  "cost_optimal_threshold": 0.05,
+  "expected_cost_at_optimal_threshold_usd": 8698814.02,
+  "expected_cost_at_naive_threshold_usd": 15118920.76,
+  "cost_reduction_vs_naive": 0.4246,
+  "precision_at_optimal_threshold": 0.2336,
+  "recall_at_optimal_threshold": 0.7143,
+  "confusion_matrix": {
+    "tn": 12180,
+    "fp": 820,
+    "fn": 100,
+    "tp": 250
+  }
+}
