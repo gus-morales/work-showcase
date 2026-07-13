@@ -64,6 +64,6 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 
 ## About me
 
-Gustavo Morales, Senior Data Scientist, formerly an astrophysicist (PhD, Heidelberg University). 8 years in academic research, 5+ in financial analytics and ML, most recently at a buy now, pay later (BNPL) fintech.
+Gustavo Morales, Senior Data Scientist, formerly an astrophysicist (PhD, Heidelberg University). 8 years in academic research, 8 in financial analytics and ML, most recently at a buy now, pay later (BNPL) fintech.
 
 [LinkedIn](https://linkedin.com/in/gus-morales) · [GitHub](https://github.com/gus-morales)

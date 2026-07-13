@@ -61,11 +61,48 @@
     margin-bottom: 34px;
   }
 
+  .name-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 10px;
+  }
+
   .name {
     font-family: 'Lora', serif;
     font-weight: 500;
     font-size: 34px;
     color: var(--ink);
+  }
+
+  .name-detail {
+    font-size: 15px;
+    color: #A5A5A1;
+    line-height: 1.5;
+  }
+
+  .quote {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 14.5px;
+    color: #8B8B87;
+    margin: 10px 0 0;
+    max-width: 620px;
+    line-height: 1.5;
+  }
+
+  .quote .attribution {
+    font-family: 'Lato', sans-serif;
+    font-style: normal;
+    color: var(--grey);
+  }
+
+  .eyebrow {
+    font-size: 13.5px;
+    color: var(--amber);
+    margin-top: 16px;
+    letter-spacing: 0.06em;
+    font-weight: 600;
   }
 
   .subtitle {
@@ -74,14 +111,6 @@
     margin-top: 6px;
     max-width: 660px;
     line-height: 1.5;
-  }
-
-  .eyebrow {
-    font-size: 13.5px;
-    color: var(--amber);
-    margin-top: 14px;
-    letter-spacing: 0.06em;
-    font-weight: 600;
   }
 
   .about {
@@ -323,13 +352,16 @@
 
     <header class="page-header">
       <h1 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Gustavo Morales — Data Science Portfolio</h1>
-      <div class="name">Gustavo Morales</div>
-      <div class="subtitle">Senior Data Scientist — stuff I've worked on. Synthetic data, real methodology.</div>
-      <div class="eyebrow">6 PROJECTS · CODE ON GITHUB</div>
+      <div class="name-line">
+        <span class="name">Gustavo Morales</span>
+        <span class="name-detail">· Ph.D. in Astrophysics, turned Sr. Data Scientist: 8 years in research, 8 in industry.</span>
+      </div>
+      <p class="quote">&ldquo;The purpose of models is not to fit the data but to sharpen the questions&rdquo; <span class="attribution">—S. Karlin</span></p>
+      <div class="eyebrow">6 PROJECTS · ALL CODE ON GITHUB</div>
+      <div class="subtitle">Stuff I've worked on. Synthetic data, real methodology.</div>
     </header>
 
     <div class="about">
-      <p>PhD astrophysicist turned Senior Data Scientist — 8 years in research, 5+ in industry.</p>
       <div class="skills-strip">
         <span class="skill-chip">SHAP</span>
         <span class="skill-chip">Causal inference (CUPED, DiD, EconML, DoWhy)</span>
