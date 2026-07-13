@@ -41,8 +41,8 @@ set_style()
 
 # Business assumptions used to pick an operating threshold:
 # - Missing an impending failure (false negative) costs the truck's
-#   estimated downtime plus a fixed premium for an emergency repair
-#   (rush parts, overtime crew) vs. a scheduled one.
+#   estimated downtime plus a fixed extra amount for an emergency
+#   repair (rush parts, overtime crew) instead of a scheduled one.
 # - Flagging a truck for inspection that wasn't actually about to fail
 #   (false positive) costs a fixed maintenance-crew dispatch.
 UNPLANNED_FAILURE_REPAIR_PREMIUM_USD = 8_000.0
