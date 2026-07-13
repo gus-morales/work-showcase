@@ -316,10 +316,6 @@
   #last-updated {
     color: var(--grey);
   }
-
-  #last-updated:not(:empty)::before {
-    content: " · ";
-  }
 </style>
 </head>
 <body>
@@ -464,7 +460,7 @@
     </div>
 
     <footer>
-      <span>Gustavo Morales · Senior Data Scientist<span id="last-updated"></span></span>
+      <span id="last-updated"></span>
       <span>
         <a href="mailto:gustavo85@gmail.com">Email</a>
         &nbsp;·&nbsp;
