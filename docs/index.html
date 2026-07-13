@@ -460,7 +460,7 @@
     </div>
 
     <footer>
-      <span id="last-updated"></span>
+      <span id="last-updated">Last updated July 13, 2026</span>
       <span>
         <a href="mailto:gustavo85@gmail.com">Email</a>
         &nbsp;·&nbsp;
@@ -475,15 +475,29 @@
   </div>
 
   <script>
-    fetch('https://api.github.com/repos/gus-morales/work-showcase/commits?path=docs/index.html&per_page=1')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data || !data[0]) return;
-        var date = new Date(data[0].commit.committer.date);
-        var formatted = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('last-updated').textContent = 'Last updated ' + formatted;
-      })
-      .catch(function () { /* leave blank if the API is unreachable or rate-limited */ });
+    (function () {
+      // The span already has a static fallback date baked into the HTML
+      // (set whenever this file is last edited). If a cached value from a
+      // previous successful fetch exists, prefer that, it's more likely to
+      // be current. Either way, something sensible is always showing before
+      // the network call below even starts, so a failed/rate-limited GitHub
+      // API request never leaves the line blank.
+      var el = document.getElementById('last-updated');
+      var cacheKey = 'work-showcase-last-updated';
+      var cached = localStorage.getItem(cacheKey);
+      if (cached) el.textContent = cached;
+
+      fetch('https://api.github.com/repos/gus-morales/work-showcase/commits?path=docs/index.html&per_page=1')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data[0]) return;
+          var date = new Date(data[0].commit.committer.date);
+          var formatted = 'Last updated ' + date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          el.textContent = formatted;
+          localStorage.setItem(cacheKey, formatted);
+        })
+        .catch(function () { /* keep the fallback or cached value already shown */ });
+    })();
 
     document.querySelectorAll('.filter-pill').forEach(function (pill) {
       pill.addEventListener('click', function () {
