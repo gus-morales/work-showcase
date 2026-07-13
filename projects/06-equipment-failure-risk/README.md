@@ -17,7 +17,7 @@ A predictive-maintenance model for a mining haul-truck fleet, at a realistic 2.2
 
 ## The problem
 
-A maintenance team has to decide, from daily telemetry, whether to pull a haul truck in for inspection. Miss an impending failure and the cost is the truck's estimated production-loss/downtime plus an emergency-repair premium; flag a truck that wasn't actually about to fail and the cost is a much smaller scheduled-inspection dispatch, but there are vastly more healthy truck-days than failing ones. At a ~2% failure rate, a model can score 97%+ accuracy while catching almost none of the actual failures, so the metric and the threshold both have to be chosen with that skew in mind, not despite it.
+A maintenance team has to decide, from daily telemetry, whether to pull a haul truck in for inspection. Miss an impending failure and the cost is the truck's estimated downtime plus an emergency-repair premium; flag a truck that wasn't actually about to fail and the cost is a much smaller scheduled inspection, but there are vastly more healthy truck-days than ones headed for failure. At a ~2% failure rate, a model can score 97%+ accuracy while catching almost none of the actual failures, so the metric and the threshold both have to be chosen with that skew in mind, not despite it.
 
 ## What this does
 

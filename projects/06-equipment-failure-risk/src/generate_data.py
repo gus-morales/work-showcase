@@ -35,7 +35,7 @@ rng = np.random.default_rng(SEED)
 
 TRUCK_CLASSES = ["ultra_class_400t", "large_class_300t", "standard_class_200t"]
 TRUCK_CLASS_WEIGHTS = [0.25, 0.40, 0.35]
-# Baseline payload (tons) and estimated production-loss cost per unplanned
+# Baseline payload (tons) and estimated downtime cost per unplanned
 # failure event, by truck class: a bigger truck moves more ore per cycle,
 # so an unplanned failure on one is worth more lost production.
 TRUCK_CLASS_PAYLOAD_TONS = {"ultra_class_400t": 380, "large_class_300t": 280, "standard_class_200t": 190}
