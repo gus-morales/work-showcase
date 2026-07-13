@@ -1,6 +1,6 @@
 # Equipment Failure Risk Model
 
-A predictive-maintenance model for a mining haul-truck fleet, at a realistic 2.2% unplanned-failure rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual downtime-cost and inspection-cost numbers rather than a default 0.5 cutoff. Built on synthetic data, a fictional open-pit mining operation, the first project in this portfolio outside the BNPL fintech scope of projects 01-05.
+A predictive-maintenance model for a mining haul-truck fleet, at a realistic 2.2% unplanned-failure rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual downtime-cost and inspection-cost numbers rather than a default 0.5 cutoff. Built on synthetic data, a fictional open-pit mining operation unrelated to the BNPL fintech in projects 01-05.
 
 **For the full technical walkthrough (feature pipeline, PR-AUC vs. ROC-AUC, cost-based thresholding, SHAP, unsupervised comparison), see the [notebook](notebooks/06_equipment_failure_risk.ipynb).** This README is the short version.
 
