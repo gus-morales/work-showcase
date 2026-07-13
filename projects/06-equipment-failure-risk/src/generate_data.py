@@ -1,11 +1,10 @@
 """
 Synthetic data generator for a mining haul-truck predictive-maintenance
-dataset: a fictional open-pit mining operation, unrelated to the BNPL
-fintech used in projects 01-05, viewed from the fleet-maintenance side.
-Truck-day telemetry records (engine hours, vibration, oil pressure,
-coolant temperature, brake wear, fault codes, overdue-maintenance
-signal) and an unplanned-failure outcome (`failure_within_7d`) at a
-realistic, heavily imbalanced rate.
+dataset: a fictional open-pit mining operation, viewed from the
+fleet-maintenance side. Truck-day telemetry records (engine hours,
+vibration, oil pressure, coolant temperature, brake wear, fault codes,
+overdue-maintenance signal) and an unplanned-failure outcome
+(`failure_within_7d`) at a realistic, heavily imbalanced rate.
 
 All data is synthetic. Relationships between features and the failure
 outcome are hand-specified below (with noise) to resemble plausible
