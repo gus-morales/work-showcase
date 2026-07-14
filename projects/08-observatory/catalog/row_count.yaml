@@ -1,0 +1,6 @@
+name: row_count
+kind: ops_metric
+description: "Rows ingested by the nightly pipeline that day."
+monitor: true
+threshold_limit: 50
+threshold_direction: below

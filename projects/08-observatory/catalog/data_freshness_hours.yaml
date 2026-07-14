@@ -1,0 +1,6 @@
+name: data_freshness_hours
+kind: ops_metric
+description: "Hours between the source data landing and the pipeline run that consumes it."
+monitor: true
+threshold_limit: 12
+threshold_direction: above

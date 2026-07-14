@@ -1,0 +1,6 @@
+name: pipeline_success_rate
+kind: ops_metric
+description: "Fraction of scheduled pipeline runs that completed without error that day."
+monitor: true
+threshold_limit: 0.80
+threshold_direction: below

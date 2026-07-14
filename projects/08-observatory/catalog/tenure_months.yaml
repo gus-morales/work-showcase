@@ -1,0 +1,5 @@
+name: tenure_months
+kind: model_feature
+description: "Months since the customer's subscription started, as of the scoring date. Not expected to drift; a stable reference feature."
+monitor: true
+dtype: numerical

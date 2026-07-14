@@ -1,0 +1,5 @@
+name: predicted_churn_prob
+kind: model_feature
+description: "The churn model's own predicted probability for the customer, model output, not an input feature."
+monitor: true
+dtype: numerical

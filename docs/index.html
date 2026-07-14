@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gustavo Morales — Data Science Portfolio</title>
-<meta name="description" content="Gustavo Morales, Senior Data Scientist — PhD astrophysicist turned data scientist. Seven data science and ML projects, synthetic data, real methodology.">
-<meta name="keywords" content="Gustavo Morales, Senior Data Scientist, Data Science Portfolio, Machine Learning, Credit Risk Modeling, Causal Inference, A/B Testing, SHAP, LLM Evaluation, Fraud Detection, Predictive Maintenance, Decision Governance">
+<meta name="description" content="Gustavo Morales, Senior Data Scientist — PhD astrophysicist turned data scientist. Eight data science and ML projects, synthetic data, real methodology.">
+<meta name="keywords" content="Gustavo Morales, Senior Data Scientist, Data Science Portfolio, Machine Learning, Credit Risk Modeling, Causal Inference, A/B Testing, SHAP, LLM Evaluation, Fraud Detection, Predictive Maintenance, Decision Governance, Model Monitoring">
 <meta name="author" content="Gustavo Morales">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://gus-morales.github.io/work-showcase/">
@@ -13,13 +13,13 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://gus-morales.github.io/work-showcase/">
 <meta property="og:title" content="Gustavo Morales — Data Science Portfolio">
-<meta property="og:description" content="PhD astrophysicist turned Senior Data Scientist. Seven data science and ML projects — credit risk, causal inference, LLM evaluation, fraud detection, predictive maintenance, and decision governance — on synthetic data with real methodology.">
+<meta property="og:description" content="PhD astrophysicist turned Senior Data Scientist. Eight data science and ML projects — credit risk, causal inference, LLM evaluation, fraud detection, predictive maintenance, decision governance, and ops monitoring — on synthetic data with real methodology.">
 <meta property="og:image" content="https://gus-morales.github.io/work-showcase/images/01-delinquency.png">
 <meta property="og:site_name" content="Gustavo Morales — Data Science Portfolio">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Gustavo Morales — Data Science Portfolio">
-<meta name="twitter:description" content="PhD astrophysicist turned Senior Data Scientist. Seven data science and ML projects — credit risk, causal inference, LLM evaluation, fraud detection, predictive maintenance, and decision governance — on synthetic data with real methodology.">
+<meta name="twitter:description" content="PhD astrophysicist turned Senior Data Scientist. Eight data science and ML projects — credit risk, causal inference, LLM evaluation, fraud detection, predictive maintenance, decision governance, and ops monitoring — on synthetic data with real methodology.">
 <meta name="twitter:image" content="https://gus-morales.github.io/work-showcase/images/01-delinquency.png">
 
 <meta name="theme-color" content="#17191C">
@@ -522,18 +522,18 @@
 
       <!-- Project 8 -->
       <div class="card">
-        <img class="chart" src="images/08-service-health-monitor.png" alt="Snapshot pipeline architecture diagram: metrics panel to detector engine to snapshot files, read by alert channels and a notebook, never recomputed downstream">
+        <img class="chart" src="images/08-observatory.png" alt="Two-engine architecture diagram: DuckDB and a metric catalog feed an ops detector engine and a popmon stability engine, both writing into one snapshot, read by alert channels, a static dashboard, and a notebook">
         <div class="card-body">
-          <div class="card-title">Service Health Monitor</div>
-          <div class="card-pitch">A pluggable anomaly-detection engine, not a single method: four detector types run against every metric, catching a hard latency spike, a sustained error-rate shift, a slow traffic decline, and a reporting gap, each one needing a different kind of detector to catch cleanly. Alert dedup turns 45 flagged days into 1 alert.</div>
+          <div class="card-title">Observatory</div>
+          <div class="card-pitch">A DS team's own ops monitoring: a pluggable detector engine for pipeline metrics, popmon for model-feature and prediction drift, both configured from one YAML metric catalog over a small DuckDB database. Eight of nine injected anomalies caught, deduplicated into 9 alert events, with a static dashboard built from the same snapshot.</div>
           <div class="tags">
-            <span class="tag">Anomaly detection</span>
-            <span class="tag">Pluggable architecture</span>
-            <span class="tag">Snapshot pipeline</span>
+            <span class="tag">popmon</span>
+            <span class="tag">Metric catalog</span>
+            <span class="tag">SQL / DuckDB</span>
           </div>
           <div class="card-links">
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-service-health-monitor/README.md" target="_blank" rel="noopener">README →</a>
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-service-health-monitor/notebooks/08_service_health_monitor.ipynb" target="_blank" rel="noopener">Notebook →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/README.md" target="_blank" rel="noopener">README →</a>
+            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/notebooks/08_observatory.ipynb" target="_blank" rel="noopener">Notebook →</a>
           </div>
         </div>
       </div>
@@ -552,7 +552,7 @@
     </div>
 
     <footer>
-      <span id="last-updated">Last updated July 13, 2026</span>
+      <span id="last-updated">Last updated July 14, 2026</span>
       <span>
         <a href="mailto:gustavo85@gmail.com">Email</a>
         &nbsp;·&nbsp;

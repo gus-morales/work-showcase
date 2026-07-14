@@ -1,0 +1,5 @@
+name: support_tickets_30d
+kind: model_feature
+description: "Support tickets opened by the customer in the last 30 days. Some customers legitimately have none."
+monitor: true
+dtype: numerical

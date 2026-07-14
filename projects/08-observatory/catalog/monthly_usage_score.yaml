@@ -1,0 +1,5 @@
+name: monthly_usage_score
+kind: model_feature
+description: "In-app engagement score derived from the last 30 days of activity, higher is more engaged."
+monitor: true
+dtype: numerical

@@ -1,0 +1,6 @@
+name: pipeline_duration_minutes
+kind: ops_metric
+description: "Minutes the nightly model-training pipeline took to run, start to finish."
+monitor: true
+threshold_limit: 120
+threshold_direction: above

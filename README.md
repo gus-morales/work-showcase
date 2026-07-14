@@ -19,7 +19,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 | [05 - Transaction Fraud Detection](projects/05-fraud-anomaly-detection) | Classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection (Isolation Forest) vs. a supervised model | Done |
 | [06 - Equipment Failure Risk Model](projects/06-equipment-failure-risk) | Predictive maintenance for a mining haul-truck fleet: classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection vs. a supervised model | Done |
 | [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | A record format for a DS team's own decisions: schema-based validation, CLI tooling to scaffold and check records, a live scan for overdue monitoring commitments | Done |
-| [08 - Service Health Monitor](projects/08-service-health-monitor) | A pluggable multi-method anomaly engine (threshold, z-score, trend-break, data-gap detectors), alert dedup, pluggable alert channels, snapshot-based pipeline architecture | Done |
+| [08 - Observatory](projects/08-observatory) | A DS-team ops-monitoring toolkit: a pluggable detector engine for pipeline metrics plus popmon for model-feature drift, both configured from a YAML metric catalog, backed by DuckDB/SQL, unified into one snapshot with alert dedup and a static dashboard | Done |
 
 ## Skills and tools featured
 
@@ -45,7 +45,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 
 **Customer & growth analytics**
 
-- SQL: window functions, CTEs, cohort joins via DuckDB (02)
+- SQL: window functions, CTEs, cohort joins via DuckDB (02, 08)
 - Data contracts and a governed metric layer (02)
 - Cohort retention analysis (02)
 - Log-share contribution decomposition (02)
@@ -60,6 +60,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 - Cost-based decision/threshold optimization (01, 04, 05, 06)
 - Schema-based record validation (Pydantic) and CLI tooling for a structured record format (07)
 - Pluggable multi-method anomaly detection (threshold, z-score, trend-break, data-gap) with alert dedup and a snapshot-based pipeline architecture (08)
+- Population/distribution stability monitoring for model features and predictions (popmon), reference-period-relative alerting (08)
 
 **NLP & LLM evaluation**
 

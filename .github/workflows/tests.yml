@@ -20,7 +20,7 @@ jobs:
           - 05-fraud-anomaly-detection
           - 06-equipment-failure-risk
           - 07-ds-decision-governance
-          - 08-service-health-monitor
+          - 08-observatory
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}

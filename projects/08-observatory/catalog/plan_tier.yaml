@@ -1,0 +1,5 @@
+name: plan_tier
+kind: model_feature
+description: "Subscription plan tier at scoring time: basic, pro, or enterprise."
+monitor: true
+dtype: categorical
