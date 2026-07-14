@@ -63,6 +63,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 
 - LLM-judge validation against human labels: Cohen's kappa, bias decomposition (04)
 - Light NLP topic modeling: TF-IDF + NMF (03)
+- TF-IDF + cosine similarity search over past decision records (07)
 
 ## About me
 

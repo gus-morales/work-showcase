@@ -9,6 +9,7 @@ A working record format for a data science team's own decisions: model launches,
 - Schema-based record validation (Pydantic)
 - CLI tooling to scaffold and validate records
 - A live scan for monitoring commitments that are currently overdue
+- TF-IDF + cosine similarity search over past decisions (scikit-learn)
 
 ## The problem
 
@@ -153,6 +154,43 @@ impact_level=high requires a non-empty '## Rollback plan' section
 
 Both of those are real output from `validate_file()` against a deliberately broken record, not paraphrased.
 
+## Searching past decisions
+
+Once a team has been logging decisions for a while, the obvious next question is: has something like this already been decided? `search_decisions.py` ranks existing records against a new proposal by TF-IDF + cosine similarity over each record's title, `artifact_type`, `domain`, and its `## Why` section, so a differently-worded proposal for the same underlying kind of change still surfaces the past one.
+
+```python
+def search(query, records, top_n=5):
+    if not records:
+        return []
+    texts = [_record_text(record, body) for _, record, body in records]
+    vectorizer = TfidfVectorizer(stop_words="english")
+    matrix = vectorizer.fit_transform([*texts, query])
+    scores = cosine_similarity(matrix[-1], matrix[:-1])[0]
+    ranked = sorted(zip(records, scores), key=lambda pair: -pair[1])
+    return [(path, record, float(score)) for (path, record, _), score in ranked[:top_n]]
+```
+
+Real output, run before writing a new deprecation proposal:
+
+```
+$ python src/search_decisions.py "should we retire an old model or endpoint nobody uses anymore" --top 3
+Top 3 match(es) for: "should we retire an old model or endpoint nobody uses anymore"
+
+0.211  DSG-0008  [shipped]  Decommission the 2023 churn-risk model
+          deprecation / product_analytics
+          decisions/product_analytics/DSG-0008-churn-model-decommission.md
+
+0.139  DSG-0003  [closed]  Deprecate the legacy relevance-scoring endpoint
+          deprecation / search_ranking
+          decisions/search_ranking/DSG-0003-deprecate-legacy-relevance-endpoint.md
+
+0.139  DSG-0002  [shipped]  Launch attribution model v2 to production scoring
+          model_launch / product_analytics
+          decisions/product_analytics/DSG-0002-attribution-model-v2-launch.md
+```
+
+The top two are the repo's only two `deprecation` records, and `DSG-0003`'s monitoring notes are worth reading before writing a third: a caller wasn't migrated in time and broke for two days, logged as "check access logs for callers, not just the known integration list." That's the kind of thing a new proposal benefits from seeing before it ships, not after.
+
 ## Creating a new decision
 
 ```
@@ -185,8 +223,8 @@ Both flagged decisions are seeded that way on purpose, so the script has somethi
 - `templates/`: `decision-low.md`, `decision-medium.md`, `decision-high.md`.
 - `routing.yaml`: reviewer-count minimums by impact level.
 - `decisions/<domain>/`: 8 example records spanning all six domains, all three impact levels, and most lifecycle states (draft, shipped, closed, reverted, abandoned).
-- `src/`: `schema.py` (the contract), `validate.py`, `open_loops.py`, `new_decision.py`, plus `render_lifecycle_diagram.py` for the diagram above.
-- `tests/`: pytest suite covering the schema contract, the overdue-detection logic, and the scaffolding CLI.
+- `src/`: `schema.py` (the contract), `validate.py`, `open_loops.py`, `new_decision.py`, `search_decisions.py`, plus `render_lifecycle_diagram.py` for the diagram above.
+- `tests/`: pytest suite covering the schema contract, the overdue-detection logic, the search ranking, and the scaffolding CLI.
 
 ## Reproduce
 
@@ -194,6 +232,7 @@ Both flagged decisions are seeded that way on purpose, so the script has somethi
 pip install -r requirements.txt
 python src/validate.py
 python src/open_loops.py
+python src/search_decisions.py "should we retire an old model or endpoint nobody uses anymore"
 python src/render_lifecycle_diagram.py
 ```
 

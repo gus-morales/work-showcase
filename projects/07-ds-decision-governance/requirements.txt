@@ -1,6 +1,7 @@
 pydantic==2.13.4
 pyyaml==6.0.3
 matplotlib==3.10.9
+scikit-learn==1.6.1
 
 # only needed to run the test suite
 pytest==9.1.1
