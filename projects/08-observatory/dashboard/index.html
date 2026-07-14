@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatory — monitoring snapshot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --ink: #ECECEA; --slate: #8FBBDB; --teal: #82C2B7; --amber: #D8AD72;
+    --red: #C97B6E; --grey: #8B8B87; --light-grey: #2E3136;
+    --bg: #17191C; --card-bg: #1E2124; --chip-bg: #262B30;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 48px 28px 56px; }
+  header { margin-bottom: 32px; }
+  h1 { font-family: 'Lora', serif; font-weight: 500; font-size: 30px; margin: 0 0 8px; }
+  .subtitle { color: #A5A5A1; font-size: 15px; max-width: 720px; line-height: 1.5; }
+  .badge {
+    display: inline-block; margin-top: 14px; padding: 4px 11px; border-radius: 20px;
+    background: var(--chip-bg); border: 1px solid var(--light-grey); color: var(--grey);
+    font-size: 12px; letter-spacing: 0.3px;
+  }
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px; margin: 28px 0;
+  }
+  .kpi-card {
+    background: var(--card-bg); border: 1px solid var(--light-grey); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .kpi-label { font-size: 11.5px; color: var(--grey); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-family: 'Lora', serif; font-size: 26px; margin-top: 6px; color: var(--ink); }
+  .kpi-note { font-size: 11.5px; color: var(--grey); margin-top: 4px; }
+  .chart-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .panel {
+    background: var(--card-bg); border: 1px solid var(--light-grey); border-radius: 10px;
+    padding: 20px 22px;
+  }
+  .panel h2 { font-family: 'Lora', serif; font-weight: 500; font-size: 17px; margin: 0 0 3px; }
+  .panel .panel-sub { font-size: 12.5px; color: var(--grey); margin-bottom: 14px; }
+  canvas { max-height: 280px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left; padding: 8px 10px; color: var(--grey); font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--light-grey);
+  }
+  tbody td { padding: 9px 10px; border-bottom: 1px solid var(--light-grey); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  .status-pill {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px;
+    letter-spacing: 0.3px;
+  }
+  .status-flagged { background: rgba(201,123,110,0.18); color: var(--red); }
+  .status-clean { background: rgba(130,194,183,0.18); color: var(--teal); }
+  .det-chip {
+    display: inline-block; background: var(--chip-bg); border: 1px solid var(--light-grey);
+    border-radius: 5px; padding: 1px 7px; margin: 1px 3px 1px 0; font-size: 11px; color: #C9C9C4;
+  }
+  .metric-desc { color: var(--grey); font-size: 12px; }
+  footer { margin-top: 32px; font-size: 12.5px; color: var(--grey); line-height: 1.7; }
+  footer a { color: var(--slate); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  code { background: var(--chip-bg); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  @media (max-width: 820px) { .chart-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Observatory</h1>
+    <div class="subtitle">
+      A monitoring snapshot for a DS team's operations: pipeline/ops metrics tracked by
+      four scalar detectors, model-feature and prediction drift tracked by
+      <a href="https://github.com/ing-bank/popmon" style="color:var(--slate);text-decoration:none;">popmon</a>,
+      both configured from one metric catalog and unified into one alert stream.
+    </div>
+    <span class="badge">Static build from a single snapshot run — not a live app. See README for how to regenerate.</span>
+  </header>
+
+  <section class="kpi-row" id="kpi-row"></section>
+
+  <section class="chart-row">
+    <div class="panel">
+      <h2>Alerting metrics per day</h2>
+      <div class="panel-sub">Distinct metrics with at least one flagged detector that day, split by engine</div>
+      <canvas id="alerts-chart"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Alert events by detector</h2>
+      <div class="panel-sub">Which check first caught each event</div>
+      <canvas id="detector-chart"></canvas>
+    </div>
+  </section>
+
+  <section class="panel" style="margin-bottom:16px;">
+    <h2>Metric status</h2>
+    <div class="panel-sub">Every monitored signal in the catalog, ops metrics and model features together</div>
+    <table id="metric-table">
+      <thead><tr>
+        <th>Metric</th><th>Engine</th><th>Status</th><th>First alert</th><th>Detector(s)</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Alert timeline</h2>
+    <div class="panel-sub">Every alert event, in order, one row per rising edge (not per flagged day)</div>
+    <table id="events-table">
+      <thead><tr><th>Day</th><th>Metric</th><th>Detector(s)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <footer>
+    Full per-feature popmon detail: <a href="../snapshot/popmon_stability_report.html">popmon_stability_report.html ↗</a><br>
+    Regenerate this snapshot: <code>python src/generate_data.py && python src/snapshot.py && python src/build_dashboard.py</code>
+  </footer>
+</div>
+
+<script>
+const KPIS = [{"label": "Metrics monitored", "value": 9, "note": "4 ops \u00b7 5 model"}, {"label": "Days observed", "value": 90}, {"label": "Alert events", "value": 9}, {"label": "Metrics ever flagged", "value": "8 / 9"}, {"label": "Detection engines", "value": 2, "note": "detectors + popmon"}];
+const DAILY = [{"day": 0, "ops": 0, "model": 0}, {"day": 1, "ops": 0, "model": 0}, {"day": 2, "ops": 0, "model": 0}, {"day": 3, "ops": 0, "model": 0}, {"day": 4, "ops": 0, "model": 0}, {"day": 5, "ops": 0, "model": 0}, {"day": 6, "ops": 0, "model": 0}, {"day": 7, "ops": 0, "model": 0}, {"day": 8, "ops": 0, "model": 0}, {"day": 9, "ops": 0, "model": 0}, {"day": 10, "ops": 0, "model": 0}, {"day": 11, "ops": 0, "model": 0}, {"day": 12, "ops": 0, "model": 0}, {"day": 13, "ops": 0, "model": 0}, {"day": 14, "ops": 0, "model": 0}, {"day": 15, "ops": 0, "model": 0}, {"day": 16, "ops": 0, "model": 0}, {"day": 17, "ops": 0, "model": 0}, {"day": 18, "ops": 0, "model": 0}, {"day": 19, "ops": 0, "model": 0}, {"day": 20, "ops": 0, "model": 0}, {"day": 21, "ops": 0, "model": 0}, {"day": 22, "ops": 0, "model": 0}, {"day": 23, "ops": 0, "model": 0}, {"day": 24, "ops": 0, "model": 0}, {"day": 25, "ops": 0, "model": 0}, {"day": 26, "ops": 0, "model": 0}, {"day": 27, "ops": 0, "model": 0}, {"day": 28, "ops": 0, "model": 1}, {"day": 29, "ops": 0, "model": 1}, {"day": 30, "ops": 1, "model": 1}, {"day": 31, "ops": 1, "model": 1}, {"day": 32, "ops": 1, "model": 1}, {"day": 33, "ops": 0, "model": 1}, {"day": 34, "ops": 0, "model": 1}, {"day": 35, "ops": 0, "model": 1}, {"day": 36, "ops": 1, "model": 1}, {"day": 37, "ops": 1, "model": 1}, {"day": 38, "ops": 1, "model": 1}, {"day": 39, "ops": 1, "model": 1}, {"day": 40, "ops": 2, "model": 1}, {"day": 41, "ops": 2, "model": 1}, {"day": 42, "ops": 2, "model": 1}, {"day": 43, "ops": 1, "model": 1}, {"day": 44, "ops": 1, "model": 1}, {"day": 45, "ops": 1, "model": 1}, {"day": 46, "ops": 1, "model": 1}, {"day": 47, "ops": 1, "model": 1}, {"day": 48, "ops": 1, "model": 1}, {"day": 49, "ops": 1, "model": 1}, {"day": 50, "ops": 1, "model": 2}, {"day": 51, "ops": 1, "model": 2}, {"day": 52, "ops": 1, "model": 2}, {"day": 53, "ops": 1, "model": 2}, {"day": 54, "ops": 1, "model": 2}, {"day": 55, "ops": 2, "model": 2}, {"day": 56, "ops": 1, "model": 2}, {"day": 57, "ops": 1, "model": 2}, {"day": 58, "ops": 1, "model": 2}, {"day": 59, "ops": 1, "model": 2}, {"day": 60, "ops": 1, "model": 3}, {"day": 61, "ops": 1, "model": 3}, {"day": 62, "ops": 1, "model": 3}, {"day": 63, "ops": 1, "model": 3}, {"day": 64, "ops": 1, "model": 3}, {"day": 65, "ops": 1, "model": 3}, {"day": 66, "ops": 1, "model": 3}, {"day": 67, "ops": 1, "model": 3}, {"day": 68, "ops": 1, "model": 3}, {"day": 69, "ops": 1, "model": 3}, {"day": 70, "ops": 1, "model": 4}, {"day": 71, "ops": 1, "model": 4}, {"day": 72, "ops": 1, "model": 4}, {"day": 73, "ops": 1, "model": 4}, {"day": 74, "ops": 1, "model": 4}, {"day": 75, "ops": 1, "model": 3}, {"day": 76, "ops": 1, "model": 3}, {"day": 77, "ops": 1, "model": 3}, {"day": 78, "ops": 1, "model": 3}, {"day": 79, "ops": 1, "model": 3}, {"day": 80, "ops": 1, "model": 3}, {"day": 81, "ops": 1, "model": 3}, {"day": 82, "ops": 1, "model": 3}, {"day": 83, "ops": 1, "model": 3}, {"day": 84, "ops": 1, "model": 3}, {"day": 85, "ops": 1, "model": 3}, {"day": 86, "ops": 1, "model": 3}, {"day": 87, "ops": 1, "model": 3}, {"day": 88, "ops": 1, "model": 3}, {"day": 89, "ops": 1, "model": 3}];
+const DETECTOR_BREAKDOWN = [{"detector": "data_gap", "count": 1}, {"detector": "popmon", "count": 4}, {"detector": "threshold", "count": 1}, {"detector": "trend_break", "count": 2}, {"detector": "zscore", "count": 2}];
+const METRIC_ROWS = [{"name": "predicted_churn_prob", "kind": "model_feature", "description": "The churn model's own predicted probability for the customer, model output, not an input feature.", "engine": "popmon", "status": "flagged", "detectors": ["popmon"], "first_flagged_day": 28}, {"name": "pipeline_duration_minutes", "kind": "ops_metric", "description": "Minutes the nightly model-training pipeline took to run, start to finish.", "engine": "ops detectors", "status": "flagged", "detectors": ["threshold", "trend_break", "zscore"], "first_flagged_day": 30}, {"name": "row_count", "kind": "ops_metric", "description": "Rows ingested by the nightly pipeline that day.", "engine": "ops detectors", "status": "flagged", "detectors": ["data_gap"], "first_flagged_day": 40}, {"name": "monthly_usage_score", "kind": "model_feature", "description": "In-app engagement score derived from the last 30 days of activity, higher is more engaged.", "engine": "popmon", "status": "flagged", "detectors": ["popmon"], "first_flagged_day": 50}, {"name": "pipeline_success_rate", "kind": "ops_metric", "description": "Fraction of scheduled pipeline runs that completed without error that day.", "engine": "ops detectors", "status": "flagged", "detectors": ["zscore"], "first_flagged_day": 55}, {"name": "plan_tier", "kind": "model_feature", "description": "Subscription plan tier at scoring time: basic, pro, or enterprise.", "engine": "popmon", "status": "flagged", "detectors": ["popmon"], "first_flagged_day": 60}, {"name": "data_freshness_hours", "kind": "ops_metric", "description": "Hours between the source data landing and the pipeline run that consumes it.", "engine": "ops detectors", "status": "flagged", "detectors": ["trend_break"], "first_flagged_day": 68}, {"name": "support_tickets_30d", "kind": "model_feature", "description": "Support tickets opened by the customer in the last 30 days. Some customers legitimately have none.", "engine": "popmon", "status": "flagged", "detectors": ["popmon"], "first_flagged_day": 70}, {"name": "tenure_months", "kind": "model_feature", "description": "Months since the customer's subscription started, as of the scoring date. Not expected to drift; a stable reference feature.", "engine": "popmon", "status": "clean", "detectors": [], "first_flagged_day": null}];
+const EVENTS = [{"day": 28, "metric": "predicted_churn_prob", "detectors": ["popmon"]}, {"day": 30, "metric": "pipeline_duration_minutes", "detectors": ["threshold", "zscore"]}, {"day": 36, "metric": "pipeline_duration_minutes", "detectors": ["trend_break"]}, {"day": 40, "metric": "row_count", "detectors": ["data_gap"]}, {"day": 50, "metric": "monthly_usage_score", "detectors": ["popmon"]}, {"day": 55, "metric": "pipeline_success_rate", "detectors": ["zscore"]}, {"day": 60, "metric": "plan_tier", "detectors": ["popmon"]}, {"day": 68, "metric": "data_freshness_hours", "detectors": ["trend_break"]}, {"day": 70, "metric": "support_tickets_30d", "detectors": ["popmon"]}];
+
+const COLORS = { ops: '#8FBBDB', model: '#D8AD72', grid: '#2E3136', ink: '#ECECEA', grey: '#8B8B87' };
+
+function renderKPIs() {
+  const row = document.getElementById('kpi-row');
+  row.innerHTML = KPIS.map(k => `
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-note">${k.note || ''}</div>
+    </div>`).join('');
+}
+
+function renderAlertsChart() {
+  const ctx = document.getElementById('alerts-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: DAILY.map(d => d.day),
+      datasets: [
+        { label: 'Ops detectors', data: DAILY.map(d => d.ops), backgroundColor: COLORS.ops, stack: 's' },
+        { label: 'popmon', data: DAILY.map(d => d.model), backgroundColor: COLORS.model, stack: 's' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: COLORS.ink, usePointStyle: true } } },
+      scales: {
+        x: { stacked: true, ticks: { color: COLORS.grey, maxTicksLimit: 12 }, grid: { display: false }, title: { display: true, text: 'day', color: COLORS.grey } },
+        y: { stacked: true, beginAtZero: true, ticks: { color: COLORS.grey, precision: 0 }, grid: { color: COLORS.grid } },
+      }
+    }
+  });
+}
+
+function renderDetectorChart() {
+  const ctx = document.getElementById('detector-chart').getContext('2d');
+  const ops = DETECTOR_BREAKDOWN.filter(d => d.detector !== 'popmon');
+  const model = DETECTOR_BREAKDOWN.filter(d => d.detector === 'popmon');
+  const ordered = [...ops, ...model];
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ordered.map(d => d.detector),
+      datasets: [{
+        data: ordered.map(d => d.count),
+        backgroundColor: ordered.map(d => d.detector === 'popmon' ? COLORS.model : COLORS.ops),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: COLORS.grey, precision: 0 }, grid: { color: COLORS.grid } },
+        y: { ticks: { color: COLORS.ink }, grid: { display: false } },
+      }
+    }
+  });
+}
+
+function renderMetricTable() {
+  const tbody = document.querySelector('#metric-table tbody');
+  tbody.innerHTML = METRIC_ROWS.map(r => `
+    <tr>
+      <td><strong>${r.name}</strong><div class="metric-desc">${r.description}</div></td>
+      <td>${r.engine}</td>
+      <td><span class="status-pill status-${r.status}">${r.status}</span></td>
+      <td>${r.first_flagged_day === null ? '—' : 'day ' + r.first_flagged_day}</td>
+      <td>${r.detectors.map(d => `<span class="det-chip">${d}</span>`).join('') || '—'}</td>
+    </tr>`).join('');
+}
+
+function renderEventsTable() {
+  const tbody = document.querySelector('#events-table tbody');
+  tbody.innerHTML = EVENTS.map(e => `
+    <tr>
+      <td>day ${e.day}</td>
+      <td>${e.metric}</td>
+      <td>${e.detectors.map(d => `<span class="det-chip">${d}</span>`).join('')}</td>
+    </tr>`).join('');
+}
+
+renderKPIs();
+renderAlertsChart();
+renderDetectorChart();
+renderMetricTable();
+renderEventsTable();
+</script>
+</body>
+</html>

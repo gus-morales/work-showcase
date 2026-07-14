@@ -195,6 +195,8 @@ $ python3 -c "import duckdb; print(duckdb.connect('data/observatory.duckdb', rea
 
 ## Dashboard
 
+**[Live view →](https://gus-morales.github.io/work-showcase/08-observatory/dashboard.html)**
+
 `dashboard/index.html` is a static, self-contained build from a single snapshot run,
 KPI cards, an alerts-per-day chart split by engine, a detector-mix chart, a per-metric
 status table, and the alert timeline, styled to match the rest of this portfolio. It's
