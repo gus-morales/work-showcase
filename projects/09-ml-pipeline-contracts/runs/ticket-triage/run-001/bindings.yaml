@@ -1,0 +1,9 @@
+identifier_col: ticket_id
+decision_time_col: triage_cutoff
+base_population:
+  path: data/ticket_triage/tickets.csv
+event_sources:
+  agent_activity:
+    path: data/ticket_triage/agent_activity.csv
+    join_key: ticket_id
+    event_date_col: activity_date

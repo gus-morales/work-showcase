@@ -1,0 +1,82 @@
+{
+  "base_population": {
+    "path": "data/ticket_triage/tickets.csv",
+    "row_count": 2500,
+    "columns": {
+      "ticket_id": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 2500
+      },
+      "customer_id": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 1084
+      },
+      "opened_at": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 2490
+      },
+      "triage_cutoff": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 2490
+      },
+      "category": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 4
+      },
+      "channel": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 3
+      },
+      "customer_tier": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 3
+      },
+      "will_escalate": {
+        "dtype": "int64",
+        "null_rate": 0.0,
+        "n_unique": 2
+      },
+      "resolution_hours": {
+        "dtype": "float64",
+        "null_rate": 0.0,
+        "n_unique": 1292
+      }
+    }
+  },
+  "event_sources": {
+    "agent_activity": {
+      "path": "data/ticket_triage/agent_activity.csv",
+      "row_count": 13798,
+      "identifiers_covered": 1.0,
+      "columns": {
+        "ticket_id": {
+          "dtype": "object",
+          "null_rate": 0.0,
+          "n_unique": 2500
+        },
+        "activity_date": {
+          "dtype": "object",
+          "null_rate": 0.0,
+          "n_unique": 13455
+        },
+        "notes_added": {
+          "dtype": "int64",
+          "null_rate": 0.0,
+          "n_unique": 9
+        },
+        "reassigned": {
+          "dtype": "int64",
+          "null_rate": 0.0,
+          "n_unique": 2
+        }
+      }
+    }
+  }
+}

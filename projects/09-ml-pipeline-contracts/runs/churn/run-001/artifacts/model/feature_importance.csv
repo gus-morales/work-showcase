@@ -1,0 +1,7 @@
+target,feature,gain,iv,psi_train_vs_holdout
+churned_next_30d,plan_tier_basic,0.13897,0.1426,0.0
+churned_next_30d,tickets_opened_pre_decision,0.2062,0.10392,0.00604
+churned_next_30d,plan_tier_enterprise,0.02667,0.08005,0.0
+churned_next_30d,avg_usage_score_pre_decision,0.33406,0.01847,0.01828
+churned_next_30d,n_events_pre_decision,0.08411,0.02902,0.02151
+churned_next_30d,avg_logins_pre_decision,0.21,0.00959,0.01554

@@ -1,0 +1,34 @@
+# DS-authored feature ideas, compiled by the Feature stage. Each entry
+# is either an aggregation over an event source (point-in-time
+# filtered first) or a passthrough column from the base population.
+features:
+  - name: avg_logins_pre_decision
+    source: usage_events
+    column: logins
+    agg: mean
+    concept: usage_behavior
+  - name: avg_usage_score_pre_decision
+    source: usage_events
+    column: feature_usage_score
+    agg: mean
+    concept: usage_behavior
+  - name: n_events_pre_decision
+    source: usage_events
+    column: logins
+    agg: count
+    concept: usage_behavior
+  - name: tickets_opened_pre_decision
+    source: usage_events
+    column: support_tickets_opened
+    agg: sum
+    concept: support_friction
+  - name: plan_tier
+    source: base
+    column: plan_tier
+    agg: passthrough
+    concept: segment
+  - name: region
+    source: base
+    column: region
+    agg: passthrough
+    concept: segment

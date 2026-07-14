@@ -1,0 +1,23 @@
+{
+  "identifier_col": "ticket_id",
+  "decision_time_col": "triage_cutoff",
+  "training_data_path": "runs/ticket-triage/run-001/artifacts/data/training_data.parquet",
+  "targets": [
+    {
+      "name": "will_escalate",
+      "kind": "classification"
+    },
+    {
+      "name": "resolution_hours",
+      "kind": "regression"
+    }
+  ],
+  "event_sources": {
+    "agent_activity": {
+      "path": "data/ticket_triage/agent_activity.csv",
+      "join_key": "ticket_id",
+      "event_date_col": "activity_date"
+    }
+  },
+  "base_population_path": "data/ticket_triage/tickets.csv"
+}

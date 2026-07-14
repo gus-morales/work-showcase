@@ -1,0 +1,10 @@
+{
+  "churned_next_30d": [
+    "plan_tier_basic",
+    "tickets_opened_pre_decision",
+    "plan_tier_enterprise",
+    "avg_usage_score_pre_decision",
+    "n_events_pre_decision",
+    "avg_logins_pre_decision"
+  ]
+}

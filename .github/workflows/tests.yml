@@ -21,6 +21,7 @@ jobs:
           - 06-equipment-failure-risk
           - 07-ds-decision-governance
           - 08-observatory
+          - 09-ml-pipeline-contracts
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}

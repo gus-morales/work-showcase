@@ -20,6 +20,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 | [06 - Equipment Failure Risk Model](projects/06-equipment-failure-risk) | Predictive maintenance for a mining haul-truck fleet: classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection vs. a supervised model | Done |
 | [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | A record format for a DS team's own decisions: schema-based validation, CLI tooling to scaffold and check records, a live scan for overdue monitoring commitments | Done |
 | [08 - Observatory](projects/08-observatory) | A DS-team ops-monitoring toolkit: a pluggable detector engine for pipeline metrics plus popmon for model-feature drift, both configured from a YAML metric catalog, backed by DuckDB/SQL, unified into one snapshot with alert dedup and a static dashboard | Done |
+| [09 - ML Pipeline Contracts](projects/09-ml-pipeline-contracts) | A five-stage ML build pipeline (EDA, data, features, training, validation) gated by a frozen Model Scope Document and checked at every handoff by Pydantic contracts, run against two unrelated synthetic domains to prove the contracts are domain-agnostic, plus a deliberately broken run showing the checks actually catch a bad handoff | Done |
 
 ## Skills and tools featured
 
@@ -61,6 +62,13 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 - Schema-based record validation (Pydantic) and CLI tooling for a structured record format (07)
 - Pluggable multi-method anomaly detection (threshold, z-score, trend-break, data-gap) with alert dedup and a snapshot-based pipeline architecture (08)
 - Population/distribution stability monitoring for model features and predictions (popmon), reference-period-relative alerting (08)
+
+**MLOps & pipeline architecture**
+
+- Schema-validated contracts between independently-owned pipeline stages, checked at every handoff (Pydantic) (09)
+- A frozen design-document gate (Model Scope Document) blocking every downstream stage until signed off (09)
+- Point-in-time / leakage guards on event-level source data, unit-tested against a leaking case (09)
+- The same pipeline run against two unrelated synthetic domains, single- and multi-target, to prove contract portability (09)
 
 **NLP & LLM evaluation**
 

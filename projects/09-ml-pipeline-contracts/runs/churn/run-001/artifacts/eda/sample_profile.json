@@ -1,0 +1,72 @@
+{
+  "base_population": {
+    "path": "data/churn/customers.csv",
+    "row_count": 3000,
+    "columns": {
+      "customer_id": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 3000
+      },
+      "signup_date": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 300
+      },
+      "decision_date": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 307
+      },
+      "plan_tier": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 3
+      },
+      "region": {
+        "dtype": "object",
+        "null_rate": 0.0,
+        "n_unique": 4
+      },
+      "churned_next_30d": {
+        "dtype": "int64",
+        "null_rate": 0.0,
+        "n_unique": 2
+      }
+    }
+  },
+  "event_sources": {
+    "usage_events": {
+      "path": "data/churn/usage_events.csv",
+      "row_count": 125365,
+      "identifiers_covered": 1.0,
+      "columns": {
+        "customer_id": {
+          "dtype": "object",
+          "null_rate": 0.0,
+          "n_unique": 3000
+        },
+        "event_date": {
+          "dtype": "object",
+          "null_rate": 0.0,
+          "n_unique": 453
+        },
+        "logins": {
+          "dtype": "int64",
+          "null_rate": 0.0,
+          "n_unique": 13
+        },
+        "feature_usage_score": {
+          "dtype": "float64",
+          "null_rate": 0.0,
+          "n_unique": 1001
+        },
+        "support_tickets_opened": {
+          "dtype": "int64",
+          "null_rate": 0.0,
+          "n_unique": 4
+        }
+      }
+    }
+  }
+}

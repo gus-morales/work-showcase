@@ -1,0 +1,26 @@
+{
+  "will_escalate": [
+    "early_reassignments",
+    "category_general",
+    "category_technical",
+    "channel_phone",
+    "channel_email",
+    "early_activity_count",
+    "early_notes_added",
+    "category_account",
+    "channel_chat",
+    "customer_tier_basic"
+  ],
+  "resolution_hours": [
+    "early_reassignments",
+    "category_general",
+    "category_technical",
+    "channel_phone",
+    "channel_email",
+    "early_activity_count",
+    "early_notes_added",
+    "category_account",
+    "channel_chat",
+    "customer_tier_basic"
+  ]
+}

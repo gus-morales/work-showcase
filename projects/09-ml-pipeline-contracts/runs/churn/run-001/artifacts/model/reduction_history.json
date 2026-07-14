@@ -1,0 +1,27 @@
+{
+  "churned_next_30d": {
+    "metric_name": "pr_auc",
+    "steps": [
+      {
+        "n_features": 10,
+        "metric": 0.39105
+      },
+      {
+        "n_features": 9,
+        "metric": 0.38559
+      },
+      {
+        "n_features": 8,
+        "metric": 0.37918
+      },
+      {
+        "n_features": 7,
+        "metric": 0.38301
+      },
+      {
+        "n_features": 6,
+        "metric": 0.39179
+      }
+    ]
+  }
+}

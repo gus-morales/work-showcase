@@ -1,0 +1,19 @@
+{
+  "identifier_col": "customer_id",
+  "decision_time_col": "decision_date",
+  "training_data_path": "runs/churn/run-001/artifacts/data/training_data.parquet",
+  "targets": [
+    {
+      "name": "churned_next_30d",
+      "kind": "classification"
+    }
+  ],
+  "event_sources": {
+    "usage_events": {
+      "path": "data/churn/usage_events.csv",
+      "join_key": "customer_id",
+      "event_date_col": "event_date"
+    }
+  },
+  "base_population_path": "data/churn/customers.csv"
+}

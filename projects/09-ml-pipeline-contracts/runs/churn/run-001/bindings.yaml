@@ -1,0 +1,15 @@
+# Execution detail for the churn Model Scope: which files back the
+# declared data_sources, how they join, and the decision-time cutoff
+# that point-in-time filtering keys off. The Model Scope names the
+# source slug ("usage_events"); this file resolves it to an actual
+# path and join key, the same split the real data-agent skill this
+# project is modeled on draws between intent and execution.
+identifier_col: customer_id
+decision_time_col: decision_date
+base_population:
+  path: data/churn/customers.csv
+event_sources:
+  usage_events:
+    path: data/churn/usage_events.csv
+    join_key: customer_id
+    event_date_col: event_date

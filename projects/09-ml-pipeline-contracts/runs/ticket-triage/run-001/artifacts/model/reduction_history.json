@@ -1,0 +1,52 @@
+{
+  "will_escalate": {
+    "metric_name": "pr_auc",
+    "steps": [
+      {
+        "n_features": 10,
+        "metric": 0.43528
+      },
+      {
+        "n_features": 9,
+        "metric": 0.4275
+      },
+      {
+        "n_features": 8,
+        "metric": 0.40426
+      },
+      {
+        "n_features": 7,
+        "metric": 0.40465
+      },
+      {
+        "n_features": 6,
+        "metric": 0.39786
+      }
+    ]
+  },
+  "resolution_hours": {
+    "metric_name": "mae",
+    "steps": [
+      {
+        "n_features": 10,
+        "metric": 3.04708
+      },
+      {
+        "n_features": 9,
+        "metric": 3.05511
+      },
+      {
+        "n_features": 8,
+        "metric": 3.05321
+      },
+      {
+        "n_features": 7,
+        "metric": 3.0754
+      },
+      {
+        "n_features": 6,
+        "metric": 3.09156
+      }
+    ]
+  }
+}

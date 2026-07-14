@@ -1,0 +1,31 @@
+features:
+  - name: early_notes_added
+    source: agent_activity
+    column: notes_added
+    agg: sum
+    concept: early_handling
+  - name: early_reassignments
+    source: agent_activity
+    column: reassigned
+    agg: sum
+    concept: early_handling
+  - name: early_activity_count
+    source: agent_activity
+    column: notes_added
+    agg: count
+    concept: early_handling
+  - name: category
+    source: base
+    column: category
+    agg: passthrough
+    concept: ticket_context
+  - name: channel
+    source: base
+    column: channel
+    agg: passthrough
+    concept: ticket_context
+  - name: customer_tier
+    source: base
+    column: customer_tier
+    agg: passthrough
+    concept: ticket_context
