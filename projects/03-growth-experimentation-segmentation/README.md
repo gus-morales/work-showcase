@@ -121,7 +121,7 @@ Predicted effect tracks realized effect on held-out data (Figure 9), and the mod
 
 ### A second, more rigorous CATE estimator
 
-The T-learner has a structural weakness: subtracting two separately-fit models amplifies whatever noise each one picked up on its own. A more robust alternative, [EconML](https://github.com/py-why/econml)'s `CausalForestDML`, avoids that by first statistically removing the parts of the outcome and treatment that the covariates alone already explain, a technique called double machine learning, then fitting a causal forest on what's left.
+The T-learner has a structural weakness: subtracting two separately-fit models amplifies whatever noise each one picked up on its own. A different approach, [EconML](https://github.com/py-why/econml)'s `CausalForestDML`, avoids that. It first statistically strips out the parts of the outcome and treatment that a user's tenure, activity, and revenue already explain on their own (a step called double machine learning), then groups the remaining users into a tree structure, a "causal forest," so each estimated effect comes from a group of genuinely similar users rather than one model's difference from another.
 
 Trained on the exact same data split as the T-learner above, it nearly doubles the Qini coefficient:
 

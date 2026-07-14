@@ -21,7 +21,7 @@ A fraud team has to decide, at checkout, whether to let a transaction through. M
 
 ## What this does
 
-Trains a classifier to score each transaction's fraud probability at checkout time, using device, velocity, and mismatch signals available in that moment, then picks the approve/flag threshold that minimizes expected cost given fraud-loss and review-cost assumptions, the same cost-based approach project 01 uses for delinquency.
+Trains a classifier to score each transaction's fraud probability at checkout time, using device, velocity, and mismatch signals available in that moment, then picks the approve/flag threshold that minimizes expected cost given fraud-loss and review-cost assumptions.
 
 ## Exploratory analysis
 

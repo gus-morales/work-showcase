@@ -21,7 +21,7 @@ A maintenance team has to decide, from daily telemetry, whether to pull a haul t
 
 ## What this does
 
-Trains a classifier to score each truck-day's failure probability from telemetry available that day (engine hours, vibration, oil pressure, coolant temperature, brake wear, recent fault codes, days overdue for preventive maintenance), then picks the inspect/leave-in-service threshold that minimizes expected cost given downtime-cost and inspection-cost assumptions, the same cost-based approach projects 01 and 05 use for delinquency and fraud.
+Trains a classifier to score each truck-day's failure probability from telemetry available that day (engine hours, vibration, oil pressure, coolant temperature, brake wear, recent fault codes, days overdue for preventive maintenance), then picks the inspect/leave-in-service threshold that minimizes expected cost given downtime-cost and inspection-cost assumptions.
 
 ## Exploratory analysis
 
@@ -66,7 +66,7 @@ The GBM ranks truck-days well above random despite the skew (Figure 4); sweeping
 
 The threshold sits at 0.05 instead of 0.5 because the two mistakes cost very different amounts. Missing an impending failure costs the truck's estimated downtime plus an extra $8,000 for an emergency repair. Flagging a healthy truck for inspection only costs a flat $4,000 crew dispatch. Given that gap, the cost-minimizing policy flags well ahead of the default cutoff, catching about 71% of impending failures, even though only 23.4% of what it flags turns out to actually fail within the week (roughly 3 inspections for every real impending failure caught). That's a normal trade for a maintenance system to make, since an unplanned haul-truck failure costs far more than a routine inspection. It would be a terrible trade if the goal were accuracy instead.
 
-Worth flagging on its own: the logistic baseline slightly outperforms the GBM here (0.434 vs. 0.402 PR-AUC), the reverse of project 05's fraud result. That's a genuine finding rather than an inconsistency: this dataset's failure label was generated from a close-to-linear combination of the raw telemetry signals, so a linear model captures most of the available signal on its own, and the GBM's extra flexibility for interactions and nonlinearities buys little on top of it. The GBM is still used below for its SHAP tooling and because a production system would keep both models in the comparison rather than lock in the linear one from a single test split.
+Worth flagging on its own: the logistic baseline slightly outperforms the GBM here (0.434 vs. 0.402 PR-AUC). That's a genuine finding rather than an inconsistency: this dataset's failure label was generated from a close-to-linear combination of the raw telemetry signals, so a linear model captures most of the available signal on its own, and the GBM's extra flexibility for interactions and nonlinearities buys little on top of it. The GBM is still used below for its SHAP tooling and because a production system would keep both models in the comparison rather than lock in the linear one from a single test split.
 
 ## The accuracy paradox
 
@@ -90,7 +90,7 @@ Before enough confirmed-failure labels exist to train a model like the one above
 
 An Isolation Forest is one option. Trained on the same features but with no access to the failure label at all, it works by repeatedly splitting the feature space at random. A genuine outlier tends to get isolated into its own tiny partition in far fewer splits than a typical point does, so a short average path length becomes its anomaly score. It's scoring general "unusualness," not failure probability specifically.
 
-On the same held-out set, it clears random ranking by a wide margin (10.5x the base rate), coming within 1.5x of the supervised model (15.3x), a much narrower gap than project 05's fraud case (4.2x) (Figure 8). That difference makes sense given what each label looks like: a truck heading toward failure genuinely looks statistically unusual, elevated vibration, dropping oil pressure, rising coolant temperature, all at once, while a fraudulent transaction is deliberately built to resemble a genuine one. Equipment degradation is closer to true anomaly detection's home turf than fraud is.
+On the same held-out set, it clears random ranking by a wide margin (10.5x the base rate), coming within 1.5x of the supervised model (15.3x) (Figure 8). That's a narrow gap for an unsupervised method, and it makes sense given what the label looks like: a truck heading toward failure genuinely looks statistically unusual, elevated vibration, dropping oil pressure, rising coolant temperature, all at once. Gradual physical degradation like this is close to what anomaly detection is naturally good at, unlike a case such as fraud, where the bad actor is actively trying to look normal.
 
 | | |
 |---|---|
