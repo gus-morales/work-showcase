@@ -1,89 +1,90 @@
 # Data Science Decision Governance
 
-A synthetic decision log for a data science team: every model launch, experiment rollout, dashboard change, pipeline change, metric-definition change, and deprecation, recorded against a schema that rejects incomplete records, with an impact level and two follow-up commitments due after it ships. Built so a real pattern is recoverable from it: more scrutiny before shipping predicts fewer rollbacks, but it also predicts that follow-up on smaller changes gets skipped.
+A working record format for a data science team's own decisions: model launches, experiment rollouts, dashboard changes, pipeline changes, metric-definition changes, deprecations. One decision is one file. Impact level (low/medium/high) sets how much rigor that file needs, enforced by a schema instead of by memory. This README documents the standard; `decisions/` holds real example records written against it.
 
-**For the full technical walkthrough, see the [notebook](notebooks/07_ds_decision_governance.ipynb).** This README is the short version.
-
-> All data here is synthetically generated. No proprietary data, models, or results from any employer are used or implied.
+> Everything here, the example records included, is fictional. No proprietary data, decisions, or results from any employer are used or implied.
 
 **Skills and tools featured:**
 
 - Schema-based record validation (Pydantic)
-- Group comparisons across categorical levels
-- Statistical process control (p-chart) for backlog monitoring
+- CLI tooling to scaffold and validate records
+- A live scan for monitoring commitments that are currently overdue
 
 ## The problem
 
 A data science team makes a lot of decisions that never get written down anywhere: launching a model, rolling out an experiment, changing a dashboard, changing a pipeline, redefining a metric, deprecating something old. Without a record, two things tend to break. Nobody can later reconstruct what shipped, when, or why. And the follow-up, checking that a change actually did what it was supposed to, quietly gets skipped, especially for changes that felt too small to worry about at the time.
 
-## What this does
+## How it works
 
-Builds a decision log where every record carries an impact level (low/medium/high) and two dated follow-up commitments: a short check that it shipped as intended, and a longer check on whether it actually worked. A schema contract rejects records missing what their impact level requires, the same idea as a pull-request check that won't let an incomplete record merge. From there: how approval speed and rollback rate vary by impact level, and a control chart that catches a stretch of missed follow-ups while it's happening rather than after the fact.
+Every decision is **low, medium, or high** impact. That's the only thing that determines how much process it needs.
 
-## The standard
+| | low | medium | high |
+|---|---|---|---|
+| Ship check (did it ship as intended) | - | required | required |
+| Outcome check (did it work) | required | required | required |
+| Rollback plan (body section) | - | if not easily reversible | required |
+| Reviewers | 1 | 2 | 3, incl. a review-board reviewer |
 
-Every record has to satisfy a schema before it counts as valid: a low-impact decision can't claim to need a ship check, a reverted decision has to carry a rollback outcome, an abandoned decision can't have a shipped date. This is the actual center of the exercise, closer to what a real governance process is than any chart below: agreeing on what a valid record looks like, and enforcing it mechanically instead of by memory. All 900 records in this log pass validation.
+A decision moves through a fixed lifecycle. `abandoned` and `reverted` are the two ways out that aren't "it worked":
 
-## What's in the log
+![Decision lifecycle](assets/lifecycle.png)
 
-900 decisions over a 2-year window. Dashboard and pipeline changes make up half the log by volume; deprecations are rarest (Figure 1). Most decisions are low impact (Figure 2, 47%), and most close out without ever being rolled back (Figure 3: 81% closed, 13% reverted, 6% abandoned before approval).
+## The record
 
-![Volume by artifact type](reports/figures/volume_by_artifact_type.png)
+A decision is a markdown file: YAML frontmatter (the fields the schema checks) plus a free-text body (what changed, why, the rollback plan, monitoring notes). Templates for each impact level live in `templates/`. `routing.yaml` holds the reviewer-count minimums the table above is drawn from.
 
-*Figure 1. Decision count by artifact type.*
+## The record contract
 
-![Impact level mix](reports/figures/impact_level_mix.png)
+`schema.py` defines what a valid record looks like, and `validate.py` checks every file in `decisions/` against it: a low-impact record claiming a ship_check, a reverted record with no rollback outcome, a high-impact record with no rollback plan section, an approved record without enough reviewers, all fail. This is the same job a CI check would do on a pull request in a real repo; here it's a standalone script instead of a merge gate.
 
-*Figure 2. Decision count by impact level.*
+```
+$ python src/validate.py
+8 / 8 records valid.
+```
 
-![Status mix](reports/figures/status_mix.png)
+## Creating a new decision
 
-*Figure 3. Decision count by final status.*
+```
+$ python src/new_decision.py --domain marketing --impact-level medium \
+    --title "Switch the campaign dashboard to weekly cohorts" --author "J. Okafor"
+Wrote decisions/marketing/DSG-0009-switch-the-campaign-dashboard-to-weekly-cohorts.md
+```
 
-## Does more scrutiny pay off?
+Copies the right template, assigns the next id, and fills in what it can. The rest (dates once approved and shipped, reviewers, the body) gets filled in by hand as the decision moves through its lifecycle.
 
-Higher-impact decisions take longer to get approved: 1.7 days on average at low impact, 5.9 at medium, 16.1 at high (Figure 4). That extra scrutiny lines up with a real difference in outcomes: rollback rate falls from 18.8% at low impact to 10.1% at medium and 6.5% at high (Figure 5), close to a 3x spread between the two ends.
+## Catching what's overdue right now
 
-![Approval lag by impact level](reports/figures/approval_lag_by_impact.png)
+`open_loops.py` walks every record and reports which monitoring checks are past their due date and not marked done, a live status check against whatever's in `decisions/` right now, not a report over history. As of July 14, 2026:
 
-*Figure 4. Mean approval lag by impact level.*
+```
+$ python src/open_loops.py
+4 overdue check(s):
 
-![Rollback rate by impact level](reports/figures/rollback_rate_by_impact.png)
+DSG-0008 (decisions/product_analytics/DSG-0008-churn-model-decommission.md): ship_check was due 2026-04-17, 88 day(s) ago - "Decommission the 2023 churn-risk model"
+DSG-0008 (decisions/product_analytics/DSG-0008-churn-model-decommission.md): outcome_check was due 2026-05-10, 65 day(s) ago - "Decommission the 2023 churn-risk model"
+DSG-0004 (decisions/marketing/DSG-0004-campaign-attribution-pipeline-change.md): ship_check was due 2026-05-17, 58 day(s) ago - "Rebuild the campaign-attribution ETL on the new event schema"
+DSG-0004 (decisions/marketing/DSG-0004-campaign-attribution-pipeline-change.md): outcome_check was due 2026-06-09, 35 day(s) ago - "Rebuild the campaign-attribution ETL on the new event schema"
+```
 
-*Figure 5. Rollback rate by impact level, resolved decisions only.*
-
-## Catching a follow-up backlog
-
-The metric check (due 30 days after shipping: did it actually work) is the more consequential of the two follow-up commitments, and also the one most likely to slip. It closes on time only 51.6% of the time for low-impact decisions, versus 88.6% for high-impact ones. Nobody skips the review for a big launch; a small dashboard change is exactly the kind of thing that quietly falls off everyone's list.
-
-A monthly control chart on the on-time rate, the same p-chart approach project 04 uses for a quality regression, catches a three-month stretch where on-time completion drops well below its normal range and stays there, instead of waiting for someone to notice a pile of overdue checks (Figure 6).
-
-![Monitoring control chart](reports/figures/monitoring_control_chart.png)
-
-*Figure 6. Monthly metric-check on-time rate vs. control limits from the reference period.*
-
-## Recommendation
-
-The review process is doing its job on the outcome side: higher scrutiny for higher-impact decisions tracks with meaningfully fewer rollbacks. It's failing on the follow-up side: the decisions that skip extra review are also the ones most likely to never get checked on afterward, which defeats the point of tracking an outcome if half of them are never actually checked. A light default reminder for low-impact monitoring checks, plus a monthly control chart like the one here running in the background, would catch both the routine drift and an occasional capacity crunch before either turns into a backlog nobody's watching.
+Both flagged decisions are seeded that way on purpose, so the script has something real to catch. Re-running it later will report different numbers as `date.today()` moves and the example records don't.
 
 ## Repo layout
 
-- `notebooks/07_ds_decision_governance.ipynb`: full technical walkthrough, executed with all charts and results inline.
-- `src/`: the reproducible pipeline (data generation, schema validation, decision-log overview, governance analysis, monitoring control chart) as standalone scripts.
-- `tests/`: pytest suite covering data-generation invariants (including that every impact-level relationship the log is supposed to encode actually holds), the schema contract, and the control-chart detection logic.
-- `reports/`: generated charts and metrics.
+- `README.md`: this file, the standard.
+- `templates/`: `decision-low.md`, `decision-medium.md`, `decision-high.md`.
+- `routing.yaml`: reviewer-count minimums by impact level.
+- `decisions/<domain>/`: 8 example records spanning all six domains, all three impact levels, and most lifecycle states (draft, shipped, closed, reverted, abandoned).
+- `src/`: `schema.py` (the contract), `validate.py`, `open_loops.py`, `new_decision.py`, plus `render_lifecycle_diagram.py` for the diagram above.
+- `tests/`: pytest suite covering the schema contract, the overdue-detection logic, and the scaffolding CLI.
 
 ## Reproduce
 
 ```bash
 pip install -r requirements.txt
-python src/generate_data.py
-python src/overview.py
-python src/governance_analysis.py
+python src/validate.py
 python src/open_loops.py
+python src/render_lifecycle_diagram.py
 ```
-
-`data/` is gitignored; regenerate it by running the scripts above.
 
 ## Tests
 

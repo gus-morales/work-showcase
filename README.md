@@ -6,7 +6,7 @@
 
 Data science and ML projects demonstrating applied skills in credit risk, customer analytics, and experimentation. This is the kind of work I did as a Senior Data Scientist in fintech, plus a couple of projects outside that scope. All projects use synthetic data generated in-repo, so they're fully shareable. None of it reflects proprietary data or results from any employer.
 
-Each project ships with a pytest test suite (data-generation invariants plus unit tests on the pure computation, e.g. the log-share decomposition, the DiD estimator, the RFM labeling logic) and runs in CI on every push via GitHub Actions, alongside a ruff lint check.
+Each project ships with a pytest test suite (data-generation invariants, a record-schema contract, or unit tests on the pure computation, e.g. the log-share decomposition, the DiD estimator, the RFM labeling logic) and runs in CI on every push via GitHub Actions, alongside a ruff lint check.
 
 ## Projects
 
@@ -18,7 +18,7 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 | [04 - Evaluating & Monitoring an LLM-Powered Feature](projects/04-llm-eval-monitoring) | LLM-judge validation (Cohen's kappa, bias analysis), A/B testing, statistical process control for output-quality monitoring, cost-based guardrail thresholds | Done |
 | [05 - Transaction Fraud Detection](projects/05-fraud-anomaly-detection) | Classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection (Isolation Forest) vs. a supervised model | Done |
 | [06 - Equipment Failure Risk Model](projects/06-equipment-failure-risk) | Predictive maintenance for a mining haul-truck fleet: classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection vs. a supervised model | Done |
-| [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | Synthetic decision log for a DS team: schema-based record validation, group comparisons by impact level, statistical process control for a monitoring backlog | Done |
+| [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | A record format for a DS team's own decisions: schema-based validation, CLI tooling to scaffold and check records, a live scan for overdue monitoring commitments | Done |
 
 ## Skills and tools featured
 
@@ -55,9 +55,9 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 
 - Drift and calibration monitoring (01)
 - Rate-mix shift decomposition (01)
-- Statistical process control: p-charts for output-quality and backlog monitoring (04, 07)
+- Statistical process control: p-charts for output-quality monitoring (04)
 - Cost-based decision/threshold optimization (01, 04, 05, 06)
-- Schema-based record validation (Pydantic) (07)
+- Schema-based record validation (Pydantic) and CLI tooling for a structured record format (07)
 
 **NLP & LLM evaluation**
 

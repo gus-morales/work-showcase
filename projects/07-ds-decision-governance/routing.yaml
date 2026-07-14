@@ -1,0 +1,12 @@
+# How many reviewers a decision needs, by impact level. validate.py
+# checks each record's `reviewers` list against this; new_decision.py
+# reads it to fill in the reviewer placeholder count in a fresh record.
+low:
+  approvers: 1
+  role: domain_lead
+medium:
+  approvers: 2
+  role: [domain_lead, senior_reviewer]
+high:
+  approvers: 3
+  role: [domain_lead, senior_reviewer, review_board]
