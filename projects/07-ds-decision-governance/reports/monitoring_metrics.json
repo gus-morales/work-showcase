@@ -1,0 +1,11 @@
+{
+  "reference_center": 0.6718,
+  "months_below_control_limit": 3,
+  "months_total": 24,
+  "backlog_detected_month": 12,
+  "on_time_rate_by_impact": {
+    "low": 0.5157,
+    "medium": 0.7338,
+    "high": 0.8862
+  }
+}

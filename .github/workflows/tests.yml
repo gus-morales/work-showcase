@@ -19,6 +19,7 @@ jobs:
           - 04-llm-eval-monitoring
           - 05-fraud-anomaly-detection
           - 06-equipment-failure-risk
+          - 07-ds-decision-governance
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}

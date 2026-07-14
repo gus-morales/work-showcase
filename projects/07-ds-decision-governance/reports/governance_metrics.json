@@ -1,0 +1,27 @@
+{
+  "n_decisions": 900,
+  "approval_lag_days_mean_by_impact": {
+    "low": 1.68,
+    "medium": 5.86,
+    "high": 16.08
+  },
+  "rollback_rate_by_impact": {
+    "low": 0.188,
+    "medium": 0.1006,
+    "high": 0.065
+  },
+  "logistic_regression": {
+    "pr_auc": 0.1858,
+    "base_rate": 0.1368,
+    "coefficients": {
+      "approval_lag_days": -0.3592,
+      "impact_level_high": -0.1678,
+      "impact_level_medium": -0.1675,
+      "artifact_type_pipeline_change": -0.1005,
+      "artifact_type_model_launch": -0.0688,
+      "artifact_type_metric_definition_change": -0.0425,
+      "artifact_type_experiment_rollout": -0.0196,
+      "artifact_type_deprecation": 0.0289
+    }
+  }
+}
