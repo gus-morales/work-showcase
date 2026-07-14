@@ -18,7 +18,7 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 | [04 - Evaluating & Monitoring an LLM-Powered Feature](projects/04-llm-eval-monitoring) | LLM-judge validation (Cohen's kappa, bias analysis), A/B testing, statistical process control for output-quality monitoring, cost-based guardrail thresholds | Done |
 | [05 - Transaction Fraud Detection](projects/05-fraud-anomaly-detection) | Classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection (Isolation Forest) vs. a supervised model | Done |
 | [06 - Equipment Failure Risk Model](projects/06-equipment-failure-risk) | Predictive maintenance for a mining haul-truck fleet: classification under extreme class imbalance, PR-AUC and cost-based thresholding, SHAP interpretability, unsupervised anomaly detection vs. a supervised model | Done |
-| [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | Synthetic decision log for a DS team: schema-based record validation, group comparisons by impact level, logistic regression for interpretability, statistical process control for a monitoring backlog | Done |
+| [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | Synthetic decision log for a DS team: schema-based record validation, group comparisons by impact level, statistical process control for a monitoring backlog | Done |
 
 ## Skills and tools featured
 
@@ -31,7 +31,6 @@ Each project ships with a pytest test suite (data-generation invariants plus uni
 - Probability calibration (01)
 - SHAP interpretability (01, 05, 06)
 - Unsupervised anomaly detection (Isolation Forest) as a labels-scarce alternative (05, 06)
-- Logistic regression for interpretability, checking a pattern holds with other factors in the same model (07)
 
 **Causal inference & experimentation**
 

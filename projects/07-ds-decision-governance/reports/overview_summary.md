@@ -1,4 +1,4 @@
-# EDA summary
+# Decision log overview
 
 - Decisions: 900
 

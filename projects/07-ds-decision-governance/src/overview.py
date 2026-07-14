@@ -1,6 +1,7 @@
-"""Exploratory analysis on the raw decision log, before any further
-analysis runs: saves charts to reports/figures and a numeric summary to
-reports/eda_summary.md."""
+"""What's in the decision log: composition by artifact type, impact
+level, and final status. Context for the governance analysis that
+follows, not a separate analytical phase, saves charts to
+reports/figures and a numeric summary to reports/overview_summary.md."""
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
@@ -58,13 +59,13 @@ def main():
     savefig(fig, FIG_DIR / "status_mix.png", footnote=SOURCE)
 
     # Summary markdown
-    lines = ["# EDA summary\n"]
+    lines = ["# Decision log overview\n"]
     lines.append(f"- Decisions: {len(df):,}\n")
     lines.append(f"- Artifact type counts:\n{type_counts.to_string()}\n")
     lines.append(f"- Impact level mix:\n{(impact_counts / len(df)).round(3).to_string()}\n")
     lines.append(f"- Status mix:\n{(status_counts / len(df)).round(3).to_string()}\n")
-    (BASE / "reports" / "eda_summary.md").write_text("\n".join(lines))
-    print("EDA complete. Figures + summary written to reports/.")
+    (BASE / "reports" / "overview_summary.md").write_text("\n".join(lines))
+    print("Overview complete. Figures + summary written to reports/.")
 
 
 if __name__ == "__main__":
