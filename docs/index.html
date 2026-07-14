@@ -541,10 +541,10 @@
 
       <!-- Project 9 -->
       <div class="card">
-        <img class="chart" src="images/09-ml-pipeline-contracts.png" alt="A frozen Model Scope Document feeding five contract-checked pipeline stages, EDA through Validation, each handoff verified before the next stage runs, with a broken-handoff path shown stopping the chain">
+        <img class="chart" src="images/09-ml-pipeline-contracts.png" alt="A sign-off plan document feeding five model-build stages, EDA through Validation, each handoff checked before the next stage runs, with a broken-handoff path shown stopping the chain">
         <div class="card-body">
           <div class="card-title">ML Pipeline Contracts</div>
-          <div class="card-pitch">A five-stage ML build pipeline gated by a frozen Model Scope Document, with a schema-checked contract at every handoff. Run against two unrelated synthetic domains, single- and multi-target, to prove the contracts are domain-agnostic, plus a deliberately broken run showing the checks actually catch a bad handoff.</div>
+          <div class="card-pitch">A 5-stage model-build pipeline (understand the data, prepare it, build features, train, check against the bar) with an automatic check at every handoff, catching mistakes like the prediction target leaking in as a feature. Proven on two unrelated example problems with zero code changes, plus a run that deliberately breaks a handoff to show the checks actually catch it.</div>
           <div class="tags">
             <span class="tag">Pydantic contracts</span>
             <span class="tag">Point-in-time guards</span>

@@ -1,132 +1,148 @@
 # ML Pipeline Contracts
 
-A model build touches five specialized stages, EDA, data preparation, feature engineering,
-training, validation, each one plausibly owned by a different person. This project asks
-one question: when a stage's output becomes the next stage's input, how do you know it
-actually means what the next stage assumes it means, without a human re-reading every
-handoff? The answer here is a schema-validated Model Scope Document plus a
-contract-checked stage chain: every stage's declared output is verified against the next
-stage's requirements before the pipeline advances, and a broken handoff stops the run
-with a specific, stage-addressed error instead of a bad model three steps downstream.
+Building a machine learning model usually happens in stages: understand the raw data,
+assemble a clean training set, build the actual inputs (the "features") a model will
+learn from, train the model, then check whether it's good enough to use. On a real
+team, different people often own different stages. That handoff is where things quietly
+go wrong. A common, easy-to-miss mistake: whoever builds the features doesn't realize
+that a column they've included is actually the answer the model is supposed to
+predict, not a legitimate signal for it. The model then looks excellent in testing and
+fails the moment it meets real data, because it was never predicting anything, it was
+looking up the answer.
 
-> All data here is synthetically generated. This project is a genericized, from-scratch
-> reimplementation of the shape of a multi-agent ML pipeline framework, not a copy of
-> any specific one: no employer name, person name, vendor name, or internal codename
-> appears anywhere in this code. Every stage here is a deterministic Python function,
-> not a live model call, so the whole pipeline reproduces identically on every run and
-> needs no API key or network access, the same as every other project in this portfolio.
+This project builds that five-stage pipeline with a check at every handoff: before one
+stage's output is allowed to feed the next stage, code opens the actual file that got
+produced and checks it against a stated rule, not just that the previous step ran
+without crashing. When a handoff breaks a rule, for example a stage that hands over the
+target itself disguised as a feature, the pipeline stops immediately and says exactly
+what went wrong and where, instead of quietly training a broken model.
+
+> All data here is synthetically generated. No proprietary data, methodology, or
+> results from any employer are used or implied. Every stage runs as a plain,
+> deterministic Python function rather than a live model call, so re-running the
+> pipeline produces the same result every time.
 
 **Skills and tools featured:**
 
-- Schema-based contracts between pipeline stages (Pydantic), checked at every handoff, not just at the edges
-- A frozen design-document gate (the Model Scope Document) that blocks every downstream stage until it's signed off
-- Point-in-time / leakage guards on event-level source data, unit-tested against a case that would leak
-- The same pipeline code run against two unrelated synthetic domains, one single-target classification, one two-target (`task_type: both`) run, to prove the contracts are actually domain-agnostic
-- IV and PSI as training-time feature diagnostics (a different job than this portfolio's other PSI use, see below)
-- A deliberately broken run that shows the contract layer actually catching something, not just claiming to
+- Contracts between pipeline stages (Pydantic) that open each stage's actual output file and check it, not just that the code ran without error
+- A single sign-off document that has to be explicitly finalized before any stage is allowed to run
+- A filter that strips out any data a decision-maker couldn't have known about yet, tested against a case built to leak
+- The exact same pipeline run against two unrelated synthetic business problems, one with a single yes/no target, one with a yes/no target and a numeric target together
+- Information Value and Population Stability Index (PSI), two standard scoring-model diagnostics, computed automatically for every feature a model ends up using
+- A deliberately broken run, with the real error message it produces, showing the checks actually catch a mistake rather than just claiming to
 
 ## The problem
 
-A pipeline built as one script per stage, chained by convention, tends to break in a
-specific way: stage three assumes stage two's output has a column named a certain
-thing, or that a certain column is a feature and not the label, and nothing checks that
-assumption until training either crashes on a `KeyError` or, worse, doesn't crash at
-all and just trains on the label. The fix isn't more code in each stage, it's a
-contract at the seam: what a stage promises to produce, and a check that actually opens
-the artifact and confirms the promise holds before the next stage ever runs.
+A five-stage pipeline where nothing checks the boundaries between stages tends to
+break in the same boring way: one stage assumes a column from the previous stage is
+named a certain thing, or assumes a certain column is a safe input and not the answer
+itself, and nothing catches that assumption until training either crashes outright or,
+worse, runs fine and trains on the answer. Adding more code inside each stage doesn't
+fix this, since no single stage can see what the others actually produced. What fixes
+it is a check placed at the boundary: a stated promise of what a stage's output should
+contain, and code that opens the file and confirms the promise holds before the
+pipeline is allowed to continue.
 
 ## How it works
 
-Every run starts as a `MODEL_SCOPE.md`: a machine-readable YAML header (objective,
-target definitions, one metric and threshold per target, a feature-count cap, declared
-data sources) plus a free-text body, the same frontmatter-plus-prose format project 07
-uses for its decision records. `status` moves `draft -> signed_off -> frozen`, and
-`require_frozen()` is the one gate every stage checks: nothing downstream runs against
-a Scope that isn't frozen.
+Every run starts with one document, `MODEL_SCOPE.md`, that states what's being built:
+what it's for, what's being predicted (the "target"), how success will be measured,
+and a cap on how many features the model is allowed to use. That document has a
+status, `draft`, `signed_off`, or `frozen`, and nothing else in the pipeline is allowed
+to run until it's `frozen`, the same way a plan gets finalized and signed off before
+anyone starts building against it.
 
-![One Model Scope, five contract-checked stages](assets/architecture.png)
+![One plan document, five checked handoffs](assets/architecture.png)
 
-A Model Scope names intent, not execution. Two more files, committed alongside it,
-supply that: `bindings.yaml` (which files back each data source, the join keys, the
-decision-time cutoff) and `feature_spec.yaml` (the feature ideas: an aggregation over
-an event source, or a passthrough column from the base population). `src/orchestrator.py`
-chains the five stages in order, and between every one, calls a `verify_*` function
-from `src/stage_io.py` that opens the actual artifact and checks it, not just that a
-Pydantic object with the right field names came back:
+The plan document states intent, not the mechanics of where the data actually lives.
+Two more files sit next to it: `bindings.yaml` (which real files back the data the
+plan refers to, and how they connect to each other) and `feature_spec.yaml` (the
+specific features someone wants built, e.g. "average number of logins before the
+decision was made"). One script, `src/orchestrator.py`, runs the five stages in order.
+Between every stage, it opens the file the stage just produced and checks specific
+things about it before letting the next stage start:
 
-| Stage | Consumes | Produces | What gets checked before advancing |
-|---|---|---|---|
-| ① EDA | the 4 inputs a Model Scope needs | a sample profile + target rate over time | the declared files actually exist |
-| ② Data | frozen Model Scope + bindings | `training_data.parquet` (identifier + targets only) + a manifest | the identifier column is real and unique, every target is present and non-null, the row count matches |
-| ③ Features | Data stage output + `feature_spec.yaml` | `features.parquet`, point-in-time filtered | the identifier lines up with the Data stage's, no target column snuck into the feature list, the feature count is under the Scope's cap |
-| ④ Training | Feature stage output | one model per target, a 5-step reduction funnel, IV/PSI | every selected feature actually came from the Feature stage's output, the metric is a real number |
-| ⑤ Validation | Training stage output | pass/fail per target against the Scope's threshold | the pass flag is arithmetically consistent with the metric and threshold it's based on |
+| Stage | What it does | What gets checked before moving on |
+|---|---|---|
+| ① Understand the data | Profiles the raw data and reports how the target behaves over time | The report files were actually written |
+| ② Prepare the data | Builds one clean table: one row per customer or ticket, plus the target, nothing else | The identifier column is real with no duplicates, the target has no missing values, and the row count matches what was reported |
+| ③ Build features | Builds the actual model inputs, dropping anything dated after the decision point | The features line up with the same identifier as the previous stage, the target hasn't snuck in as a feature, and the feature count is under the agreed cap |
+| ④ Train | Fits a model per target, then repeatedly drops the weakest feature to see if a smaller model does just as well | Every feature the model claims to use actually came from the previous stage, and the reported score is a real number |
+| ⑤ Check against the bar | Compares the trained model's score to the number stated in the plan document | The pass/fail result is actually consistent with the score and the bar it's being measured against |
 
-Stage ② only stages the target spine and the join graph, on purpose, mirroring the
-real discipline this project is modeled on: a stage that engineers features and also
-decides what the target is has no seam for a leakage check to sit at. Feature
-engineering, and only feature engineering, touches the event-level source data.
+The data-preparation stage only builds the identifier-and-target table, on purpose. A
+stage that both builds features and decides what the target is has no natural place
+for a leakage check to sit, since it's the one deciding what counts as leakage. Feature
+building, and only feature building, is allowed to touch the detailed event-level data.
 
-## Point-in-time correctness
+## Not training on hindsight
 
-Both synthetic domains below have event-level source data (usage events, agent
-activity) with rows dated on both sides of each identifier's decision-time cutoff, on
-purpose. `guards.filter_point_in_time()` drops every row after the cutoff before
-aggregating; skipping that step would leak information the decision-maker couldn't
-have had yet. `tests/test_guards.py` proves the difference directly: on a small
-fixture, the naive (unfiltered) average is 50.0, one future event with an extreme
-value drags it there, the correctly filtered average is 1.0.
+The two example problems below both have event-level data, individual login events or
+individual ticket updates, that include records dated both before and after the moment
+a real decision would have needed to be made. Before those records get turned into
+features, anything dated after the decision point gets dropped. Skipping that step is
+an easy mistake with a specific consequence: the model gets to see information nobody
+would have actually had at decision time, so it looks accurate in testing and then
+fails once it's making real decisions on data that hasn't happened yet. A test in this
+project shows the difference directly: computed the ordinary way, one future event
+pulls a customer's average logins from 1 up to 50; computed the correct way, filtering
+out anything after the decision date, it stays at 1.
 
-## Two domains, one contract
+## Two example problems, run through the same pipeline unchanged
 
-**Domain A, churn** (`runs/churn/run-001`): a subscription business deciding, at each
-customer's 90-day mark, whether they're at risk of churning in the next 30 days.
-3,000 customers, 29.1% `churned_next_30d`. A gradient-boosted classifier, reduced from
-10 candidate features to 6, holds 0.392 PR-AUC on the holdout split against a Model
-Scope threshold of 0.30.
+**Predicting subscription cancellations** (`runs/churn/run-001`): a subscription
+business trying to flag, around each customer's 90-day mark, who's likely to cancel in
+the next 30 days. 3,000 customers, 29% actually cancel. A model built from 10
+candidate signals, narrowed down to the strongest 6, correctly ranks cancelling
+customers as risky well above chance: a score of 0.39 out of 1 (PR-AUC, a measure of
+how well the model ranks people who actually cancel above those who don't; guessing at
+random would score around the 29% cancellation rate), clearing the 0.30 bar the plan
+called for.
 
-**Domain B, ticket triage** (`runs/ticket-triage/run-001`): a support team deciding,
-within 2 hours of a ticket opening, whether it will escalate and how long it will take
-to resolve. 2,500 tickets, 34.6% `will_escalate`, median resolution 10.5 hours. This
-run's Model Scope declares `task_type: both`, one classification target
-(`will_escalate`, PR-AUC 0.435 vs. a 0.40 threshold) and one regression target
-(`resolution_hours`, MAE 3.05 hours vs. a 4.5-hour threshold), from the same base
-population. Nothing in `src/orchestrator.py` or `src/stage_io.py` changed to handle
-that, `ModelScope`'s own validation is what enforces that `task_type: both` means
-exactly one target of each kind with a metric for each.
+**Predicting how a support ticket will go** (`runs/ticket-triage/run-001`): a support
+team trying to decide, within 2 hours of a ticket opening, whether it's headed for
+escalation and roughly how long it will take to close. 2,500 tickets, 35% eventually
+escalate, the typical ticket takes 10.5 hours to close. This plan asks for two
+different kinds of prediction from the same data at once: a yes/no call on escalation
+(scores 0.44 vs. a required 0.40) and a number, hours to close (off by 3.05 hours on
+average vs. a 4.5-hour requirement). None of the pipeline code changed to support
+asking for two predictions instead of one, the plan document itself enforces that a
+request for both a yes/no answer and a number gets exactly one of each, with a bar
+stated for both.
 
-Every number above is real output from the committed run directories, not
-representative or rounded for effect; `notebooks/09_ml_pipeline_contracts.ipynb`
-reads the same artifacts and charts them.
+Every number above came from actually running the pipeline against the example folders
+committed in this repo, not rounded or invented for effect.
+`notebooks/09_ml_pipeline_contracts.ipynb` reads the same files and charts them.
 
-## IV and PSI here vs. project 01
+## What the training stage reports
 
-Training reports Information Value (against the classification target, standard
-credit-scoring style) and PSI for every selected feature, but the PSI here answers a
-different question than project 01's: it compares a feature's distribution in the
-split that trained the model against the split that evaluated it, asking whether the
-model saw a representative slice of the world during training. Project 01's PSI
-compares a live production period against a training-time reference, asking whether
-the world has since moved. A feature that fails the check here would fail before the
-model ever ships; project 01's is a standing check on a model that already has.
+Alongside the trained model, the training stage writes out, for every feature it kept:
+how much that feature actually contributed to the model's predictions, and two extra
+numbers borrowed from credit-scoring practice. Information Value measures how cleanly
+a feature, on its own, separates the two outcomes of a yes/no target. PSI (Population
+Stability Index) checks whether a feature looks the same in the data used to train the
+model as in the data held back to test it, a big difference there would mean the two
+halves of the data don't actually resemble each other, which would make the whole
+evaluation untrustworthy.
 
-## What the contract layer catches
+## Proving the safety check actually works
 
-`src/demo_broken_contract.py` runs EDA and Data for real against the churn Model
-Scope, then simulates the single most common way a Feature Engineering stage breaks
-its handoff to Training: the target rides along as a declared feature, because
-whoever built the join didn't drop it. Real captured output, from
-`runs/broken-example/run-001/CAUGHT_VIOLATION.md`:
+It's easy to claim a safety check works without showing it. `src/demo_broken_contract.py`
+runs the first two stages for real, then deliberately hands the training stage a
+feature file where the target itself, the exact thing being predicted, is included as
+one of the "features." This is a common real mistake: someone builds a join, forgets
+to drop the answer column, and the resulting model looks perfect because it's just
+looking up the label. Real, unedited output from running that script:
 
 ```
 ContractViolation: [features] target column(s) ['churned_next_30d'] appear in feature_cols, that's target leakage
 ```
 
-The orchestrator stops there. Training never runs against that feature matrix, and
-`tests/test_orchestrator.py` checks the same thing end to end: after this exact
-failure, no model file exists on disk.
+The pipeline stops right there. No model gets trained on the broken file, and a test
+in this project checks that directly: after this exact failure, no model file exists
+on disk anywhere.
 
-## Creating a new run
+## Starting a new run
 
 ```
 $ python src/new_run.py --slug expansion-risk --run-id run-001 \
@@ -135,26 +151,26 @@ $ python src/new_run.py --slug expansion-risk --run-id run-001 \
 Wrote runs/expansion-risk/run-001/MODEL_SCOPE.md (status: draft)
 ```
 
-Scaffolds the Model Scope from a template, `status: draft`. The targets, metric,
-`bindings.yaml`, and `feature_spec.yaml` get filled in by hand, same as every other
-project-specific judgment call in this framework; `require_frozen()` blocks the
-orchestrator from running against it until `status: frozen` is set.
+This writes a starting plan document with status `draft`. Someone fills in the actual
+target, the success bar, and the two execution files by hand, then sets the status to
+`frozen` once it's been reviewed, that's the step that actually unlocks the pipeline
+for that run.
 
 ## Repo layout
 
-- `src/model_scope.py`: the Model Scope contract (Pydantic) and the frontmatter parser.
-- `src/stage_io.py`: the per-stage output contracts and the `verify_*` functions the orchestrator checks between stages.
+- `src/model_scope.py`: reads and validates the plan document (`MODEL_SCOPE.md`).
+- `src/stage_io.py`: what each stage promises to produce, and the checks that confirm it did.
 - `src/bindings.py`: loaders for a run's `bindings.yaml` and `feature_spec.yaml`.
-- `src/guards.py`: the point-in-time filter and the target-leakage assertion, standalone and unit-tested.
-- `src/generate_data.py`: synthetic source data for both domains.
+- `src/guards.py`: the point-in-time filter and the target-leakage check, both standalone and tested on their own.
+- `src/generate_data.py`: synthetic source data for both example problems.
 - `src/stages/`: the five stage implementations (`eda.py`, `data_prep.py`, `feature_engineering.py`, `training.py`, `validation.py`).
-- `src/orchestrator.py`: chains the five stages, verifying every handoff; `python src/orchestrator.py --run-dir <path>`.
-- `src/new_run.py`: scaffolds a new run's Model Scope.
-- `src/demo_broken_contract.py`: the deliberately broken handoff, real captured output.
+- `src/orchestrator.py`: runs the five stages in order, checking every handoff; `python src/orchestrator.py --run-dir <path>`.
+- `src/new_run.py`: creates a new run's starting plan document.
+- `src/demo_broken_contract.py`: the deliberately broken handoff, with real captured output.
 - `src/render_architecture.py`: renders `assets/architecture.png`.
-- `runs/<slug>/<run-id>/`: `MODEL_SCOPE.md`, `bindings.yaml`, `feature_spec.yaml`, and `artifacts/` per stage. `runs/churn/` and `runs/ticket-triage/` are the two worked examples; `runs/broken-example/` is the caught-violation demo.
-- `notebooks/09_ml_pipeline_contracts.ipynb`: reads the runs' committed artifacts only, no stage or the orchestrator gets called from here.
-- `tests/`: pytest suite covering the Model Scope contract, every `verify_*` check (including cases built to fail), the point-in-time guard, the IV/PSI/reduction logic, and two end-to-end orchestrator runs, one clean, one broken mid-chain via a monkeypatched Feature stage.
+- `runs/<slug>/<run-id>/`: the plan document, the two execution files, and the output of every stage. `runs/churn/` and `runs/ticket-triage/` are the two example problems; `runs/broken-example/` is the caught-mistake example.
+- `notebooks/09_ml_pipeline_contracts.ipynb`: reads the committed run output and charts it; it doesn't call any stage or re-run anything itself.
+- `tests/`: covers the plan-document rules, every handoff check (including cases built to fail), the point-in-time filter, the scoring-diagnostic math, and two full pipeline runs, one clean, one deliberately broken partway through.
 
 ## Reproduce
 
@@ -167,10 +183,10 @@ python src/demo_broken_contract.py
 jupyter nbconvert --to notebook --execute --inplace notebooks/09_ml_pipeline_contracts.ipynb
 ```
 
-`data/` is gitignored; regenerate it with the command above. `runs/*/artifacts/*.pkl`
-and `runs/*/artifacts/*.parquet` are gitignored too, everything else under `runs/` is
-committed light output, the same split every other project in this portfolio uses
-between regenerable heavy artifacts and committed reports.
+`data/` is regenerated by the first command rather than committed, since it's large and
+easy to reproduce. Under `runs/`, the trained model files and the large intermediate
+tables are regenerated the same way; everything else, the plan documents, the small
+reports, the feature-importance tables, is kept in version control.
 
 ## Tests
 
