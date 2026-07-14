@@ -186,6 +186,10 @@
     gap: 20px;
   }
 
+  .featured-section {
+    margin-bottom: 34px;
+  }
+
   .card {
     background: var(--card-bg);
     border: 1px solid var(--light-grey);
@@ -194,6 +198,10 @@
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+
+  .card.featured {
+    border-color: var(--teal);
   }
 
   .card:hover {
@@ -384,6 +392,68 @@
       </div>
     </div>
 
+    <div class="featured-section">
+      <div class="skills-label">Featured</div>
+      <div class="grid">
+
+        <!-- Featured: Project 9 -->
+        <div class="card featured">
+          <img class="chart" src="images/09-ml-pipeline-contracts.png" alt="A sign-off plan document feeding five model-build stages, EDA through Validation, each handoff checked before the next stage runs, with a broken-handoff path shown stopping the chain">
+          <div class="card-body">
+            <div class="card-title">ML Pipeline Contracts</div>
+            <div class="card-pitch">A 5-stage model-build pipeline (understand the data, prepare it, build features, train, check against the bar) with an automatic check at every handoff, catching mistakes like the prediction target leaking in as a feature. Proven on two unrelated example problems with zero code changes, plus a run that deliberately breaks a handoff to show the checks actually catch it.</div>
+            <div class="tags">
+              <span class="tag">Pydantic contracts</span>
+              <span class="tag">Point-in-time guards</span>
+              <span class="tag">IV / PSI</span>
+            </div>
+            <div class="card-links">
+              <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/09-ml-pipeline-contracts/README.md" target="_blank" rel="noopener">README →</a>
+              <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/09-ml-pipeline-contracts/notebooks/09_ml_pipeline_contracts.ipynb" target="_blank" rel="noopener">Notebook →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured: Project 7 -->
+        <div class="card featured">
+          <img class="chart" src="images/07-ds-governance.png" alt="Decision lifecycle diagram: draft to approved to shipped to closed, with abandoned and reverted branches">
+          <div class="card-body">
+            <div class="card-title">Data Science Decision Governance</div>
+            <div class="card-pitch">A working record format for a DS team's own decisions, not an analysis of invented history: a schema that rejects incomplete records, a live scan that catches monitoring commitments already overdue, and a search over past decisions so a new proposal can check whether something like it already happened.</div>
+            <div class="tags">
+              <span class="tag">Schema validation</span>
+              <span class="tag">TF-IDF search</span>
+              <span class="tag">CLI tooling</span>
+            </div>
+            <div class="card-links">
+              <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/07-ds-decision-governance/README.md" target="_blank" rel="noopener">README →</a>
+              <a href="https://github.com/gus-morales/work-showcase/tree/main/projects/07-ds-decision-governance/decisions" target="_blank" rel="noopener">Examples →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured: Project 8 -->
+        <div class="card featured">
+          <img class="chart" src="images/08-observatory.png" alt="Two-engine architecture diagram: DuckDB and a metric catalog feed an ops detector engine and a popmon stability engine, both writing into one snapshot, read by alert channels, a static dashboard, and a notebook">
+          <div class="card-body">
+            <div class="card-title">Observatory</div>
+            <div class="card-pitch">A DS team's own ops monitoring: a pluggable detector engine for pipeline metrics, popmon for model-feature and prediction drift, both configured from one YAML metric catalog over a small DuckDB database. Eight of nine injected anomalies caught, deduplicated into 9 alert events, with a static dashboard built from the same snapshot.</div>
+            <div class="tags">
+              <span class="tag">popmon</span>
+              <span class="tag">Metric catalog</span>
+              <span class="tag">SQL / DuckDB</span>
+            </div>
+            <div class="card-links">
+              <a href="08-observatory/dashboard.html" target="_blank" rel="noopener">Dashboard →</a>
+              <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/README.md" target="_blank" rel="noopener">README →</a>
+              <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/notebooks/08_observatory.ipynb" target="_blank" rel="noopener">Notebook →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <div class="filters">
       <button class="filter-pill active" data-filter="all">All</button>
       <button class="filter-pill" data-filter="credit-risk">Credit &amp; Risk</button>
@@ -392,7 +462,7 @@
       <button class="filter-pill" data-filter="fraud">Fraud &amp; Anomaly Detection</button>
     </div>
 
-    <div class="grid">
+    <div class="grid projects-grid">
 
       <!-- Project 1 -->
       <div class="card" data-category="credit-risk">
@@ -485,7 +555,7 @@
       </div>
 
       <!-- Project 6 -->
-      <div class="card" data-category="credit-risk">
+      <div class="card" data-category="fraud">
         <img class="chart" src="images/06-equipment-failure.png" alt="Expected maintenance cost by decision threshold, showing the cost-optimal cutoff well below the naive 0.5 default">
         <div class="card-body">
           <div class="card-title">Equipment Failure Risk Model</div>
@@ -498,61 +568,6 @@
           <div class="card-links">
             <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/06-equipment-failure-risk/README.md" target="_blank" rel="noopener">README →</a>
             <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/06-equipment-failure-risk/notebooks/06_equipment_failure_risk.ipynb" target="_blank" rel="noopener">Notebook →</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Project 7 -->
-      <div class="card">
-        <img class="chart" src="images/07-ds-governance.png" alt="Decision lifecycle diagram: draft to approved to shipped to closed, with abandoned and reverted branches">
-        <div class="card-body">
-          <div class="card-title">Data Science Decision Governance</div>
-          <div class="card-pitch">A working record format for a DS team's own decisions, not an analysis of invented history: a schema that rejects incomplete records, a live scan that catches monitoring commitments already overdue, and a search over past decisions so a new proposal can check whether something like it already happened.</div>
-          <div class="tags">
-            <span class="tag">Schema validation</span>
-            <span class="tag">TF-IDF search</span>
-            <span class="tag">CLI tooling</span>
-          </div>
-          <div class="card-links">
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/07-ds-decision-governance/README.md" target="_blank" rel="noopener">README →</a>
-            <a href="https://github.com/gus-morales/work-showcase/tree/main/projects/07-ds-decision-governance/decisions" target="_blank" rel="noopener">Examples →</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Project 8 -->
-      <div class="card">
-        <img class="chart" src="images/08-observatory.png" alt="Two-engine architecture diagram: DuckDB and a metric catalog feed an ops detector engine and a popmon stability engine, both writing into one snapshot, read by alert channels, a static dashboard, and a notebook">
-        <div class="card-body">
-          <div class="card-title">Observatory</div>
-          <div class="card-pitch">A DS team's own ops monitoring: a pluggable detector engine for pipeline metrics, popmon for model-feature and prediction drift, both configured from one YAML metric catalog over a small DuckDB database. Eight of nine injected anomalies caught, deduplicated into 9 alert events, with a static dashboard built from the same snapshot.</div>
-          <div class="tags">
-            <span class="tag">popmon</span>
-            <span class="tag">Metric catalog</span>
-            <span class="tag">SQL / DuckDB</span>
-          </div>
-          <div class="card-links">
-            <a href="08-observatory/dashboard.html" target="_blank" rel="noopener">Dashboard →</a>
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/README.md" target="_blank" rel="noopener">README →</a>
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/08-observatory/notebooks/08_observatory.ipynb" target="_blank" rel="noopener">Notebook →</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Project 9 -->
-      <div class="card">
-        <img class="chart" src="images/09-ml-pipeline-contracts.png" alt="A sign-off plan document feeding five model-build stages, EDA through Validation, each handoff checked before the next stage runs, with a broken-handoff path shown stopping the chain">
-        <div class="card-body">
-          <div class="card-title">ML Pipeline Contracts</div>
-          <div class="card-pitch">A 5-stage model-build pipeline (understand the data, prepare it, build features, train, check against the bar) with an automatic check at every handoff, catching mistakes like the prediction target leaking in as a feature. Proven on two unrelated example problems with zero code changes, plus a run that deliberately breaks a handoff to show the checks actually catch it.</div>
-          <div class="tags">
-            <span class="tag">Pydantic contracts</span>
-            <span class="tag">Point-in-time guards</span>
-            <span class="tag">IV / PSI</span>
-          </div>
-          <div class="card-links">
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/09-ml-pipeline-contracts/README.md" target="_blank" rel="noopener">README →</a>
-            <a href="https://github.com/gus-morales/work-showcase/blob/main/projects/09-ml-pipeline-contracts/notebooks/09_ml_pipeline_contracts.ipynb" target="_blank" rel="noopener">Notebook →</a>
           </div>
         </div>
       </div>
@@ -615,7 +630,7 @@
         document.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('active'); });
         pill.classList.add('active');
         var cat = pill.dataset.filter;
-        document.querySelectorAll('.grid .card').forEach(function (card) {
+        document.querySelectorAll('.projects-grid .card').forEach(function (card) {
           card.style.display = (cat === 'all' || card.dataset.category === cat) ? '' : 'none';
         });
       });
