@@ -29,18 +29,129 @@ A decision moves through a fixed lifecycle. `abandoned` and `reverted` are the t
 
 ![Decision lifecycle](assets/lifecycle.png)
 
+- **draft**: being written, not yet approved.
+- **approved**: reviewers signed off, hasn't shipped yet.
+- **shipped**: live. Both monitoring checks are now running.
+- **closed**: the outcome check happened and the decision is being kept or iterated on.
+- **reverted**: the outcome check happened and the decision was rolled back.
+- **abandoned**: proposed, never approved. A dead end from draft, not a failure once shipped.
+
 ## The record
 
 A decision is a markdown file: YAML frontmatter (the fields the schema checks) plus a free-text body (what changed, why, the rollback plan, monitoring notes). Templates for each impact level live in `templates/`. `routing.yaml` holds the reviewer-count minimums the table above is drawn from.
 
+Here's a real one, high impact, currently shipped and partway through its monitoring window (`decisions/product_analytics/DSG-0002-attribution-model-v2-launch.md`):
+
+```yaml
+---
+id: DSG-0002
+title: "Launch attribution model v2 to production scoring"
+artifact_type: model_launch
+domain: product_analytics
+impact_level: high
+status: shipped
+author: "M. Alvarez"
+dates:
+  proposed: 2026-06-20
+  approved: 2026-06-25
+  shipped: 2026-07-01
+  resolved: null
+monitoring:
+  ship_check:
+    due: 2026-07-08
+    done: true
+  outcome_check:
+    due: 2026-07-31
+    done: false
+    outcome: null
+reviewers: ["J. Okafor", "R. Singh", "Review Board"]
+---
+
+## What changed
+
+Attribution model v2 replaces the rule-based last-touch model for marketing spend attribution.
+
+## Why
+
+The rule-based model was known to overweight the last channel in the path. v2 uses a data-driven multi-touch approach. Expected to shift attributed spend away from paid search toward earlier-funnel channels, without changing the total spend figure.
+
+## Rollback plan
+
+Scoring pipeline can flip back to the v1 rule-based model with a single config change; no data migration involved. If v2's attributed totals diverge from v1's by more than 15% in either direction during the first two weeks, roll back and re-evaluate.
+
+## Monitoring notes
+
+Shipped and scoring live traffic as of 2026-07-01. Ship check confirmed the new model is scoring in production as intended. Outcome check (does the attribution shift match expectations) isn't due until 2026-07-31.
+```
+
+Three reviewers because it's high impact (one of them the review board), a filled-in rollback plan because that's required at this level too, and `outcome.done: false` because the outcome check genuinely hasn't happened yet, its due date is two weeks out.
+
+## Field reference
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | `DSG-####`, assigned sequentially by `new_decision.py`. |
+| `title` | string | |
+| `artifact_type` | enum | `dashboard_change` \| `pipeline_change` \| `experiment_rollout` \| `model_launch` \| `metric_definition_change` \| `deprecation` |
+| `domain` | enum | `product_analytics` \| `search_ranking` \| `marketing` \| `customer_support` \| `operations` \| `infrastructure` |
+| `impact_level` | enum | `low` \| `medium` \| `high` |
+| `status` | enum | `draft` \| `approved` \| `shipped` \| `closed` \| `reverted` \| `abandoned` |
+| `author` | string | |
+| `dates.proposed` | date | Always required. |
+| `dates.approved` | date \| null | Required once `status` is past `draft`, except `abandoned`. |
+| `dates.shipped` | date \| null | Required once `status` is `shipped` or later. |
+| `dates.resolved` | date \| null | Required once `status` is `closed` or `reverted`. |
+| `monitoring` | object \| null | `null` while `draft` or `abandoned`. |
+| `monitoring.ship_check.due` / `.done` | date / bool | Required once shipped, medium and high impact only. |
+| `monitoring.outcome_check.due` / `.done` | date / bool | Required once shipped, every impact level. |
+| `monitoring.outcome_check.outcome` | enum \| null | `keep` \| `iterate` \| `rollback`. Required once `status` is `closed` or `reverted`. |
+| `reviewers` | list of strings | Minimum count by impact level, enforced once past `draft`/`abandoned` (see `routing.yaml`). |
+
 ## The record contract
 
-`schema.py` defines what a valid record looks like, and `validate.py` checks every file in `decisions/` against it: a low-impact record claiming a ship_check, a reverted record with no rollback outcome, a high-impact record with no rollback plan section, an approved record without enough reviewers, all fail. This is the same job a CI check would do on a pull request in a real repo; here it's a standalone script instead of a merge gate.
+`schema.py` is a Pydantic model plus one cross-field check per rule above. The parts that aren't obvious from the field table alone:
+
+```python
+@model_validator(mode="after")
+def _check_consistency(self):
+    if self.status == "draft":
+        ...
+        return self          # no dates, no monitoring, no reviewer check yet
+
+    if self.status == "abandoned":
+        ...
+        return self          # proposed, never approved -- same idea
+
+    # everything past this point went through approval
+    if self.dates.approved is None:
+        raise ValueError(f"status={self.status} requires an approved date")
+    ...
+```
+
+Reviewers get assigned as part of approval, so a `draft` (still being written) or an `abandoned` record (never got that far) isn't held to the reviewer-count minimum. Once a record is approved or later, `validate_file()` layers on two checks that aren't pure field validation: the reviewer count against `routing.yaml`, and, for high impact, a non-empty `## Rollback plan` section in the body (checked with the placeholder HTML comment stripped out first, so an untouched template doesn't pass by accident).
+
+`validate.py` runs this over every file in `decisions/`:
 
 ```
 $ python src/validate.py
 8 / 8 records valid.
 ```
+
+A few concrete ways a record fails it. A medium-impact decision that shipped without a ship check:
+
+```
+1 validation error for DecisionRecord
+  Value error, impact_level=medium requires a ship_check once shipped [type=value_error, ...]
+```
+
+A high-impact decision approved with only 2 reviewers and no rollback plan written yet:
+
+```
+impact_level=high requires >= 3 reviewers, got 2
+impact_level=high requires a non-empty '## Rollback plan' section
+```
+
+Both of those are real output from `validate_file()` against a deliberately broken record, not paraphrased.
 
 ## Creating a new decision
 
