@@ -21,6 +21,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 | [07 - Data Science Decision Governance](projects/07-ds-decision-governance) | A record format for a DS team's own decisions: schema-based validation, CLI tooling to scaffold and check records, a live scan for overdue monitoring commitments | Done |
 | [08 - Observatory](projects/08-observatory) | A DS-team ops-monitoring toolkit: a pluggable detector engine for pipeline metrics plus popmon for model-feature drift, both configured from a YAML metric catalog, backed by DuckDB/SQL, unified into one snapshot with alert dedup and a static dashboard | Done |
 | [09 - ML Pipeline Contracts](projects/09-ml-pipeline-contracts) | A 5-stage model-build pipeline with an automatic check at every handoff between stages, catching mistakes like the prediction target leaking in as a feature. Proven on two unrelated example problems with no code changes, plus a run that deliberately breaks a handoff to show the checks actually catch it | Done |
+| [10 - Thermal Fault Detection](projects/10-thermal-fault-detection) | Computer vision for predictive maintenance: OpenCV handcrafted features vs. a CNN trained on raw thermal-camera images, compared head to head, plus Grad-CAM interpretability checked against the true fault location instead of just eyeballed | Done |
 
 ## Skills and tools featured
 
@@ -69,6 +70,12 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 - A frozen design-document gate (Model Scope Document) blocking every downstream stage until signed off (09)
 - Point-in-time / leakage guards on event-level source data, unit-tested against a leaking case (09)
 - The same pipeline run against two unrelated synthetic domains, single- and multi-target, to prove contract portability (09)
+
+**Computer vision**
+
+- OpenCV feature extraction: thresholding, contour/blob detection on image data (10)
+- A CNN trained directly on raw pixels (TensorFlow/Keras), compared head to head against a handcrafted-feature baseline (10)
+- Grad-CAM interpretability, checked against a known ground-truth location rather than just eyeballed (10)
 
 **NLP & LLM evaluation**
 

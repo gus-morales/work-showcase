@@ -1,0 +1,10 @@
+{
+  "model": "CNN (raw pixels, TensorFlow/Keras)",
+  "n_train": 1275,
+  "n_val": 225,
+  "n_test": 500,
+  "test_fault_rate": 0.126,
+  "pr_auc": 0.9836653510522633,
+  "roc_auc": 0.9972394755003451,
+  "epochs_run": 20
+}

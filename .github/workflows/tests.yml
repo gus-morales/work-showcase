@@ -22,6 +22,7 @@ jobs:
           - 07-ds-decision-governance
           - 08-observatory
           - 09-ml-pipeline-contracts
+          - 10-thermal-fault-detection
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}

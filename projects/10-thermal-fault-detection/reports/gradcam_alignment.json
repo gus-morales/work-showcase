@@ -1,0 +1,7 @@
+{
+  "n_fault_test_images": 63,
+  "mean_gradcam_peak_distance_px": 6.366120706711497,
+  "median_gradcam_peak_distance_px": 1.318825364112854,
+  "random_guess_expected_distance_px": 28.530194742097724,
+  "image_size_px": 64
+}

@@ -1,0 +1,19 @@
+{
+  "model": "classical (OpenCV features + GBM)",
+  "n_train": 1500,
+  "n_test": 500,
+  "test_fault_rate": 0.126,
+  "pr_auc": 0.8455878668544355,
+  "roc_auc": 0.9623333696560241,
+  "feature_importances": {
+    "max_intensity": 0.5855,
+    "mean_intensity": 0.0852,
+    "hotspot_area": 0.1337,
+    "hotspot_eccentricity": 0.0773,
+    "hotspot_dist_from_center": 0.0261,
+    "n_hotspots": 0.092,
+    "component_electrical_cabinet": 0.0,
+    "component_engine_bay": 0.0,
+    "component_wheel_motor": 0.0
+  }
+}
