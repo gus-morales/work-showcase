@@ -11,6 +11,8 @@ import numpy as np  # noqa: E402
 import tensorflow as tf  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 
+from sklearn.metrics import average_precision_score  # noqa: E402
+
 from style import BG, GREY, INK, MUTED_AMBER, MUTED_RED, MUTED_TEAL, savefig, set_style, style_ax  # noqa: E402
 from train_cnn import normalize  # noqa: E402
 
@@ -23,6 +25,7 @@ FIG_DIR = REPORTS_DIR / "figures"
 MODEL_PATH = REPORTS_DIR / "model_cnn.keras"
 SPLIT_PATH = REPORTS_DIR / "split_indices.npz"
 METRICS_CLASSICAL_PATH = REPORTS_DIR / "metrics_classical.json"
+METRICS_CNN_PATH = REPORTS_DIR / "metrics_cnn.json"
 GRADCAM_REPORT_PATH = REPORTS_DIR / "gradcam_alignment.json"
 
 THERMAL_CMAP = LinearSegmentedColormap.from_list("thermal", [BG, MUTED_RED, MUTED_AMBER])
@@ -114,6 +117,35 @@ def plot_classical_feature_importance():
             footnote="Gradient-boosted classifier feature importances, held-out test set.")
 
 
+def plot_model_comparison(images, labels, test_idx):
+    set_style()
+    max_intensity = images.reshape(len(images), -1).max(axis=1)
+    naive_pr_auc = average_precision_score(labels[test_idx], max_intensity[test_idx])
+    classical_pr_auc = json.loads(METRICS_CLASSICAL_PATH.read_text())["pr_auc"]
+    cnn_pr_auc = json.loads(METRICS_CNN_PATH.read_text())["pr_auc"]
+    base_rate = float(labels[test_idx].mean())
+
+    names = ["Naive\nthreshold", "Classical\n(OpenCV + GBM)", "CNN\n(raw pixels)"]
+    values = [naive_pr_auc, classical_pr_auc, cnn_pr_auc]
+    colors = [GREY, MUTED_TEAL, MUTED_RED]
+
+    fig, ax = plt.subplots(figsize=(7, 4.8))
+    bars = ax.bar(names, values, color=colors, width=0.55, zorder=3)
+    for bar, v in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width() / 2, v + 0.02, f"{v:.3f}", ha="center", fontsize=11, color=INK)
+    ax.axhline(base_rate, color=GREY, linestyle="--", linewidth=1, zorder=2)
+    ax.text(2.5, base_rate + 0.015, "base rate", fontsize=9, color=GREY, ha="right")
+    style_ax(
+        ax,
+        title="The CNN separates faults from healthy images best",
+        subtitle="PR-AUC on the same 500 held-out images, all three approaches",
+        ylabel="PR-AUC",
+    )
+    savefig(fig, FIG_DIR / "model_comparison.png", footnote="Held-out test set, 12.6% fault rate.")
+    return {"naive_pr_auc": float(naive_pr_auc), "classical_pr_auc": float(classical_pr_auc),
+            "cnn_pr_auc": float(cnn_pr_auc)}
+
+
 def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     images, labels, fault_x, fault_y = load_data()
@@ -124,6 +156,9 @@ def main():
 
     plot_gradcam_examples(model, images, labels, fault_x, fault_y, test_idx)
     plot_classical_feature_importance()
+    comparison = plot_model_comparison(images, labels, test_idx)
+    print(f"PR-AUC -- naive: {comparison['naive_pr_auc']:.3f}, "
+          f"classical: {comparison['classical_pr_auc']:.3f}, cnn: {comparison['cnn_pr_auc']:.3f}")
 
     # quantitative check: does Grad-CAM's peak actually land near the true fault?
     normed = normalize(images)

@@ -8,16 +8,20 @@ from pathlib import Path
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import tensorflow as tf  # noqa: E402
 from sklearn.metrics import average_precision_score, roc_auc_score  # noqa: E402
 from sklearn.model_selection import train_test_split  # noqa: E402
+
+from style import MUTED_AMBER, SLATE, savefig, set_style, style_ax  # noqa: E402
 
 tf.get_logger().setLevel("ERROR")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "data" / "thermal_images.npz"
 REPORTS_DIR = PROJECT_ROOT / "reports"
+FIG_DIR = REPORTS_DIR / "figures"
 MODEL_PATH = REPORTS_DIR / "model_cnn.keras"
 METRICS_PATH = REPORTS_DIR / "metrics_cnn.json"
 SPLIT_PATH = REPORTS_DIR / "split_indices.npz"
@@ -60,8 +64,26 @@ def build_model(input_shape=(64, 64, 1)):
     return tf.keras.Model(inputs, outputs, name="thermal_fault_cnn")
 
 
+def plot_training_curve(history):
+    set_style()
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    epochs = range(1, len(history.history["pr_auc"]) + 1)
+    ax.plot(epochs, history.history["pr_auc"], color=SLATE, label="Train", linewidth=1.8)
+    ax.plot(epochs, history.history["val_pr_auc"], color=MUTED_AMBER, label="Validation", linewidth=1.8)
+    style_ax(
+        ax,
+        title="Validation PR-AUC climbs steadily once pooling was fixed",
+        subtitle="Global max-pooling CNN, per-epoch PR-AUC",
+        xlabel="Epoch",
+        ylabel="PR-AUC",
+    )
+    ax.legend()
+    savefig(fig, FIG_DIR / "cnn_training_curve.png", footnote="Training history, thermal fault-detection CNN.")
+
+
 def main():
     REPORTS_DIR.mkdir(exist_ok=True)
+    FIG_DIR.mkdir(exist_ok=True)
     tf.keras.utils.set_random_seed(SEED)
 
     images, labels = load_data()
@@ -124,6 +146,7 @@ def main():
     HISTORY_PATH.write_text(json.dumps(
         {k: [float(v) for v in vals] for k, vals in history.history.items()}, indent=2
     ))
+    plot_training_curve(history)
 
     print(f"Test set: {len(test_idx)} images, {base_rate:.1%} fault rate")
     print(f"Epochs run (early stopping): {metrics['epochs_run']}")
