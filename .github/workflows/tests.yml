@@ -23,6 +23,7 @@ jobs:
           - 08-observatory
           - 09-ml-pipeline-contracts
           - 10-thermal-fault-detection
+          - 11-cardholder-segmentation-propensity
     defaults:
       run:
         working-directory: projects/${{ matrix.project }}

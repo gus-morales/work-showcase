@@ -1,0 +1,33 @@
+{
+  "n_customers": 12000,
+  "budget_fraction": 0.2,
+  "budget_n": 2400,
+  "expected_responders_random": 734.4,
+  "expected_responders_topspend": 1103.8,
+  "expected_responders_model": 1425.1,
+  "lift_vs_random": 0.9404,
+  "lift_vs_topspend": 0.291,
+  "model_segment_mix_pct": {
+    "Occasional": 35.1,
+    "High-Value Active": 25.1,
+    "Light Spender": 22.2,
+    "Lapsed": 15.6,
+    "Dormant": 1.1,
+    "Steady Regular": 0.9
+  },
+  "topspend_segment_mix_pct": {
+    "High-Value Active": 51.0,
+    "Occasional": 33.2,
+    "Light Spender": 8.2,
+    "Steady Regular": 7.5,
+    "Lapsed": 0.0
+  },
+  "overall_segment_mix_pct": {
+    "Occasional": 37.2,
+    "High-Value Active": 21.0,
+    "Lapsed": 17.1,
+    "Light Spender": 16.6,
+    "Dormant": 4.9,
+    "Steady Regular": 3.2
+  }
+}

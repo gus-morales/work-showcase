@@ -22,6 +22,7 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 | [08 - Observatory](projects/08-observatory) | A DS-team ops-monitoring toolkit: a pluggable detector engine for pipeline metrics plus popmon for model-feature drift, both configured from a YAML metric catalog, backed by DuckDB/SQL, unified into one snapshot with alert dedup and a static dashboard | Done |
 | [09 - ML Pipeline Contracts](projects/09-ml-pipeline-contracts) | A 5-stage model-build pipeline with an automatic check at every handoff between stages, catching mistakes like the prediction target leaking in as a feature. Proven on two unrelated example problems with no code changes, plus a run that deliberately breaks a handoff to show the checks actually catch it | Done |
 | [10 - Thermal Fault Detection](projects/10-thermal-fault-detection) | Computer vision for predictive maintenance: OpenCV handcrafted features vs. a CNN trained on raw thermal-camera images, compared head to head, plus Grad-CAM interpretability checked against the true fault location instead of just eyeballed | Done |
+| [11 - Cardholder Segmentation & Spend-Growth Propensity](projects/11-cardholder-segmentation-propensity) | Gaussian Mixture Model behavioral segmentation (BIC-selected), response-propensity modeling with calibration and a cumulative-gains chart, SHAP interpretability, budget-constrained targeting vs. naive spend-based and random rules | Done |
 
 ## Skills and tools featured
 
@@ -31,8 +32,8 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 - Classification under extreme class imbalance, PR-AUC over accuracy/ROC-AUC (05, 06)
 - Gradient boosting regression with feature importance (02)
 - Leakage-safe feature pipelines (feature-engine, fit on the training split only) (01, 05, 06)
-- Probability calibration (01)
-- SHAP interpretability (01, 05, 06)
+- Probability calibration (01, 11)
+- SHAP interpretability (01, 05, 06, 11)
 - Unsupervised anomaly detection (Isolation Forest) as a labels-scarce alternative (05, 06)
 
 **Causal inference & experimentation**
@@ -53,6 +54,9 @@ Each project ships with a pytest test suite (data-generation invariants, a recor
 - Log-share contribution decomposition (02)
 - Probabilistic customer lifetime value: BG/NBD + Gamma-Gamma, with calibration/holdout validation (02)
 - KMeans clustering for RFM segmentation (03)
+- Gaussian Mixture Model behavioral segmentation, component count chosen by BIC (11)
+- Response-propensity modeling with a cumulative-gains (decile lift) chart (11)
+- Budget-constrained targeting vs. naive spend-based and random baselines (11)
 
 **Monitoring & decisioning**
 

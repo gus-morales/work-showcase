@@ -1,0 +1,16 @@
+pandas==2.3.3
+numpy==2.2.6
+scipy==1.15.3
+scikit-learn==1.7.2
+shap==0.49.1
+matplotlib==3.10.9
+seaborn==0.13.2
+joblib==1.5.3
+tabulate==0.9.0
+
+# only needed to re-run/re-execute the notebook
+jupyter==1.1.1
+nbconvert==7.17.1
+
+# only needed to run the test suite
+pytest==9.1.1

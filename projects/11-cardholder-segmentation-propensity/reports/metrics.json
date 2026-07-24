@@ -1,0 +1,13 @@
+{
+  "n_offered": 5313,
+  "n_train": 3187,
+  "n_val": 1063,
+  "n_test": 1063,
+  "response_rate_offered": 0.3213,
+  "logistic_baseline_auc": 0.7059,
+  "gbm_test_roc_auc": 0.7166,
+  "gbm_test_pr_auc": 0.5233,
+  "brier_raw": 0.1896,
+  "brier_calibrated": 0.1904,
+  "gains_top20pct_capture_share": 0.3777
+}
