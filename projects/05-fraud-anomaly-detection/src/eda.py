@@ -18,7 +18,7 @@ set_style()
 
 def main():
     tx = pd.read_csv(BASE / "data" / "transactions.csv")
-    SOURCE = f"Source: synthetic BNPL transaction data (src/generate_data.py) · n = {len(tx):,} transactions"
+    SOURCE = f"Source: synthetic bank card-transaction data (src/generate_data.py) · n = {len(tx):,} transactions"
 
     n_genuine = int((tx["is_fraud"] == 0).sum())
     n_fraud = int((tx["is_fraud"] == 1).sum())

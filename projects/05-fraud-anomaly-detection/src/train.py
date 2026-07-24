@@ -5,8 +5,7 @@ accuracy is close to useless as a metric (predicting "never fraud"
 already scores ~98.6%), so average precision (PR-AUC) is the headline
 number here instead of ROC-AUC, and the decision threshold is picked
 from actual fraud-loss and review-cost assumptions rather than a
-default 0.5 cutoff, the same cost-based approach project 01 uses for
-delinquency.
+default 0.5 cutoff.
 
 Saves:
     reports/metrics.json
@@ -65,7 +64,7 @@ def main():
     df = pd.read_csv(BASE / "data" / "transactions.csv", parse_dates=["timestamp"])
     train_df, val_df, test_df = temporal_split(df)
     print(f"Train: {len(train_df):,} | Val: {len(val_df):,} | Test: {len(test_df):,}")
-    SOURCE = f"Source: synthetic BNPL transaction data · held-out test set · n = {len(test_df):,} transactions"
+    SOURCE = f"Source: synthetic bank card-transaction data · held-out test set · n = {len(test_df):,} transactions"
 
     feature_pipeline = build_feature_pipeline()
     X_train = feature_pipeline.fit_transform(train_df[RAW_FEATURE_COLS])

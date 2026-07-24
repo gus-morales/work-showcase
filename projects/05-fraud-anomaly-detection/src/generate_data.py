@@ -1,6 +1,6 @@
 """
-Synthetic data generator for a BNPL transaction-fraud dataset: the same
-fictional BNPL fintech as projects 01-04, viewed from the fraud/risk
+Synthetic data generator for a bank's card-transaction fraud dataset: a
+fictional regional bank's card business, viewed from the fraud/risk
 operations side. Transaction-level records with device, velocity, and
 mismatch signals available at checkout time, and a fraud outcome
 (`is_fraud`) at a realistic, heavily imbalanced rate.
@@ -32,8 +32,7 @@ OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 
 rng = np.random.default_rng(SEED)
 
-# Same category/device vocabularies used in projects 01 and 03, since
-# this is the same fictional platform viewed from a different angle.
+# Merchant category and device vocabularies for online card transactions.
 MERCHANT_CATS = ["electronics", "fashion", "home_goods", "travel", "education", "groceries"]
 MERCHANT_WEIGHTS = [0.30, 0.25, 0.15, 0.10, 0.08, 0.12]
 DEVICE_TYPES = ["android", "ios", "web"]
@@ -47,8 +46,7 @@ def make_customers(n=N_CUSTOMERS):
     customer_id = np.arange(1, n + 1)
     account_age_at_start_days = np.clip(rng.exponential(scale=250, size=n), 0, 1500).round(0)
     home_device = rng.choice(DEVICE_TYPES, size=n, p=DEVICE_WEIGHTS)
-    # Customer-level baseline spend level (same gamma-baseline pattern used
-    # for "quality" in project 03), drives each customer's typical
+    # Customer-level baseline spend level, drives each customer's typical
     # transaction amount before per-transaction noise.
     spend_scale = rng.gamma(shape=3.0, scale=1.0, size=n)
     n_transactions = np.clip(rng.poisson(lam=6, size=n), 1, 60)

@@ -1,15 +1,14 @@
 """
 Cardholder segmentation via a Gaussian Mixture Model on trailing-90-day
 behavioral features (recency, frequency, monetary, category diversity,
-checkout decline rate). Log-transforms and standardizes first, same
-reasoning as the RFM segmentation in project 03: raw scales are wildly
-different and right-skewed, which would otherwise let monetary value
-dominate distance/likelihood purely by having the largest raw scale.
+checkout decline rate). Log-transforms and standardizes first: raw
+scales are wildly different and right-skewed, which would otherwise
+let monetary value dominate distance/likelihood purely by having the
+largest raw scale.
 
-Component count is chosen by BIC rather than silhouette score (project
-03's method), a different, likelihood-based model-selection criterion,
-since GMM gives a proper log-likelihood to penalize, unlike a hard
-k-means partition.
+Component count is chosen by BIC, a likelihood-based model-selection
+criterion, since GMM gives a proper log-likelihood to penalize, unlike
+a hard k-means partition.
 
 Deliberately excludes tenure and lifetime order count: this segments
 customers on CURRENT behavior only, the kind of feature set a growth
@@ -50,11 +49,9 @@ def choose_k(X, source_note):
     # BIC keeps falling all the way to the edge of K_RANGE with no clean
     # elbow, typical once there's enough data that BIC's complexity
     # penalty barely bites: more components almost always buy a little
-    # more likelihood. The same judgment call project 03 makes for its
-    # NMF topic count (reconstruction error with no clean elbow there
-    # either): cap the candidate range at a size a growth team could
-    # actually act on, and take the minimum within that cap instead of
-    # the unconstrained minimum.
+    # more likelihood. Cap the candidate range at a size a growth team
+    # could actually act on, and take the minimum within that cap
+    # instead of the unconstrained minimum.
     candidates = [k for k in K_RANGE if k <= MAX_INTERPRETABLE_K]
     candidate_bics = [bics[list(K_RANGE).index(k)] for k in candidates]
     best_k = candidates[int(np.argmin(candidate_bics))]
@@ -89,8 +86,7 @@ def label_segments(profile):
     """Rank-based labeling from the cluster-mean behavioral profile
     (best to worst combined recency/frequency/monetary rank), mapped
     onto a name set sized to however many components BIC actually
-    picked, the same post-hoc approach project 03 uses for RFM
-    segments, so labels always span the full best-to-worst spectrum."""
+    picked, so labels always span the full best-to-worst spectrum."""
     r_rank = profile["recency_days"].rank()  # low recency (rank 1) = most recent = best
     f_rank = profile["frequency_90d"].rank(ascending=False)
     m_rank = profile["monetary_90d"].rank(ascending=False)
@@ -105,7 +101,7 @@ def label_segments(profile):
 def main():
     df = pd.read_csv(DATA_DIR / "customers.csv")
     n_customers = len(df)
-    source_note = f"Source: synthetic BNPL customer data · n = {n_customers:,} customers"
+    source_note = f"Source: synthetic bank customer data · n = {n_customers:,} customers"
 
     log_features = np.column_stack([
         np.log1p(df["recency_days"]), np.log1p(df["frequency_90d"]), np.log1p(df["monetary_90d"]),

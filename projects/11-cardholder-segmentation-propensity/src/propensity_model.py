@@ -5,17 +5,17 @@ labeled subset (past_offer_sent == 1), then scored against the FULL
 customer base, since the point is to rank everyone, offered or not,
 for the next campaign.
 
-At a ~32% response rate this isn't the extreme class imbalance projects
-01/05/06 deal with, so ROC-AUC is a reasonable headline metric here,
-not just PR-AUC. What matters more for a marketing use case is the
-cumulative gains chart: given a fixed budget that can only reach some
-fraction of customers, how many of the actual responders does the
-model's ranking capture, against a random-targeting baseline.
+At a ~32% response rate, positive and negative cases aren't sharply
+imbalanced, so ROC-AUC is a reasonable headline metric here alongside
+PR-AUC. What matters more for a marketing use case is the cumulative
+gains chart: given a fixed budget that can only reach some fraction of
+customers, how many of the actual responders does the model's ranking
+capture, against a random-targeting baseline.
 
-Uses the same isotonic-calibration-on-a-validation-split pattern as
-project 01, since expected-responder counts under a budget (computed
-in targeting.py) need probabilities that are actually well-calibrated,
-not just well-ranked.
+Isotonic calibration is fit on a held-out validation split, since
+expected-responder counts under a budget (computed in targeting.py)
+need probabilities that are actually well-calibrated, not just
+well-ranked.
 
 Saves:
     reports/metrics.json
@@ -92,8 +92,8 @@ def main():
     print(f"Offered customers: {len(X_offered):,} | response rate: {y_offered.mean():.1%}")
 
     # 60/20/20 train/val/test, stratified on the response label, since
-    # there's no temporal dimension here (a single trailing-90-day
-    # snapshot, unlike the time-ordered splits in 01/05/06).
+    # there's no temporal dimension here, a single trailing-90-day
+    # snapshot rather than a time-ordered series.
     X_train, X_temp, y_train, y_temp = train_test_split(
         X_offered, y_offered, test_size=0.4, stratify=y_offered, random_state=42,
     )
@@ -130,7 +130,7 @@ def main():
     print(f"GBM test ROC-AUC: {auc:.4f} | PR-AUC: {ap:.4f} (base rate {y_test.mean():.1%})")
     print(f"Brier score - raw: {brier_raw:.4f} | calibrated: {brier_cal:.4f}")
 
-    SOURCE = f"Source: synthetic BNPL customer data · held-out test set · n = {len(X_test):,} offered customers"
+    SOURCE = f"Source: synthetic bank customer data · held-out test set · n = {len(X_test):,} offered customers"
 
     # --- Cumulative gains chart ---
     pop_share, capture_share = cumulative_gains(y_test.values, y_prob_test)

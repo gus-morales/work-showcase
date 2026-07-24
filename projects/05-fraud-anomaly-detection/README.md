@@ -1,6 +1,6 @@
 # Transaction Fraud Detection
 
-A transaction-fraud model for a buy now, pay later (BNPL) checkout flow, at a realistic 1.4% fraud rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual fraud-loss and review-cost numbers rather than a default 0.5 cutoff. Built on synthetic data, the same fictional fintech as projects 01-04, viewed from the fraud/risk operations side.
+A transaction-fraud model for a bank's real-time card-authorization flow, at a realistic 1.4% fraud rate, where accuracy is close to meaningless as a metric and the decision threshold has to come from actual fraud-loss and review-cost numbers rather than a default 0.5 cutoff. Built on synthetic data modeling a fictional regional bank's card business, viewed from the fraud/risk operations side.
 
 **For the full technical walkthrough (feature pipeline, PR-AUC vs. ROC-AUC, cost-based thresholding, SHAP, unsupervised comparison), see the [notebook](notebooks/05_fraud_anomaly_detection.ipynb).** This README is the short version.
 
@@ -17,11 +17,11 @@ A transaction-fraud model for a buy now, pay later (BNPL) checkout flow, at a re
 
 ## The problem
 
-A fraud team has to decide, at checkout, whether to let a transaction through. Miss a fraudulent one and the loss is the transaction amount plus a chargeback fee; flag a genuine one and the cost is a much smaller review or friction cost, but there are vastly more genuine transactions than fraudulent ones. At a 1-2% fraud rate, a model can score 98%+ accuracy while never catching a single fraud case, so the metric and the threshold both have to be chosen with that skew in mind, not despite it.
+A bank's fraud team has to decide, in real time, whether to authorize a transaction. Miss a fraudulent one and the loss is the transaction amount plus a chargeback fee; flag a genuine one and the cost is a much smaller review or friction cost, but there are vastly more genuine transactions than fraudulent ones. At a 1-2% fraud rate, a model can score 98%+ accuracy while never catching a single fraud case, so the metric and the threshold both have to be chosen with that skew in mind, not despite it.
 
 ## What this does
 
-Trains a classifier to score each transaction's fraud probability at checkout time, using device, velocity, and mismatch signals available in that moment, then picks the approve/flag threshold that minimizes expected cost given fraud-loss and review-cost assumptions.
+Trains a classifier to score each transaction's fraud probability at authorization time, using device, velocity, and mismatch signals available in that moment, then picks the authorize/flag threshold that minimizes expected cost given fraud-loss and review-cost assumptions.
 
 ## Exploratory analysis
 

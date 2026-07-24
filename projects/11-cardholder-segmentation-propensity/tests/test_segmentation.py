@@ -1,7 +1,6 @@
 """Unit tests for the segment-labeling logic: a pure function over a
 small hand-built cluster-mean profile, independent of GaussianMixture
-itself. Mirrors project 03's test_segmentation.py, which tests the same
-kind of rank-based labeling for its KMeans/RFM segments."""
+itself."""
 import pandas as pd
 
 from segmentation import label_segments, NAME_SETS

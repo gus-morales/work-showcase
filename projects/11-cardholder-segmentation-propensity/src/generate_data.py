@@ -1,7 +1,7 @@
 """
-Synthetic data generator for a cardholder growth dataset: the same
-fictional BNPL fintech as projects 01-06, viewed from the growth/
-marketing team's side. One row per customer, covering their trailing
+Synthetic data generator for a cardholder growth dataset: a fictional
+regional bank's card business, viewed from the growth/marketing team's
+side. One row per customer, covering their trailing
 90-day behavior (recency, order frequency, spend, category mix,
 checkout authorization decline rate) plus whether the growth team's
 past win-back campaign reached them and whether they responded.
@@ -22,9 +22,8 @@ independent of each other, then only observed through noisy proxies:
   tell them apart.
 
 `decline_rate` is included as a feature but has zero true weight in
-the response-generating formula below, a decoy covariate in the same
-spirit as project 03's decoy pre-period session count: a well-behaved
-propensity model should learn to downweight it.
+the response-generating formula below, a decoy covariate: a
+well-behaved propensity model should learn to downweight it.
 
 Run:
     python src/generate_data.py
@@ -39,8 +38,6 @@ SEED = 42
 N_CUSTOMERS = 12_000
 OUT_DIR = Path(__file__).resolve().parents[1] / "data"
 
-# Same channel vocabulary/weights used in project 05, since this is the
-# same fictional platform viewed from a different angle.
 CHANNELS = ["android", "ios", "web"]
 CHANNEL_WEIGHTS = [0.62, 0.23, 0.15]
 
@@ -99,9 +96,8 @@ def add_behavioral_features(df):
 
     # Checkout authorization decline rate: higher for thinner-file
     # (lower-tenure) accounts and, mildly, for higher-velocity
-    # customers, the same kind of risk-driven decline pattern used for
-    # the checkout decision in projects 01 and 05. Has zero weight in
-    # the response formula below, a decoy feature.
+    # customers, a realistic risk-driven decline pattern. Has zero
+    # weight in the response formula below, a decoy feature.
     decline_rate = np.clip(
         0.22 - 0.00012 * df["tenure_days"].values + 0.010 * frequency_90d + rng.normal(0, 0.05, n),
         0.01, 0.60,
@@ -144,9 +140,7 @@ def assign_offer_and_response(df):
     df["past_offer_sent"] = offer_sent
     # `responded` is only ever observed for customers who were actually
     # offered something; NaN (not 0) for everyone else, "never given a
-    # chance" is a different state from "given a chance and declined",
-    # the same distinction project 01 draws between "unknown" and
-    # "known-low" bureau score.
+    # chance" is a different state from "given a chance and declined".
     df["responded"] = np.where(offer_sent == 1, responded_draw, np.nan)
     return df
 

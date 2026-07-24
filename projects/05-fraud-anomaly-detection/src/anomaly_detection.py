@@ -81,7 +81,7 @@ def comparison_pr_chart(y_test, supervised_prob, anomaly_score, source_note):
 def main():
     df = pd.read_csv(BASE / "data" / "transactions.csv", parse_dates=["timestamp"])
     train_df, val_df, test_df = temporal_split(df)
-    source_note = f"Source: synthetic BNPL transaction data · held-out test set · n = {len(test_df):,} transactions"
+    source_note = f"Source: synthetic bank card-transaction data · held-out test set · n = {len(test_df):,} transactions"
 
     feature_pipeline = build_feature_pipeline()
     X_train = feature_pipeline.fit_transform(train_df[RAW_FEATURE_COLS])

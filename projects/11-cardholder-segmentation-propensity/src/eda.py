@@ -19,7 +19,7 @@ set_style()
 def main():
     df = pd.read_csv(BASE / "data" / "customers.csv")
     offered = df[df["past_offer_sent"] == 1].copy()
-    SOURCE_OFFERED = f"Source: synthetic BNPL customer data · n = {len(offered):,} customers offered the past campaign"
+    SOURCE_OFFERED = f"Source: synthetic bank customer data · n = {len(offered):,} customers offered the past campaign"
 
     # 1. Response rate by recency band: the "win-back sweet spot". A
     # moderately lapsed customer responds better than either a

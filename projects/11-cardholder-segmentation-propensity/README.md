@@ -1,6 +1,6 @@
 # Cardholder Segmentation & Spend-Growth Propensity
 
-A growth team at a buy now, pay later (BNPL) fintech has a limited monthly budget for a win-back campaign and needs to decide who gets it. Two complementary techniques, a behavioral segmentation and a response-propensity model, are built on the same customer base and then compared head to head on a budget-constrained targeting decision. Synthetic data, the same fictional platform as projects 01-06, viewed from the growth/marketing side.
+A bank's growth team has a limited monthly budget for a win-back campaign and needs to decide who gets it. Two complementary techniques, a behavioral segmentation and a response-propensity model, are built on the same customer base and then compared head to head on a budget-constrained targeting decision. Synthetic data modeling a fictional regional bank's card business, viewed from the growth/marketing side.
 
 **For the full technical walkthrough (exploratory analysis, GMM segmentation, propensity modeling, calibration, SHAP, budget-constrained targeting), see the [notebook](notebooks/11_cardholder_segmentation_propensity.ipynb).** This README is the short version.
 

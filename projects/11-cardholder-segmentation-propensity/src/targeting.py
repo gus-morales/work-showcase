@@ -8,11 +8,9 @@ from propensity_model.py.
 Expected responders under each policy is computed from the model's own
 calibrated propensity score, since that's the only response-rate
 estimate available for customers who were never actually offered
-anything, the same "expected value from the model's own output" logic
-projects 01, 04, and 05 use for their cost-based threshold decisions.
-This step isn't re-validating the model (the gains chart and held-out
-AUC already did that): it's a downstream decision analysis built on a
-model already shown to rank held-out responders well.
+anything. This step isn't re-validating the model (the gains chart and
+held-out AUC already did that): it's a downstream decision analysis
+built on a model already shown to rank held-out responders well.
 
 Saves:
     reports/targeting_summary.json
@@ -52,7 +50,7 @@ def main():
 
     n = len(df)
     budget_n = round(BUDGET_FRACTION * n)
-    SOURCE = f"Source: synthetic BNPL customer data · n = {n:,} customers · budget = top {BUDGET_FRACTION:.0%} ({budget_n:,} customers)"
+    SOURCE = f"Source: synthetic bank customer data · n = {n:,} customers · budget = top {BUDGET_FRACTION:.0%} ({budget_n:,} customers)"
 
     random_expected = budget_n * df["propensity_score"].mean()
     topspend_expected = expected_responders(df, "monetary_90d", budget_n)

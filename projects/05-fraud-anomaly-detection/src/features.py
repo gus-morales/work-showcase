@@ -1,12 +1,11 @@
 """Feature engineering for the fraud model. No missing values in this
 dataset (checkout-time signals are always available by construction),
-so the pipeline here is lighter than project 01's: winsorize the
-long-tailed dollar amount, one-hot encode the two categoricals. Built
-as a feature-engine/sklearn Pipeline anyway, fit on the training split
-only and reused unchanged elsewhere, for the same reason project 01
-does it: a real deployment scores each transaction against statistics
-frozen at training time, not ones recomputed on data the model
-shouldn't get to see yet."""
+so the pipeline is light: winsorize the long-tailed dollar amount,
+one-hot encode the two categoricals. Built as a feature-engine/sklearn
+Pipeline anyway, fit on the training split only and reused unchanged
+elsewhere, since a real deployment scores each transaction against
+statistics frozen at training time, not ones recomputed on data the
+model shouldn't get to see yet."""
 import pandas as pd
 from feature_engine.encoding import OneHotEncoder
 from feature_engine.outliers import Winsorizer
@@ -36,8 +35,8 @@ def build_feature_pipeline() -> Pipeline:
 
 
 def temporal_split(df: pd.DataFrame, train_end_day=126, val_end_day=153):
-    """Same rationale as project 01: a random split would let the model
-    implicitly see the future during training. train_end_day/val_end_day
+    """A random split would let the model implicitly see the future
+    during training, so the split follows time instead. train_end_day/val_end_day
     are day offsets from the dataset's epoch (2025-01-01), splitting the
     180-day window roughly 70/15/15."""
     epoch = pd.Timestamp("2025-01-01")
