@@ -44,7 +44,7 @@ Checkout authorization decline rate, included on purpose as a decoy feature with
 
 ## Segmentation
 
-A Gaussian Mixture Model clusters customers on current-window behavior (recency, frequency, monetary value, category diversity, decline rate), log-transformed and standardized first so monetary value doesn't dominate purely by having the largest raw scale, the same reasoning project 03's RFM segmentation uses. Component count is chosen by BIC, a different, likelihood-based criterion than project 03's silhouette score; BIC never elbows within a reasonable search range here (typical once there's enough data that its complexity penalty barely bites), so candidates are capped at a business-interpretable size (k ≤ 6) and the minimum is taken within that cap.
+A Gaussian Mixture Model clusters customers on current-window behavior (recency, frequency, monetary value, category diversity, decline rate), log-transformed and standardized first so monetary value doesn't dominate purely by having the largest raw scale. Component count is chosen by BIC (Bayesian Information Criterion), a likelihood-based penalty that stops the model from just picking the largest cluster count tried. BIC never elbows within a reasonable search range here, typical once there's enough data that the complexity penalty barely bites, so candidates are capped at a business-interpretable size (k ≤ 6) and the minimum is taken within that cap.
 
 | Segment | % of customers | % of 90-day spend |
 |---|---|---|
@@ -59,7 +59,7 @@ High-Value Active is a fifth of customers and over a third of spend; Dormant is 
 
 ## Propensity model
 
-Trained on the labeled subset (customers who actually received the past campaign), then scored against the full customer base. At a 32.1% response rate this isn't the extreme class imbalance projects 01/05/06 deal with, so ROC-AUC is a reasonable headline metric here, not just PR-AUC.
+Trained on the labeled subset (customers who actually received the past campaign), then scored against the full customer base. At a 32.1% response rate, positive and negative cases aren't sharply imbalanced, so ROC-AUC is a reasonable headline metric here alongside PR-AUC.
 
 | | |
 |---|---|
@@ -75,13 +75,13 @@ The GBM edges out the logistic baseline (0.717 vs. 0.706 AUC), a modest lift tha
 
 *Figure 4. Cumulative gains: share of responders captured vs. share of customers targeted, model-ranked vs. random.*
 
-Isotonic calibration (fit on a held-out validation split, the same pattern project 01 uses) left the Brier score essentially unchanged (0.1896 raw vs. 0.1904 calibrated): the raw GBM was already reasonably well-calibrated at this base rate, so the honest result here is "no meaningful change," not "calibration helped." It's still applied before scoring the full population in the targeting step below, since the budget analysis needs probabilities that are trustworthy in an absolute sense, not just well-ranked, and there's no reason to skip a cheap check that happened to come back neutral.
+Isotonic calibration, fit on a held-out validation split, left the Brier score essentially unchanged (0.1896 raw vs. 0.1904 calibrated): the raw GBM was already reasonably well-calibrated at this base rate, an honest null result rather than a forced improvement. It's still applied before scoring the full population in the targeting step below, since the budget analysis needs probabilities that are trustworthy in an absolute sense, and there's no reason to skip a cheap check that happened to come back neutral.
 
 SHAP recovers the intended drivers: `lifetime_orders` and `tenure_days`, the two observable proxies for a customer's long-run value, dominate, followed by `monetary_90d` and `recency_days` (the sweet-spot signal). The decoy `decline_rate` ranks 6th of 16 features, a real but secondary signal, not a top driver, which is what a well-behaved model should do with a feature that has zero true weight in the data it was trained on.
 
 ## Budget-constrained targeting
 
-Given a fixed budget (the top 20% of customers by whatever rule is used), three targeting policies are compared: random, a naive "target the biggest spenders" rule, and ranking by the calibrated propensity score. Expected responders under each policy come from the model's own calibrated score, the only response-rate estimate available for customers who were never actually offered anything, the same "expected value from the model's own output" logic projects 01, 04, and 05 use for their cost-based threshold decisions.
+Given a fixed budget (the top 20% of customers by whatever rule is used), three targeting policies are compared: random, a naive "target the biggest spenders" rule, and ranking by the calibrated propensity score. Expected responders under each policy come from the model's own calibrated score, the only response-rate estimate available for customers who were never actually offered anything.
 
 | Policy | Expected responders (top 20%, n=2,400) |
 |---|---|
@@ -103,7 +103,7 @@ The mechanism shows up clearly in who each policy actually reaches (Figure 6): t
 
 ## Recommendation
 
-Use the propensity-ranked targeting policy for the next campaign, not a spend-based or behavioral-segment-only rule. It captures meaningfully more expected responders under an identical budget, and it does so by reaching a different set of customers: it concentrates on Lapsed and Occasional customers with a strong historical-value signal, not customers who'd likely respond, or spend, regardless of any offer. Keep the segmentation as a reporting and resource-planning tool, since it's useful for understanding the customer base at a glance, but don't use it as a targeting rule on its own: it's built entirely from current behavior, so it can't see the historical-value signal the propensity model relies on most. Re-derive the propensity model whenever the campaign, offer, or eligible population changes meaningfully, and note that since the past campaign wasn't randomized, this model ranks response likelihood, it doesn't estimate the offer's causal, incremental effect; that's a different question, the one project 03's uplift/CATE work answers on a genuinely randomized test.
+Use the propensity-ranked targeting policy for the next campaign over a spend-based or behavioral-segment-only rule. It captures meaningfully more expected responders under an identical budget, and it does so by reaching a different set of customers: it concentrates on Lapsed and Occasional customers with a strong historical-value signal, rather than customers who'd likely respond, or spend, regardless of any offer. Keep the segmentation as a reporting and resource-planning tool, since it's useful for understanding the customer base at a glance, but don't use it as a targeting rule on its own: it's built entirely from current behavior, so it can't see the historical-value signal the propensity model relies on most. Re-derive the propensity model whenever the campaign, offer, or eligible population changes meaningfully. The past campaign also wasn't randomized, so this model ranks response likelihood rather than measuring the offer's causal, incremental effect; getting that would need a randomized holdout test, which the growth team didn't run for this campaign.
 
 ## Repo layout
 
